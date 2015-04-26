@@ -1,7 +1,7 @@
 # jpigpio
 A Java interface to the Raspberry Pi pigpio library
 
-Pigpio is a great library for accessing the GPIO pins and other inputs and outputs of a Raspberry Pi.  Pigpio provides interfaces for C and Python.  However, if what you want to do is use the functions of the library from a Java application, you are stuck.  The purpose of this project is to provide a Java interface to the pigpio library.
+[Pigpio](http://abyz.co.uk/rpi/pigpio/index.html) is a great library for accessing the GPIO pins and other inputs and outputs of a Raspberry Pi.  Pigpio provides interfaces for C and Python.  However, if what you want to do is use the functions of the library from a Java application, you are stuck.  The purpose of this project is to provide a Java interface to the pigpio library.
 
 The core of the solution is a Java interface called `jpigpio.JPigpio`.  It is this interface that provides the exposed functions that perform the pigpio requests.  Currently, the following pigpio operations are supported:
 
@@ -29,15 +29,19 @@ Since `jpigpio.JPigpio` is a Java interface, something must implement it.  Two s
 ## jpigpio.Pigpio
 Using this class, your custom Java code **must** be executed on the Raspberry Pi.  The method calls made in Java are passed as quickly as possible to the underlying pigpio C library for execution.  This provides the fastest capability to call pigpio with as little Java overhead as possible.  Of course, the Java classes must execute on the Pi.
 
-![text](images/Sockets.png)  
+![text](images/NoSockets.png)  
 
 ## jpigpio.PigpioSocket
 Using this class, your custom Java code can run either on the Raspberry Pi or on a separate machine as long as there is a network connection (TCP/IP).  The pigpio function requests are transmitted via sockets to the pigpio supplied demon which is called `pigpiod` which can listen for incoming requests and service them when they arrive.
 
+![text](images/Sockets.png)  
+
 ----
 
 # Installation
-A prerequisite of this package is the correct installation of pigpio by itself. 
+A prerequisite of this package is the correct installation of pigpio by itself.  Please see the Pigpio [Download & Install](http://abyz.co.uk/rpi/pigpio/download.html) page for details.
+
+Details of the installation techniques to be provided here ...
 
 ----
 
