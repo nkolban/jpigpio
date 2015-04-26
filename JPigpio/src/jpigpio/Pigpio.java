@@ -46,5 +46,8 @@ public class Pigpio implements JPigpio {
 
 	@Override
 	public native void gpioServo(int pin, int pulseWidth) throws PigpioException;
+
+	@Override
+	public native void gpioSetAlertFunc(int pin, Alert alert) throws PigpioException;
 } // End of class
 // End of file

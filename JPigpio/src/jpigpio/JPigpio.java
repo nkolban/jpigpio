@@ -34,5 +34,7 @@ public interface JPigpio {
 	
 	public void i2cWriteDevice(int handle, byte data[]) throws PigpioException;
 	
+	public void gpioSetAlertFunc(int pin, Alert alert) throws PigpioException;
+	
 } // End of interface
 // End of file

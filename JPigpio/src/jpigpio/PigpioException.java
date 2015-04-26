@@ -40,8 +40,12 @@ public class PigpioException extends Exception {
 
 	@Override
 	public String getMessage() {
-		return String.format("rc=%d", rc);
+		return String.format("errorCode=%d", rc);
 	}
+	
+	public int getErrorCode() {
+		return rc;
+	} // End of getErrorCode
 
 	public static final int PI_INIT_FAILED = -1; // gpioInitialise failed
 	public static final int PI_BAD_USER_GPIO = -2; // gpio not 0-31

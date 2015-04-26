@@ -608,5 +608,16 @@ public class PigpioSocket implements JPigpio {
 		}
 	} // End of gpioServo
 
+	/**
+	 * 
+	 * @param pin
+	 * @param alert
+	 * @throws PigpioException
+	 */
+	@Override
+	public void gpioSetAlertFunc(int pin, Alert alert) throws PigpioException {
+		throw new NotImplementedException();
+	} // End of gpioSetAlertFunc
+
 } // End of class
 // End of file
