@@ -28,14 +28,18 @@ public class Test_gpioSetAlertFunc {
 			pigpio.gpioSetMode(TESTPIN, JPigpio.PI_INPUT);
 			
 			// Define a callback function
-			Alert alert = new Alert() {
-				@Override
-				public void alert(int pin, int level, long tick) {
-					System.out.println(String.format("Callback in Java: We received an alert on: %d with %d at %d", pin, level, tick));
-				}
-			};
+//			Alert alert = new Alert() {
+//				@Override
+//				public void alert(int gpio, int level, long tick) {
+//					System.out.println(String.format("Callback in Java: We received an alert on: %d with %d at %d", gpio, level, tick));
+//				}
+//			};
+//			
+//			pigpio.gpioSetAlertFunc(TESTPIN, alert);
+			pigpio.gpioSetAlertFunc(TESTPIN, (gpio, level, tick) -> {
+				System.out.println(String.format("Callback in Java: We received an alert on: %d with %d at %d", gpio, level, tick));
+			});
 			
-			pigpio.gpioSetAlertFunc(TESTPIN, alert);
 			System.out.println(String.format("Watching for changes on pin: %d", TESTPIN));
 			
 			// Sleep for a minute

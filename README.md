@@ -58,6 +58,21 @@ will have a value of `-3` which is the underlying code for the corresponding pig
     	}
     }
 
+## Alert callbacks
+The `gpioSetAlertFunc` method takes a gpio pin and an instance of an `Alert` class.  The `Alert` is a Java interface that has the following signature:
+
+	public interface Alert {
+		public void alert(int gpio, int level, long tick);
+	}
+
+This is a callback class.  When the state of the gpio pin changes, the `alert` method is invoked to indicate that a state change event has occurred.  Because the `Alert` interface only has a single member function, it is eligible to be used as a Java 8 lambda function which makes it very convenient to use:
+
+	pigpio.gpioSetAlertFunc(TESTPIN, (gpio, level, tick) -> {
+		System.out.println(
+			String.format("Callback in Java: We received an alert on: %d with %d at %d",
+				gpio, level, tick));
+	});
+
 ## Utilities
 A class called `Utils` provides some Java utilities that can be used in conjunction with JPigpio.
 
