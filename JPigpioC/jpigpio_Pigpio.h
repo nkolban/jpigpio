@@ -98,10 +98,10 @@ JNIEXPORT void JNICALL Java_jpigpio_Pigpio_i2cWriteDevice
 /*
  * Class:     jpigpio_Pigpio
  * Method:    gpioDelay
- * Signature: (I)V
+ * Signature: (J)V
  */
 JNIEXPORT void JNICALL Java_jpigpio_Pigpio_gpioDelay
-  (JNIEnv *, jobject, jint);
+  (JNIEnv *, jobject, jlong);
 
 /*
  * Class:     jpigpio_Pigpio
@@ -118,6 +118,14 @@ JNIEXPORT jlong JNICALL Java_jpigpio_Pigpio_gpioTick
  */
 JNIEXPORT void JNICALL Java_jpigpio_Pigpio_gpioServo
   (JNIEnv *, jobject, jint, jint);
+
+/*
+ * Class:     jpigpio_Pigpio
+ * Method:    gpioSetAlertFunc
+ * Signature: (ILjpigpio/Alert;)V
+ */
+JNIEXPORT void JNICALL Java_jpigpio_Pigpio_gpioSetAlertFunc
+  (JNIEnv *, jobject, jint, jobject);
 
 #ifdef __cplusplus
 }

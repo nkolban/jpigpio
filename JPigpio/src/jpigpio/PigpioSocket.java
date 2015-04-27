@@ -562,9 +562,9 @@ public class PigpioSocket implements JPigpio {
 	 *            The time for the delay.
 	 */
 	@Override
-	public void gpioDelay(int delay) throws PigpioException {
+	public void gpioDelay(long delay) throws PigpioException {
 		try {
-			writeInt(MILS, delay, 0, 0);
+			writeInt(MILS, (int)delay, 0, 0);
 			readPigpioResponse();
 			return;
 		} catch (IOException e) {

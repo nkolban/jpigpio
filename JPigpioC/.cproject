@@ -30,6 +30,7 @@
 								<option id="org.eclipse.cdt.build.core.settings.holder.incpaths.1376945100" name="Include Paths" superClass="org.eclipse.cdt.build.core.settings.holder.incpaths" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;C:\Program Files (x86)\Java\jdk1.8.0_45\include&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;C:\Program Files (x86)\Java\jdk1.8.0_45\include\win32&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;C:\Projects\RaspberryPI\Includes&quot;"/>
 								</option>
 								<inputType id="org.eclipse.cdt.build.core.settings.holder.inType.1086337456" languageId="org.eclipse.cdt.core.gcc" languageName="GNU C" sourceContentType="org.eclipse.cdt.core.cSource,org.eclipse.cdt.core.cHeader" superClass="org.eclipse.cdt.build.core.settings.holder.inType"/>
 							</tool>

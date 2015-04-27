@@ -39,7 +39,7 @@ public class Pigpio implements JPigpio {
 	public native void i2cWriteDevice(int handle, byte[] data) throws PigpioException;
 	
 	@Override
-	public native void gpioDelay(int delay) throws PigpioException;
+	public native void gpioDelay(long delay) throws PigpioException;
 
 	@Override
 	public native long gpioTick() throws PigpioException;

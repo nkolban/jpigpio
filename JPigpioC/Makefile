@@ -1,6 +1,6 @@
 CC=gcc
 CFLAGS=-c -Wall -fPIC -I $(JAVA_HOME)/include -I $(JAVA_HOME)/include/linux
-JAVACLASSDIR=/mnt/share/WorkSpace/JPigpio/bin
+JAVACLASSDIR=../JPigpio/bin
 LIBDIR=/mnt/share/opt/lib
 TARGETLIB=libJPigpioC.so
 OBJECTS=JPigpioC.o

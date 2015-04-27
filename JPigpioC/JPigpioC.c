@@ -13,6 +13,12 @@
 #include "JPigpioC.h"
 
 jthrowable createPigpioException(JNIEnv *env, int rc);
+extern void alertCallback(int gpio, int level, unsigned int tick);
+
+JavaVM *g_vm;
+
+// Define an array of callback functions
+jobject alertFunctions[MAXPINS];
 
 
 /*
@@ -21,10 +27,16 @@ jthrowable createPigpioException(JNIEnv *env, int rc);
  * Signature: ()V
  */
 void JNICALL Java_jpigpio_Pigpio_gpioInitialize(JNIEnv *env, jobject obj) {
+	// Zero out any callbacks
+	int i;
+	for (i=0; i<MAXPINS; i++) {
+		alertFunctions[i] = NULL;
+	}
 	int rc = gpioInitialise();
 	if (rc < 0) {
 		(*env)->Throw(env, createPigpioException(env, rc));
 	}
+	(*env)->GetJavaVM(env, &g_vm);
 } // End of Java_jpigpio_Pigpio_gpioInitialize
 
 /*
@@ -32,7 +44,7 @@ void JNICALL Java_jpigpio_Pigpio_gpioInitialize(JNIEnv *env, jobject obj) {
  * Method:    gpioTerminate
  * Signature: ()V
  */
-void JNICALL Java_jpigpio_gpioTerminate(JNIEnv *env, jobject obj) {
+void JNICALL Java_jpigpio_Pigpio_gpioTerminate(JNIEnv *env, jobject obj) {
 	return gpioTerminate();
 }
 
@@ -41,8 +53,8 @@ void JNICALL Java_jpigpio_gpioTerminate(JNIEnv *env, jobject obj) {
  * Method:    gpioSetMode
  * Signature: (II)V
  */
-void JNICALL Java_jpigpio_Pigpio_gpioSetMode(JNIEnv *env, jobject obj, jint pin, jint mode) {
-	int rc = gpioSetMode(pin, mode);
+void JNICALL Java_jpigpio_Pigpio_gpioSetMode(JNIEnv *env, jobject obj, jint gpio, jint mode) {
+	int rc = gpioSetMode(gpio, mode);
 	if (rc < 0) {
 		(*env)->Throw(env, createPigpioException(env, rc));
 		return;
@@ -54,8 +66,8 @@ void JNICALL Java_jpigpio_Pigpio_gpioSetMode(JNIEnv *env, jobject obj, jint pin,
  * Method:    gpioGetMode
  * Signature: (I)I
  */
-jint JNICALL Java_jpigpio_Pigpio_gpioGetMode(JNIEnv *env, jobject obj, jint pin) {
-	return gpioGetMode(pin);
+jint JNICALL Java_jpigpio_Pigpio_gpioGetMode(JNIEnv *env, jobject obj, jint gpio) {
+	return gpioGetMode(gpio);
 }
 
 /*
@@ -76,8 +88,8 @@ void JNICALL Java_jpigpio_Pigpio_gpioSetPullUpDown(JNIEnv *env, jobject obj, jin
  * Method:    gpioRead
  * Signature: (I)I
  */
-jint JNICALL Java_jpigpio_Pigpio_gpioRead(JNIEnv *env, jobject obj, jint pin) {
-	return gpioRead(pin);
+jint JNICALL Java_jpigpio_Pigpio_gpioRead(JNIEnv *env, jobject obj, jint gpio) {
+	return gpioRead(gpio);
 }
 
 /*
@@ -85,8 +97,8 @@ jint JNICALL Java_jpigpio_Pigpio_gpioRead(JNIEnv *env, jobject obj, jint pin) {
  * Method:    gpioWrite
  * Signature: (II)V
  */
-void JNICALL Java_jpigpio_Pigpio_gpioWrite(JNIEnv *env, jobject obj, jint pin, jint value) {
-	int rc = gpioWrite(pin, value);
+void JNICALL Java_jpigpio_Pigpio_gpioWrite(JNIEnv *env, jobject obj, jint gpio, jint value) {
+	int rc = gpioWrite(gpio, value);
 	if (rc < 0) {
 		(*env)->Throw(env, createPigpioException(env, rc));
 		return;
@@ -181,10 +193,10 @@ void JNICALL Java_jpigpio_Pigpio_i2cWriteDevice(JNIEnv *env, jobject obj, jint h
 /*
  * Class:     jpigpio_Pigpio
  * Method:    gpioDelay
- * Signature: (I)V
+ * Signature: (J)V
  */
-void JNICALL Java_jpigpio_Pigpio_gpioDelay(JNIEnv *env, jobject obj, jint delay) {
-	gpioDelay(delay);
+void JNICALL Java_jpigpio_Pigpio_gpioDelay(JNIEnv *env, jobject obj, jlong delay) {
+	gpioDelay((unsigned int)delay);
 } // End of Java_jpigpio_Pigpio_gpioDelay
 
 /*
@@ -195,6 +207,59 @@ void JNICALL Java_jpigpio_Pigpio_gpioDelay(JNIEnv *env, jobject obj, jint delay)
 jlong JNICALL Java_jpigpio_Pigpio_gpioTick(JNIEnv *env, jobject obj) {
 	return gpioTick();
 } // End of Java_jpigpio_Pigpio_gpioTick
+
+/*
+ * Class:     jpigpio_Pigpio
+ * Method:    gpioSetAlertFunc
+ * Signature: (ILjpigpio/Alert;)V
+ */
+void JNICALL Java_jpigpio_Pigpio_gpioSetAlertFunc(JNIEnv *env, jobject obj, jint gpio, jobject alert) {
+	// Register the generic callback
+	int rc = gpioSetAlertFunc(gpio, alertCallback);
+	// Handle an error registering the alert function
+	if (rc < 0) {
+		(*env)->Throw(env, createPigpioException(env, rc));
+		return;
+	}
+	if (alertFunctions[gpio] != NULL) {
+		(*env)->DeleteGlobalRef(env, alertFunctions[gpio]);
+	}
+	alertFunctions[gpio] = (*env)->NewGlobalRef(env, alert);
+} // End of Java_jpigpio_Pigpio_gpioSetAlertFunc
+
+
+/**
+ * A callback function that is invoked when a gpioSetAlertFunc() happens.
+ * We use the gpio pin value as a lookup into a saved set of Java Alert objects that have
+ * been registered.  Once we have the correct Alert object, we setup the environment to
+ * call back into Java to call the Alert.alert() method.
+ */
+void alertCallback(int gpio, int level, unsigned int tick) {
+	JNIEnv *env;
+
+	if (alertFunctions[gpio] == NULL) {
+		printf("JPigpio: alertCallback(gpio=%d, level=%d, tick=%d): Odd ... alert callback but no alert function registered\n", gpio, level, tick);
+		return;
+	}
+	//printf("JPigpio: alertCallback(gpio=%d, level=%d, tick=%d)\n", gpio, level, tick);
+
+	int getEnvStat = (*g_vm)->GetEnv(g_vm, (void **) &env, JNI_VERSION_1_8);
+
+	if (getEnvStat == JNI_EDETACHED) {
+		(*g_vm)->AttachCurrentThread(g_vm, (void **)&env, NULL);
+	}
+
+	// We have now attached this C thread to the JVM environment.
+	// Lookup the class of the Alert, lookup the alert method methodId and
+	// then call the alert() method with the correct parameters.
+
+	jclass classz = (*env)->GetObjectClass(env, alertFunctions[gpio]);
+	jmethodID methodId = (*env)->GetMethodID(env, classz, "alert", "(IIJ)V");
+	(*env)->CallVoidMethod(env, alertFunctions[gpio], methodId, gpio, level, (jlong)tick);
+
+	// Cleanup the environment by detaching the thread.
+	(*g_vm)->DetachCurrentThread(g_vm);
+} // End of alertCallback
 
 /**
  * Create a new Java Exception
