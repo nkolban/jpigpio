@@ -5,6 +5,8 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 
+import jpigpio.impl.CommonPigpio;
+
 /**
  * http://abyz.co.uk/rpi/pigpio/sif.html
  */
@@ -13,7 +15,7 @@ import java.net.Socket;
  * An implementation of the Pigpio Java interface using sockets to connect to the target pigpio demon.
  *
  */
-public class PigpioSocket implements JPigpio {
+public class PigpioSocket extends CommonPigpio {
 	/**
 	 * A data output stream over which to write data.
 	 */
@@ -459,9 +461,9 @@ public class PigpioSocket implements JPigpio {
 	}
 
 	@Override
-	public void gpioWrite(int pin, int value) throws PigpioException {
+	public void gpioWrite(int pin, boolean value) throws PigpioException {
 		try {
-			writeInt(WRITE, pin, value, 0);
+			writeInt(WRITE, pin, value?1:0, 0);
 			int rc = readPigpioResponse();
 			if (rc < 0) {
 				throw new PigpioException(rc);
@@ -618,6 +620,11 @@ public class PigpioSocket implements JPigpio {
 	public void gpioSetAlertFunc(int pin, Alert alert) throws PigpioException {
 		throw new NotImplementedException();
 	} // End of gpioSetAlertFunc
+
+	@Override
+	public void gpioTrigger(int gpio, long pulseLen, boolean level) throws PigpioException {
+		throw new NotImplementedException();
+	}
 
 } // End of class
 // End of file

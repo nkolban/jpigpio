@@ -58,10 +58,10 @@ JNIEXPORT jint JNICALL Java_jpigpio_Pigpio_gpioRead
 /*
  * Class:     jpigpio_Pigpio
  * Method:    gpioWrite
- * Signature: (II)V
+ * Signature: (IZ)V
  */
 JNIEXPORT void JNICALL Java_jpigpio_Pigpio_gpioWrite
-  (JNIEnv *, jobject, jint, jint);
+  (JNIEnv *, jobject, jint, jboolean);
 
 /*
  * Class:     jpigpio_Pigpio
@@ -126,6 +126,14 @@ JNIEXPORT void JNICALL Java_jpigpio_Pigpio_gpioServo
  */
 JNIEXPORT void JNICALL Java_jpigpio_Pigpio_gpioSetAlertFunc
   (JNIEnv *, jobject, jint, jobject);
+
+/*
+ * Class:     jpigpio_Pigpio
+ * Method:    gpioTrigger
+ * Signature: (IJZ)V
+ */
+JNIEXPORT void JNICALL Java_jpigpio_Pigpio_gpioTrigger
+  (JNIEnv *, jobject, jint, jlong, jboolean);
 
 #ifdef __cplusplus
 }

@@ -95,15 +95,28 @@ jint JNICALL Java_jpigpio_Pigpio_gpioRead(JNIEnv *env, jobject obj, jint gpio) {
 /*
  * Class:     jpigpio_Pigpio
  * Method:    gpioWrite
- * Signature: (II)V
+ * Signature: (IZ)V
  */
-void JNICALL Java_jpigpio_Pigpio_gpioWrite(JNIEnv *env, jobject obj, jint gpio, jint value) {
+void JNICALL Java_jpigpio_Pigpio_gpioWrite(JNIEnv *env, jobject obj, jint gpio, jboolean value) {
 	int rc = gpioWrite(gpio, value);
 	if (rc < 0) {
 		(*env)->Throw(env, createPigpioException(env, rc));
 		return;
 	}
-}
+} // End of Java_jpigpio_Pigpio_gpioWrite
+
+/*
+ * Class:     jpigpio_Pigpio
+ * Method:    gpioTrigger
+ * Signature: (IJZ)V
+ */
+void JNICALL Java_jpigpio_Pigpio_gpioTrigger(JNIEnv *env, jobject obj, jint gpio, jlong pulseLen, jboolean level) {
+	int rc = gpioTrigger(gpio, pulseLen, level);
+	if (rc < 0) {
+		(*env)->Throw(env, createPigpioException(env, rc));
+		return;
+	}
+} // End of Java_jpigpio_Pigpio_gpioTrigger
 
 /*
  * Class:     jpigpio_Pigpio

@@ -19,12 +19,28 @@ public interface JPigpio {
 	public void gpioSetMode(int gpio, int mode) throws PigpioException;
 
 	public int gpioGetMode(int gpio) throws PigpioException;
+	
+	public void gpioTrigger(int gpio, long pulseLen, boolean level) throws PigpioException;
 
 	public void gpioSetPullUpDown(int gpio, int pud) throws PigpioException;
 
+	/**
+	 * Retrieve the state of the gpio
+	 * @param gpio The gpio pin to retrieve
+	 * @return The state of the gpio, one of PI_HIGH or PI_LOW (or equivalents)
+	 * @throws PigpioException
+	 */
 	public int gpioRead(int gpio) throws PigpioException;
 
-	public void gpioWrite(int gpio, int value) throws PigpioException;
+	/**
+	 * Set the state of the gpio
+	 * @param gpio The gpio pin to set
+	 * @param value The desired value of the new pin state.  One of PI_HIGH or PI_LOW (or equivalents)
+	 * @throws PigpioException
+	 */
+	public void gpioWrite(int gpio, boolean value) throws PigpioException;
+	
+	public void gpioShiftOut(int gpioData, int gpioClock, boolean bitOrder, int value) throws PigpioException;
 
 	public void gpioServo(int gpio, int pulseWidth) throws PigpioException;
 
@@ -54,8 +70,8 @@ public interface JPigpio {
 	public static final int PI_CLEAR = 0;
 	public static final int PI_SET = 1;
 
-	public static final int PI_LOW = 0;
-	public static final int PI_HIGH = 1;
+	public static final boolean PI_LOW = false;
+	public static final boolean PI_HIGH = true;
 
 	/* level: only reported for gpio time-out, see gpioSetWatchdog */
 
@@ -103,6 +119,9 @@ public interface JPigpio {
 
 	public static final int PI_HW_CLK_MIN_FREQ = 4689;
 	public static final int PI_HW_CLK_MAX_FREQ = 250000000;
+	
+	public static final boolean PI_MSBFIRST = true;
+	public static final boolean PI_LSBFIRST = false;
 
 } // End of interface
 // End of file

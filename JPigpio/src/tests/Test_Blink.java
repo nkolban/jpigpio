@@ -19,12 +19,21 @@ public class Test_Blink {
 	 */
 	private final int BLINK_PIN = 17;
 	
+	
+	/**
+	 * Bootstrap the application.
+	 * @param args Standard application arguments (not used).
+	 */
 	public static void main(String args[]) {
 		System.out.println("Test_Blink");
 		Test_Blink test_Blink = new Test_Blink();
 		test_Blink.run();
 	}
 
+	/**
+	 * Define a run function to perform the work in the context of an
+	 * instance of the class.
+	 */
 	public void run() {
 		try {
 			//JPigpio pigpio = new PigpioSocket("raspi", 8888);
@@ -50,6 +59,6 @@ public class Test_Blink {
 		} catch (PigpioException e) {
 			e.printStackTrace();
 		}
-	}
+	} // End of run
 } // End of class
 // End of file

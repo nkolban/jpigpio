@@ -1,6 +1,8 @@
 package jpigpio;
 
-public class Pigpio implements JPigpio {
+import jpigpio.impl.CommonPigpio;
+
+public class Pigpio extends CommonPigpio {
 	static {
 		System.loadLibrary("JPigpioC");
 	}
@@ -24,7 +26,7 @@ public class Pigpio implements JPigpio {
 	public native int gpioRead(int pin) throws PigpioException;
 
 	@Override
-	public native void gpioWrite(int pin, int value) throws PigpioException;
+	public native void gpioWrite(int pin, boolean value) throws PigpioException;
 
 	@Override
 	public native int i2cOpen(int i2cBus, int i2cAddr) throws PigpioException;
@@ -49,5 +51,9 @@ public class Pigpio implements JPigpio {
 
 	@Override
 	public native void gpioSetAlertFunc(int pin, Alert alert) throws PigpioException;
+
+	@Override
+	public native void gpioTrigger(int gpio, long pulseLen, boolean level) throws PigpioException;
+	
 } // End of class
 // End of file

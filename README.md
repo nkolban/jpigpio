@@ -11,10 +11,12 @@ The core of the solution is a Java interface called `jpigpio.JPigpio`.  It is th
 * gpioSetMode
 * gpioRead
 * gpioWrite
-* gpioSetAlertFunc
+* gpioTrigger
+* gpioSetAlertFunc (Not available for sockets)
 * gpioSetPullUpDown
 * gpioDelay
 * gpioTick
+* gpioShiftOut (Extra)
 
 * gpioServo
 
@@ -78,6 +80,19 @@ A class called `Utils` provides some Java utilities that can be used in conjunct
 
 * `static void addShutdown(JPigpio pigpio)` - Register a JVM shutdown handler that automatically gets called when the JVM ends.  This shutdown handler cleans up (terminates) any resources allocated on behalf of pigpio.
 
+## Constant definitions
+
+The JPigpio interface defines a set of constants for use with the library:
+
+* PI_HIGH - A high value
+* PI_LOW - A low value
+* PI_ON - A high value
+* PI_OFF - A low value
+* PI_INPUT - The mode of a gpio for input
+* PI_OUTPUT - The mode of a gpio for output
+* PI\_PUD_OFF - No pull-up associated with the gpio
+* PI\_PUD_UP - Pull-up the gpio to high
+* PI\_PUD_DOWN - Pull-down the gpio to low
 
 ----
 
@@ -108,6 +123,23 @@ A prerequisite of this package is the correct installation of pigpio on the Rasp
 * `/usr/local/include/pigpio.h`
 
 Details of the installation techniques for this project to be provided here ...
+
+----
+# Mapping
+On occasion, you may find existing code written for either an Arduino (a sketch) or for alternate Raspberry Pi libraries such as Wiring Pi.  Here we provide a mapping from similar capabilities to those found in the JPigpio package.
+
+## Arduino
+
+* digitalWrite - gpioWrite
+* digitalRead - gpioRead
+* shiftOut - gpioShiftOut
+* pinMode - gpioSetMode
+
+## Wiring Pi
+
+* digitalWrite - gpioWrite
+* digitalRead - gpioRead
+* pinMode - gpioSetMode
 
 ----
 

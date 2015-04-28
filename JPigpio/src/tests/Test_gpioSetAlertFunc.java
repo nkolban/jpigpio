@@ -1,13 +1,20 @@
 package tests;
 
-import jpigpio.Alert;
 import jpigpio.JPigpio;
 import jpigpio.Pigpio;
 import jpigpio.PigpioException;
 import jpigpio.Utils;
 
+/**
+ * Test the gpioSetAlertFunc capability.
+ * @author Neil Kolban
+ *
+ */
 public class Test_gpioSetAlertFunc {
 
+	/**
+	 * The pin to watch for changes in state.
+	 */
 	private final int TESTPIN = 18;
 
 	public static void main(String args[]) {
@@ -16,10 +23,12 @@ public class Test_gpioSetAlertFunc {
 		test_gpioSetAlertFunc.run();
 	}
 
+	/**
+	 * Main entry point to the test in the context of an object instance.
+	 */
 	public void run() {
-
 		try {
-			// JPigpio pigpio = new PigpioSocket("raspi", 8888);
+			// Initialize the environment
 			JPigpio pigpio = new Pigpio();
 			pigpio.gpioInitialize();
 			Utils.addShutdown(pigpio);
@@ -28,14 +37,6 @@ public class Test_gpioSetAlertFunc {
 			pigpio.gpioSetMode(TESTPIN, JPigpio.PI_INPUT);
 			
 			// Define a callback function
-//			Alert alert = new Alert() {
-//				@Override
-//				public void alert(int gpio, int level, long tick) {
-//					System.out.println(String.format("Callback in Java: We received an alert on: %d with %d at %d", gpio, level, tick));
-//				}
-//			};
-//			
-//			pigpio.gpioSetAlertFunc(TESTPIN, alert);
 			pigpio.gpioSetAlertFunc(TESTPIN, (gpio, level, tick) -> {
 				System.out.println(String.format("Callback in Java: We received an alert on: %d with %d at %d", gpio, level, tick));
 			});
@@ -53,6 +54,6 @@ public class Test_gpioSetAlertFunc {
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
-	}
+	} // End of run
 } // End of class
 // End of file
