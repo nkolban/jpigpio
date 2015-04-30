@@ -42,6 +42,13 @@ public interface JPigpio {
 	
 	public void gpioShiftOut(int gpioData, int gpioClock, boolean bitOrder, int value) throws PigpioException;
 
+	
+	/**
+	 * Set the pulse width of a specific GPIO.  The pulse width is in microseconds
+	 * with a value between 500 and 2500 or a value of 0 to switch the servo off.
+	 * @param gpio The pin to use to control the servo.
+	 * @param pulseWidth The pulse width of the pulse (500-2500).
+	 */
 	public void gpioServo(int gpio, int pulseWidth) throws PigpioException;
 
 	/**

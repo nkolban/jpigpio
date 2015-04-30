@@ -590,17 +590,15 @@ public class PigpioSocket extends CommonPigpio {
 	} // End of gpioTick
 
 	/**
-	 * Set the servo value of the pin to the given pulsewidth.
-	 * 
-	 * @param pin
-	 *            The pin on which to pulse
-	 * @param pulseWidth
-	 *            The size of the pulse width
+	 * Set the pulse width of a specific GPIO.  The pulse width is in microseconds
+	 * with a value between 500 and 2500 or a value of 0 to switch the servo off.
+	 * @param gpio The pin to use to control the servo.
+	 * @param pulseWidth The pulse width of the pulse (500-2500).
 	 */
 	@Override
-	public void gpioServo(int pin, int pulseWidth) throws PigpioException {
+	public void gpioServo(int gpio, int pulseWidth) throws PigpioException {
 		try {
-			writeInt(SERVO, pin, pulseWidth, 0);
+			writeInt(SERVO, gpio, pulseWidth, 0);
 			int rc = readPigpioResponse();
 			if (rc < 0) {
 				throw new PigpioException(rc);

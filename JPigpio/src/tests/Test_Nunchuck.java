@@ -1,8 +1,8 @@
 package tests;
 
 import jpigpio.JPigpio;
+import jpigpio.Pigpio;
 import jpigpio.PigpioException;
-import jpigpio.PigpioSocket;
 
 public class Test_Nunchuck {
 
@@ -16,7 +16,8 @@ public class Test_Nunchuck {
 			int NUNCHUCK_DEVICE = 0x52;
 			int PI_I2CBUS = 1;
 			// IPigpio pigpio = new Pigpio();
-			JPigpio pigpio = new PigpioSocket("localhost", 8888);
+			//JPigpio pigpio = new PigpioSocket("localhost", 8888);
+			JPigpio pigpio = new Pigpio();
 
 			System.out.println("Testing the nunchuck through I2C");
 			pigpio.gpioInitialize();

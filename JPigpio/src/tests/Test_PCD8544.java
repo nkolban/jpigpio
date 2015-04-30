@@ -7,11 +7,11 @@ import jpigpio.Utils;
 
 public class Test_PCD8544 {
 
-	private final int PIN_SCE = 0;
-	private final int PIN_RESET = 6;
-	private final int PIN_DC = 5;
-	private final int PIN_SDIN = 4;
-	private final int PIN_SCLK = 3;
+	private final int PIN_SCE =22;
+	private final int PIN_RESET = 23;
+	private final int PIN_DC = 27;
+	private final int PIN_SDIN = 18;
+	private final int PIN_SCLK = 17;
 
 	private final boolean LCD_COMMAND = false;
 	private final boolean LCD_DATA = true;
@@ -135,6 +135,7 @@ public class Test_PCD8544 {
 			LcdInitialise();
 			LcdClear();
 			LcdString("Hello World!");
+			System.out.println("About to sleep");
 			Thread.sleep(60 * 1000);
 		} catch (PigpioException e) {
 			e.printStackTrace();
@@ -166,8 +167,14 @@ public class Test_PCD8544 {
 			pigpio.gpioSetMode(PIN_SCLK, Pigpio.PI_OUTPUT);
 			pigpio.gpioWrite(PIN_RESET, Pigpio.PI_LOW);
 			pigpio.gpioWrite(PIN_RESET, Pigpio.PI_HIGH);
+			// 0x21 = 0010 0001 = Chip active + Horizontal Addressing + Use extended instructions (H=1)
+			// 0xB1 = 1011 0001 = Set Vop to 1
+			// 0x04 = 0000 0100 = Set temperature coefficient (0)
+			// 0x20 = 0010 0000 = Chip active + Horizontal Addressing + Normal instructions (H=0)
+			// 0x0c = 0000 1100 = Display normal mode (D=1, E=0 -> 10 = Normal mode)
 			LcdWrite(LCD_COMMAND, 0x21); // LCD Extended Commands.
-			LcdWrite(LCD_COMMAND, 0xB1); // Set LCD Vop (Contrast).
+			LcdWrite(LCD_COMMAND, 0xBF); // Set LCD Vop (Contrast).
+			//LcdWrite(LCD_COMMAND, 0xB1); // Set LCD Vop (Contrast).
 			LcdWrite(LCD_COMMAND, 0x04); // Set Temp coefficent. //0x04
 			LcdWrite(LCD_COMMAND, 0x14); // LCD bias mode 1:48. //0x13
 			LcdWrite(LCD_COMMAND, 0x20); // LCD Basic Commands

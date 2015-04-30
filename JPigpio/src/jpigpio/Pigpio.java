@@ -46,8 +46,14 @@ public class Pigpio extends CommonPigpio {
 	@Override
 	public native long gpioTick() throws PigpioException;
 
+	/**
+	 * Set the pulse width of a specific GPIO.  The pulse width is in microseconds
+	 * with a value between 500 and 2500 or a value of 0 to switch the servo off.
+	 * @param gpio The pin to use to control the servo.
+	 * @param pulseWidth The pulse width of the pulse (500-2500).
+	 */
 	@Override
-	public native void gpioServo(int pin, int pulseWidth) throws PigpioException;
+	public native void gpioServo(int gpio, int pulseWidth) throws PigpioException;
 
 	@Override
 	public native void gpioSetAlertFunc(int pin, Alert alert) throws PigpioException;
