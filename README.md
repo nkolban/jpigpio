@@ -25,6 +25,12 @@ The core of the solution is a Java interface called `jpigpio.JPigpio`.  It is th
 * i2cReadDevice
 * i2cWriteDevice
 
+* spiOpen
+* spiClose
+* spiRead
+* spiWrite
+* spiXfer
+
 Obviously, this is only a subset of the full and rich capabilities of C and Python pigpio.  However, the subset is the starter set we chose to create.  If you find you need a pigpio function that is not provided by Java, simply let us know and we will turn it around very quickly.  We simply don't want to spend time porting if there is no demand.
 
 Since `jpigpio.JPigpio` is a Java interface, something must implement it.  Two separate implementations are provided.  One called `jpigpio.Pigpio` and one called `jpigpio.PigpioSocket`.  Both of them implement the `jpigpio.JPigpio` interface.  The difference between them is how the calls from Java to pigpio are achieved.

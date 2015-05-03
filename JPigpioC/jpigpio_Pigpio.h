@@ -135,6 +135,46 @@ JNIEXPORT void JNICALL Java_jpigpio_Pigpio_gpioSetAlertFunc
 JNIEXPORT void JNICALL Java_jpigpio_Pigpio_gpioTrigger
   (JNIEnv *, jobject, jint, jlong, jboolean);
 
+/*
+ * Class:     jpigpio_Pigpio
+ * Method:    spiOpen
+ * Signature: (III)I
+ */
+JNIEXPORT jint JNICALL Java_jpigpio_Pigpio_spiOpen
+  (JNIEnv *, jobject, jint, jint, jint);
+
+/*
+ * Class:     jpigpio_Pigpio
+ * Method:    spiClose
+ * Signature: (I)V
+ */
+JNIEXPORT void JNICALL Java_jpigpio_Pigpio_spiClose
+  (JNIEnv *, jobject, jint);
+
+/*
+ * Class:     jpigpio_Pigpio
+ * Method:    spiRead
+ * Signature: (I[B)I
+ */
+JNIEXPORT jint JNICALL Java_jpigpio_Pigpio_spiRead
+  (JNIEnv *, jobject, jint, jbyteArray);
+
+/*
+ * Class:     jpigpio_Pigpio
+ * Method:    spiWrite
+ * Signature: (I[B)I
+ */
+JNIEXPORT jint JNICALL Java_jpigpio_Pigpio_spiWrite
+  (JNIEnv *, jobject, jint, jbyteArray);
+
+/*
+ * Class:     jpigpio_Pigpio
+ * Method:    spiXfer
+ * Signature: (I[B[B)I
+ */
+JNIEXPORT jint JNICALL Java_jpigpio_Pigpio_spiXfer
+  (JNIEnv *, jobject, jint, jbyteArray, jbyteArray);
+
 #ifdef __cplusplus
 }
 #endif

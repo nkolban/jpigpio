@@ -623,6 +623,75 @@ public class PigpioSocket extends CommonPigpio {
 	public void gpioTrigger(int gpio, long pulseLen, boolean level) throws PigpioException {
 		throw new NotImplementedException();
 	}
+	
+	/**
+	 * Open an SPI channel.
+	 * @param spiChannel The channel to open.
+	 * @param spiBaudRate The baud rate for transmition and receiption
+	 * @param flags Control flags
+	 * @return A handle used in subsequent SPI API calls
+	 * @throws PigpioException
+	 */
+	@Override
+	public int spiOpen(int spiChannel, int spiBaudRate, int flags) throws PigpioException {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+
+	/**
+	 * Close an SPI connection previously created with spiOpen().
+	 * @param handle The handle to be closed.
+	 * @throws PigpioException
+	 */
+	@Override
+	public void spiClose(int handle) throws PigpioException {
+		// TODO Auto-generated method stub
+		
+	}
+
+	
+
+	/**
+	 * Read data from SPI.
+	 * @param handle The handle from which to read.
+	 * @param data An array into which to read data.
+	 * @return The number of bytes actually read.
+	 * @throws PigpioException
+	 */
+	@Override
+	public int spiRead(int handle, byte[] data) throws PigpioException {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	/**
+	 * Write data to SPI.
+	 * @param handle The handle into which to write.
+	 * @param data An array of data to write to SPI.
+	 * @return The number of bytes actually written
+	 * @throws PigpioException
+	 */
+	@Override
+	public int spiWrite(int handle, byte[] data) throws PigpioException {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	/**
+	 * Write data to SPI and in parallel, read responses.  The size of the txData and rxData arrays must
+	 * be the same.
+	 * @param handle The handle into which to write.
+	 * @param txData An array of data to write.
+	 * @param rxData An array of data to read.
+	 * @return The number of bytes actually transferred.
+	 * @throws PigpioException
+	 */
+	@Override
+	public int spiXfer(int handle, byte[] txData, byte[] rxData) throws PigpioException {
+		// TODO Auto-generated method stub
+		return 0;
+	}
 
 } // End of class
 // End of file

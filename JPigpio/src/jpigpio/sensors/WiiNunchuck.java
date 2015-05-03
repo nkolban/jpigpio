@@ -24,11 +24,11 @@ public class WiiNunchuck {
 	private final int PI_I2CBUS = 1;
 	private JPigpio pigpio;
 	private int handle;
-	private int joyX;
-	private int joyY;
-	private int accelX;
-	private int accelY;
-	private int accelZ;
+	private byte joyX;
+	private byte joyY;
+	private byte accelX;
+	private byte accelY;
+	private byte accelZ;
 	private boolean buttonC;
 	private boolean buttonZ;
 	
@@ -67,30 +67,32 @@ public class WiiNunchuck {
 		// (h) 1 2 4 8 10 20 40 80
 		joyX = bytes[0];
 		joyY = bytes[1];
-		accelX = (bytes[2] << 2) | ((bytes[5] & 0xc0) >> 6);
-		accelY = (bytes[3] << 2) | ((bytes[5] & 0x30) >> 4);
-		accelZ = (bytes[4] << 2) | ((bytes[5] & 0x0c) >> 2);
+
+		accelX = (byte)((bytes[2] << 2) | ((bytes[5] & 0xc0) >> 6));
+		accelY = (byte)((bytes[3] << 2) | ((bytes[5] & 0x30) >> 4));
+		accelZ = (byte)((bytes[4] << 2) | ((bytes[5] & 0x0c) >> 2));
 		buttonC = ((bytes[5] & 0x02) >> 1) == 1;
 		buttonZ = (bytes[5] & 0x01) == 1;
+		//System.out.println(String.format("Data: %d %d %d %d %d %d", bytes[0], bytes[1], bytes[2], bytes[3], bytes[4], bytes[5]));
 	} // End of readValue
 
-	public int getJoyX() {
+	public byte getJoyX() {
 		return joyX;
 	}
 
-	public int getJoyY() {
+	public byte getJoyY() {
 		return joyY;
 	}
 
-	public int getAccelX() {
+	public byte getAccelX() {
 		return accelX;
 	}
 
-	public int getAccelY() {
+	public byte getAccelY() {
 		return accelY;
 	}
 
-	public int getAccelZ() {
+	public byte getAccelZ() {
 		return accelZ;
 	}
 
@@ -104,7 +106,8 @@ public class WiiNunchuck {
 	
 	@Override
 	public String toString() {
-		return String.format("joyX=%x joyY=%x accelX=%x accelY=%x accelZ=%x buttonC=%x buttonZ=%x", joyX, joyY, accelX, accelY, accelZ, buttonC, buttonZ);
+		return String.format("joyX=%d joyY=%d accelX=%d accelY=%d accelZ=%d buttonC=%b buttonZ=%b", //
+				Byte.toUnsignedInt(joyX), Byte.toUnsignedInt(joyY), Byte.toUnsignedInt(accelX), Byte.toUnsignedInt(accelY), Byte.toUnsignedInt(accelZ), buttonC, buttonZ);
 	} // End of toString
 } // End of class
 // End of file
