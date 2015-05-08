@@ -693,5 +693,11 @@ public class PigpioSocket extends CommonPigpio {
 		return 0;
 	}
 
+	@Override
+	public void setDebug(boolean flag) {
+		// TODO Auto-generated method stub
+		
+	}
+
 } // End of class
 // End of file

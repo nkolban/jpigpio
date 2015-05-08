@@ -7,15 +7,25 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <pigpio.h>
 #include <jni.h>
 #include "jpigpio_Pigpio.h"
 #include "JPigpioC.h"
 
+#define DEBUG 1
+
 jthrowable createPigpioException(JNIEnv *env, int rc);
 extern void alertCallback(int gpio, int level, unsigned int tick);
 
 JavaVM *g_vm;
+int debug = 0;
+
+#ifdef DEBUG
+int lastTime;
+extern void logDebug(char *text);
+char debugText[2000];
+#endif
 
 // Define an array of callback functions
 jobject alertFunctions[MAXPINS];
@@ -27,6 +37,9 @@ jobject alertFunctions[MAXPINS];
  */
 void JNICALL Java_jpigpio_Pigpio_gpioInitialize(JNIEnv *env, jobject obj) {
 	// Zero out any callbacks
+#ifdef DEBUG
+	lastTime = gpioTick();
+#endif
 	int i;
 	for (i = 0; i < MAXPINS; i++) {
 		alertFunctions[i] = NULL;
@@ -98,6 +111,12 @@ jint JNICALL Java_jpigpio_Pigpio_gpioRead(JNIEnv *env, jobject obj, jint gpio) {
  */
 void JNICALL Java_jpigpio_Pigpio_gpioWrite(JNIEnv *env, jobject obj, jint gpio, jboolean value) {
 	int rc = gpioWrite(gpio, value);
+#ifdef DEBUG
+	if (debug) {
+		sprintf(debugText, "gpioWrite: gpio: %d, value: 0x%x", gpio, value);
+		logDebug(debugText);
+	}
+#endif
 	if (rc < 0) {
 		(*env)->Throw(env, createPigpioException(env, rc));
 		return;
@@ -243,10 +262,17 @@ void JNICALL Java_jpigpio_Pigpio_gpioSetAlertFunc(JNIEnv *env, jobject obj, jint
  * Signature: (III)I
  */
 jint JNICALL Java_jpigpio_Pigpio_spiOpen(JNIEnv *env, jobject obj, jint channel, jint baudRate, jint flags) {
+
 	int rc = spiOpen(channel, baudRate, flags);
 	if (rc < 0) {
 		(*env)->Throw(env, createPigpioException(env, rc));
 	}
+#ifdef DEBUG
+	if (debug) {
+		sprintf(debugText, "spiOpen: channel=%d, baudRate=%d, flags=%x - handle=%d", channel, baudRate, flags, rc);
+		logDebug(debugText);
+	}
+#endif
 	return rc;
 } // End of Java_jpigpio_Pigpio_spiOpen
 
@@ -315,17 +341,42 @@ jint JNICALL Java_jpigpio_Pigpio_spiXfer(JNIEnv *env, jobject obj, jint handle, 
 	char *rxBuf = malloc(count);
 
 	(*env)->GetByteArrayRegion(env, txData, 0, count, (jbyte *)txBuf);
+
 	int rc = spiXfer(handle, txBuf, rxBuf, count);
-	free(txBuf);
+
 	if (rc < 0) {
 		(*env)->Throw(env, createPigpioException(env, rc));
 		free(rxBuf);
 		return rc;
 	}
+#ifdef DEBUG
+	if (debug) {
+		char strTXData[1024];
+		char strRXData[1024];
+		strcpy(strTXData, "");
+		strcpy(strRXData, "");
+		char strByte[10];
+		unsigned int i;
+		for (i=0; i<count; i++) {
+			sprintf(strByte, "0x%x ", txBuf[i]);
+			strcat(strTXData, strByte);
+			sprintf(strByte, "0x%x ", rxBuf[i]);
+			strcat(strRXData, strByte);
+		}
+		sprintf(debugText, "spiXfer: handle=%d, count=%d, TX Data: %s, RX Data: %s", handle, count, strTXData, strRXData);
+		logDebug(debugText);
+	}
+#endif
+	// Verified that parms are env, target array, start index, number of bytes, source buffer
 	(*env)->SetByteArrayRegion(env, rxData, 0, count, (jbyte *)rxBuf);
 	free(rxBuf);
+	free(txBuf);
 	return rc;
 } // End of Java_jpigpio_Pigpio_spiXfer
+
+void JNICALL Java_jpigpio_Pigpio_setDebug(JNIEnv *env, jobject obj, jboolean state) {
+	debug = state;
+}
 
 /**
  * A callback function that is invoked when a gpioSetAlertFunc() happens.
@@ -360,6 +411,12 @@ void alertCallback(int gpio, int level, unsigned int tick) {
 	(*g_vm)->DetachCurrentThread(g_vm);
 } // End of alertCallback
 
+#ifdef DEBUG
+	void logDebug(char *text) {
+		printf("%.6d: %s\n", gpioTick() - lastTime, text);
+		lastTime = gpioTick();
+	}
+#endif
 /**
  * Create a new Java Exception
  */

@@ -7,8 +7,8 @@ import jpigpio.PigpioException;
 public class Test_Timings {
 	public static void main(String args[]) {
 		System.out.println("Test_Timings");
-		Test_Timings test_Timings = new Test_Timings();
-		test_Timings.run();
+		Test_Timings app = new Test_Timings();
+		app.run();
 	}
 
 	public void run() {

@@ -19,8 +19,8 @@ public class Test_gpioSetAlertFunc {
 
 	public static void main(String args[]) {
 		System.out.println("Test_gpioSetAlertFunc");
-		Test_gpioSetAlertFunc test_gpioSetAlertFunc = new Test_gpioSetAlertFunc();
-		test_gpioSetAlertFunc.run();
+		Test_gpioSetAlertFunc app = new Test_gpioSetAlertFunc();
+		app.run();
 	}
 
 	/**

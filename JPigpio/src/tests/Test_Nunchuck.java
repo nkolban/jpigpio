@@ -7,8 +7,8 @@ import jpigpio.PigpioException;
 public class Test_Nunchuck {
 
 	public static void main(String[] args) {
-		Test_Nunchuck test_Nunchuck = new Test_Nunchuck();
-		test_Nunchuck.run();
+		Test_Nunchuck app = new Test_Nunchuck();
+		app.run();
 	}
 
 	public void run() {

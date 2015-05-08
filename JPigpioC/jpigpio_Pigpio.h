@@ -175,6 +175,14 @@ JNIEXPORT jint JNICALL Java_jpigpio_Pigpio_spiWrite
 JNIEXPORT jint JNICALL Java_jpigpio_Pigpio_spiXfer
   (JNIEnv *, jobject, jint, jbyteArray, jbyteArray);
 
+/*
+ * Class:     jpigpio_Pigpio
+ * Method:    setDebug
+ * Signature: (Z)V
+ */
+JNIEXPORT void JNICALL Java_jpigpio_Pigpio_setDebug
+  (JNIEnv *, jobject, jboolean);
+
 #ifdef __cplusplus
 }
 #endif

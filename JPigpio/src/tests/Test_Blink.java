@@ -26,8 +26,8 @@ public class Test_Blink {
 	 */
 	public static void main(String args[]) {
 		System.out.println("Test_Blink");
-		Test_Blink test_Blink = new Test_Blink();
-		test_Blink.run();
+		Test_Blink app = new Test_Blink();
+		app.run();
 	}
 
 	/**

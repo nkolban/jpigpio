@@ -65,18 +65,24 @@ public class Pigpio extends CommonPigpio {
 
 	/**
 	 * Open an SPI channel.
+	 * @param spiChannel The channel to open.
+	 * @param spiBaudRate The baud rate for transmission and reception.  Some constants are provided:
+	 * <ul>
+	 * <li>PI_SPI_BAUD_125KHZ</li>
+	 * <li>PI_SPI_BAUD_250KHZ</li>
+	 * <li>PI_SPI_BAUD_500KHZ</li>
+	 * <li>PI_SPI_BAUD_1MHZ</li>
+	 * <li>PI_SPI_BAUD_2MHZ</li>
+	 * <li>PI_SPI_BAUD_4MHZ</li>
+	 * <li>PI_SPI_BAUD_8MHZ</li>
+	 * </ul>
+	 * @param flags Control flags.  The flags can include:
 	 * 
-	 * @param spiChannel
-	 *            The channel to open.
-	 * @param spiBaudRate
-	 *            The baud rate for transmition and receiption
-	 * @param flags
-	 *            Control flags
 	 * @return A handle used in subsequent SPI API calls
 	 * @throws PigpioException
 	 */
 	@Override
-	public native int spiOpen(int spiChannel, int spiBaudRate, int flags) throws PigpioException;
+	public native int spiOpen(int channel, int baudRate, int flags) throws PigpioException;
 
 	/**
 	 * Close an SPI connection previously created with spiOpen().
@@ -129,5 +135,11 @@ public class Pigpio extends CommonPigpio {
 	@Override
 	public native int spiXfer(int handle, byte[] txData, byte[] rxData) throws PigpioException;
 
+	@Override
+	/**
+	 * Set whether or not debugging is enabled. True is enabled.
+	 */
+	public native void setDebug(boolean flag);
+	
 } // End of class
 // End of file

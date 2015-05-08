@@ -11,8 +11,8 @@ public class Test_ServoSweep {
 
 	public static void main(String args[]) {
 		System.out.println("Starting Test_ServoSweep");
-		Test_ServoSweep test_servoSweep = new Test_ServoSweep();
-		test_servoSweep.run();
+		Test_ServoSweep app = new Test_ServoSweep();
+		app.run();
 	}
 
 	public void run() {

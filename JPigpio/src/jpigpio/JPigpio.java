@@ -67,6 +67,8 @@ public interface JPigpio {
 	 *            The number of microseconds for which to block
 	 */
 	public void gpioDelay(long delay) throws PigpioException;
+	
+	public void gpioDelay(long delay, int type) throws PigpioException;
 
 	public long gpioTick() throws PigpioException;
 
@@ -80,13 +82,23 @@ public interface JPigpio {
 
 	/**
 	 * Open an SPI channel.
-	 * @param spiChannel The channel to open.
-	 * @param spiBaudRate The baud rate for transmition and receiption
-	 * @param flags Control flags
+	 * @param channel The channel to open.
+	 * @param baudRate The baud rate for transmission and reception.  Some constants are provided:
+	 * <ul>
+	 * <li>PI_SPI_BAUD_125KHZ</li>
+	 * <li>PI_SPI_BAUD_250KHZ</li>
+	 * <li>PI_SPI_BAUD_500KHZ</li>
+	 * <li>PI_SPI_BAUD_1MHZ</li>
+	 * <li>PI_SPI_BAUD_2MHZ</li>
+	 * <li>PI_SPI_BAUD_4MHZ</li>
+	 * <li>PI_SPI_BAUD_8MHZ</li>
+	 * </ul>
+	 * @param flags Control flags.  The flags can include:
+	 * 
 	 * @return A handle used in subsequent SPI API calls
 	 * @throws PigpioException
 	 */
-	public int spiOpen(int spiChannel, int spiBaudRate, int flags) throws PigpioException;
+	public int spiOpen(int channel, int baudRate, int flags) throws PigpioException;
 
 	/**
 	 * Close an SPI connection previously created with spiOpen().
@@ -125,6 +137,8 @@ public interface JPigpio {
 	public int spiXfer(int handle, byte txData[], byte rxData[]) throws PigpioException;
 
 	public void gpioSetAlertFunc(int gpio, Alert alert) throws PigpioException;
+	
+	public void setDebug(boolean flag);
 
 	/* level: 0-1 */
 
@@ -140,6 +154,10 @@ public interface JPigpio {
 	/* level: only reported for gpio time-out, see gpioSetWatchdog */
 
 	public static final int PI_TIMEOUT = 2;
+	
+	public static final int PI_MICROSECONDS = 0;
+	public static final int PI_MILLISECONDS = 1;
+	public static final int PI_SECONDS = 2;
 
 	/* mode: 0-7 */
 
@@ -186,6 +204,23 @@ public interface JPigpio {
 
 	public static final boolean PI_MSBFIRST = true;
 	public static final boolean PI_LSBFIRST = false;
+	
+	/* SPI */
+	public static final int PI_SPI_MODE0 = 0b00;
+	public static final int PI_SPI_MODE1 = 0b01;
+	public static final int PI_SPI_MODE2 = 0b10;
+	public static final int PI_SPI_MODE3 = 0b11;
+	
+	public static final int PI_SPI_BAUD_125KHZ = 125000;
+	public static final int PI_SPI_BAUD_250KHZ = JPigpio.PI_SPI_BAUD_125KHZ * 2;
+	public static final int PI_SPI_BAUD_500KHZ = JPigpio.PI_SPI_BAUD_250KHZ * 2;
+	public static final int PI_SPI_BAUD_1MHZ = JPigpio.PI_SPI_BAUD_500KHZ * 2;
+	public static final int PI_SPI_BAUD_2MHZ = JPigpio.PI_SPI_BAUD_1MHZ * 2;
+	public static final int PI_SPI_BAUD_4MHZ = JPigpio.PI_SPI_BAUD_2MHZ * 2;
+	public static final int PI_SPI_BAUD_8MHZ = JPigpio.PI_SPI_BAUD_4MHZ * 2;
+	
+	public static final int PI_SPI_CHANNEL0 = 0;
+	public static final int PI_SPI_CHANNEL1 = 1;
 
 } // End of interface
 // End of file
