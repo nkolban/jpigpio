@@ -16,7 +16,8 @@
 #define DEBUG 1
 
 jthrowable createPigpioException(JNIEnv *env, int rc);
-extern void alertCallback(int gpio, int level, unsigned int tick);
+void alertCallback(int gpio, int level, unsigned int tick);
+unsigned invert(unsigned level);
 
 JavaVM *g_vm;
 int debug = 0;
@@ -37,9 +38,7 @@ jobject alertFunctions[MAXPINS];
  */
 void JNICALL Java_jpigpio_Pigpio_gpioInitialize(JNIEnv *env, jobject obj) {
 	// Zero out any callbacks
-#ifdef DEBUG
-	lastTime = gpioTick();
-#endif
+
 	int i;
 	for (i = 0; i < MAXPINS; i++) {
 		alertFunctions[i] = NULL;
@@ -49,6 +48,9 @@ void JNICALL Java_jpigpio_Pigpio_gpioInitialize(JNIEnv *env, jobject obj) {
 		(*env)->Throw(env, createPigpioException(env, rc));
 	}
 	(*env)->GetJavaVM(env, &g_vm);
+#ifdef DEBUG
+	lastTime = gpioTick();
+#endif
 } // End of Java_jpigpio_Pigpio_gpioInitialize
 
 /*
@@ -208,7 +210,7 @@ void JNICALL Java_jpigpio_Pigpio_i2cWriteDevice(JNIEnv *env, jobject obj, jint h
 	unsigned count = (*env)->GetArrayLength(env, txDataArray);
 	char *buf = malloc(count);
 
-	(*env)->GetByteArrayRegion(env, txDataArray, 0, count, (jbyte *)buf);
+	(*env)->GetByteArrayRegion(env, txDataArray, 0, count, (jbyte *) buf);
 
 	int rc = i2cWriteDevice(handle, buf, count);
 
@@ -318,7 +320,7 @@ jint JNICALL Java_jpigpio_Pigpio_spiWrite(JNIEnv *env, jobject obj, jint handle,
 	unsigned count = (*env)->GetArrayLength(env, txData);
 	char *buf = malloc(count);
 
-	(*env)->GetByteArrayRegion(env, txData, 0, count, (jbyte *)buf);
+	(*env)->GetByteArrayRegion(env, txData, 0, count, (jbyte *) buf);
 
 	int rc = spiWrite(handle, buf, count);
 
@@ -340,7 +342,7 @@ jint JNICALL Java_jpigpio_Pigpio_spiXfer(JNIEnv *env, jobject obj, jint handle, 
 	char *txBuf = malloc(count);
 	char *rxBuf = malloc(count);
 
-	(*env)->GetByteArrayRegion(env, txData, 0, count, (jbyte *)txBuf);
+	(*env)->GetByteArrayRegion(env, txData, 0, count, (jbyte *) txBuf);
 
 	int rc = spiXfer(handle, txBuf, rxBuf, count);
 
@@ -357,7 +359,7 @@ jint JNICALL Java_jpigpio_Pigpio_spiXfer(JNIEnv *env, jobject obj, jint handle, 
 		strcpy(strRXData, "");
 		char strByte[10];
 		unsigned int i;
-		for (i=0; i<count; i++) {
+		for (i = 0; i < count; i++) {
 			sprintf(strByte, "0x%x ", txBuf[i]);
 			strcat(strTXData, strByte);
 			sprintf(strByte, "0x%x ", rxBuf[i]);
@@ -368,7 +370,7 @@ jint JNICALL Java_jpigpio_Pigpio_spiXfer(JNIEnv *env, jobject obj, jint handle, 
 	}
 #endif
 	// Verified that parms are env, target array, start index, number of bytes, source buffer
-	(*env)->SetByteArrayRegion(env, rxData, 0, count, (jbyte *)rxBuf);
+	(*env)->SetByteArrayRegion(env, rxData, 0, count, (jbyte *) rxBuf);
 	free(rxBuf);
 	free(txBuf);
 	return rc;
@@ -377,6 +379,81 @@ jint JNICALL Java_jpigpio_Pigpio_spiXfer(JNIEnv *env, jobject obj, jint handle, 
 void JNICALL Java_jpigpio_Pigpio_setDebug(JNIEnv *env, jobject obj, jboolean state) {
 	debug = state;
 }
+
+/**
+ * Pulse a named pin and then wait for a response on a different pin.  The output pin should already
+ * have a PI_OUTPUT mode and the input pin should already have a PI_INPUT mode.  The wait duration is in
+ * microseconds.  The pulse hold duration is how long (in microseconds) the pulse should be held for.  The
+ * default is to pulse the output high and then return low however if the pulseLow flag is set the inverse
+ * will happen (pulse the output low and then return high).
+ *
+ * The return is how long we waited for the pulse measured in microseconds.  If no response is received, we
+ * return -1 to indicate a timeout.
+ * @param outGpio The pin on which the output pulse will occur.
+ * @param inGpio The pin on which the input pulse will be sought.
+ * @param waitDuration The maximum time to wait in microseconds.
+ * @param pulseHoldDuration The time to hold the output pulse in microseconds.
+ * @param pulseLow True if the pulse should be a low pulse otherwise a high pulse will be sent.
+ * @return The time in microseconds waiting for a pulse or -1 to signfify a timeout.
+ */
+
+/*
+ * Class:     jpigpio_Pigpio
+ * Method:    gpioxPulseAndWait
+ * Signature: (IIJJZ)J
+ */
+jlong JNICALL Java_jpigpio_Pigpio_gpioxPulseAndWait(JNIEnv *env, jobject obj, //
+		jint outGpio, jint inGpio, jlong waitDuration, jlong pulseHoldDuration, jboolean pulseLow) {
+	unsigned outLevel;
+	long start;
+
+#ifdef DEBUG
+	char text[1024];
+	sprintf(text, "gpioxPulseAndWait(outGpio=%d, inGpio=%d, waitDuration=%ld, pulseHoldDuration=%ld, pulseLow=%d)", //
+			outGpio, inGpio, (long) waitDuration, (long) pulseHoldDuration, pulseLow);
+	logDebug(text);
+#endif
+	// Determine if the output pulse should be high or low.
+	if (pulseLow) {
+		outLevel = PI_LOW;
+	} else {
+		outLevel = PI_HIGH;
+	}
+
+	// Pulse the output pin for the correct duration
+	gpioWrite(outGpio, outLevel);
+	gpioDelay(pulseHoldDuration);
+	gpioWrite(outGpio, invert(outLevel));
+
+	// Loop until we have waited long enough or the input changes
+	int state = 1;
+	// 1 = Looking for high
+	// 2 = looking for low
+
+	// Loop until high
+	// Start a timer
+	// Loop until low
+	// return now - start timer
+	long waitStart = gpioTick();
+	//printf("%ld\n",gpioTick() - waitStart );
+	while ((gpioTick() - waitStart) < waitDuration) {
+		//printf("%ld\n",gpioTick() - waitStart );
+		if (state == 1) {
+			if (gpioRead(inGpio) == PI_HIGH) {
+				state = 2;
+				start = gpioTick();
+			}
+		} // End of state == 1
+		else if (state == 2) {
+			if (gpioRead(inGpio) == PI_LOW) {
+				return gpioTick() - start;
+			}
+		} // End of state == 2
+	} // End while loop because we timed out
+
+	// We didn't get a response in time.
+	return -1;
+} // End of Java_jpigpio_Pigpio_gpioxPulseAndWait
 
 /**
  * A callback function that is invoked when a gpioSetAlertFunc() happens.
@@ -412,11 +489,21 @@ void alertCallback(int gpio, int level, unsigned int tick) {
 } // End of alertCallback
 
 #ifdef DEBUG
-	void logDebug(char *text) {
+void logDebug(char *text) {
+	if (debug) {
 		printf("%.6d: %s\n", gpioTick() - lastTime, text);
 		lastTime = gpioTick();
 	}
+}
 #endif
+
+unsigned invert(unsigned level) {
+	if (level == PI_HIGH) {
+		return PI_LOW;
+	}
+	return PI_HIGH;
+}
+
 /**
  * Create a new Java Exception
  */

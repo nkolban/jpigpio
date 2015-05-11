@@ -183,6 +183,14 @@ JNIEXPORT jint JNICALL Java_jpigpio_Pigpio_spiXfer
 JNIEXPORT void JNICALL Java_jpigpio_Pigpio_setDebug
   (JNIEnv *, jobject, jboolean);
 
+/*
+ * Class:     jpigpio_Pigpio
+ * Method:    gpioxPulseAndWait
+ * Signature: (IIJJZ)J
+ */
+JNIEXPORT jlong JNICALL Java_jpigpio_Pigpio_gpioxPulseAndWait
+  (JNIEnv *, jobject, jint, jint, jlong, jlong, jboolean);
+
 #ifdef __cplusplus
 }
 #endif

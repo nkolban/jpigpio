@@ -635,7 +635,7 @@ public class PigpioSocket extends CommonPigpio {
 	@Override
 	public int spiOpen(int spiChannel, int spiBaudRate, int flags) throws PigpioException {
 		// TODO Auto-generated method stub
-		return 0;
+		throw new NotImplementedException();
 	}
 
 
@@ -647,7 +647,7 @@ public class PigpioSocket extends CommonPigpio {
 	@Override
 	public void spiClose(int handle) throws PigpioException {
 		// TODO Auto-generated method stub
-		
+		throw new NotImplementedException();
 	}
 
 	
@@ -662,7 +662,7 @@ public class PigpioSocket extends CommonPigpio {
 	@Override
 	public int spiRead(int handle, byte[] data) throws PigpioException {
 		// TODO Auto-generated method stub
-		return 0;
+		throw new NotImplementedException();
 	}
 
 	/**
@@ -675,7 +675,7 @@ public class PigpioSocket extends CommonPigpio {
 	@Override
 	public int spiWrite(int handle, byte[] data) throws PigpioException {
 		// TODO Auto-generated method stub
-		return 0;
+		throw new NotImplementedException();
 	}
 
 	/**
@@ -690,13 +690,20 @@ public class PigpioSocket extends CommonPigpio {
 	@Override
 	public int spiXfer(int handle, byte[] txData, byte[] rxData) throws PigpioException {
 		// TODO Auto-generated method stub
-		return 0;
+		throw new NotImplementedException();
 	}
 
 	@Override
-	public void setDebug(boolean flag) {
+	public void setDebug(boolean flag) throws PigpioException {
 		// TODO Auto-generated method stub
+		throw new NotImplementedException();
 		
+	}
+
+	@Override
+	public long gpioxPulseAndWait(int outGpio, int inGpio, long waitDuration, long pulseHoldDuration, boolean pulseLow) throws PigpioException {
+		// TODO Auto-generated method stub
+		throw new NotImplementedException();
 	}
 
 } // End of class
