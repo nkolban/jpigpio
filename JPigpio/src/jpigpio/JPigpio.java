@@ -35,7 +35,7 @@ public interface JPigpio {
 	 * @return The state of the gpio, one of PI_HIGH or PI_LOW (or equivalents)
 	 * @throws PigpioException
 	 */
-	public int gpioRead(int gpio) throws PigpioException;
+	public boolean gpioRead(int gpio) throws PigpioException;
 
 	/**
 	 * Set the state of the gpio
@@ -158,6 +158,34 @@ public interface JPigpio {
 	 */
 	public long gpioxPulseAndWait(int outGpio, int inGpio, long waitDuration, long pulseHoldDuration, boolean pulseLow) throws PigpioException;
 
+
+	public static final int PI_GPIO2 = 2;
+	public static final int PI_GPIO3 = 3;
+	public static final int PI_GPIO4 = 4;
+	public static final int PI_GPIO5 = 5;
+	public static final int PI_GPIO6 = 6;
+	public static final int PI_GPIO7 = 7;
+	public static final int PI_GPIO8 = 8;
+	public static final int PI_GPIO9 = 9;
+	public static final int PI_GPIO10 = 10;
+	public static final int PI_GPIO11 = 11;
+	public static final int PI_GPIO12 = 12;
+	public static final int PI_GPIO13 = 13;
+	public static final int PI_GPIO14 = 14;
+	public static final int PI_GPIO15 = 15;
+	public static final int PI_GPIO16 = 16;
+	public static final int PI_GPIO17 = 17;
+	public static final int PI_GPIO18 = 18;
+	public static final int PI_GPIO19 = 19;
+	public static final int PI_GPIO20 = 20;
+	public static final int PI_GPIO21 = 21;
+	public static final int PI_GPIO22 = 22;
+	public static final int PI_GPIO23 = 23;
+	public static final int PI_GPIO24 = 24;
+	public static final int PI_GPIO25 = 25;
+	public static final int PI_GPIO26 = 26;
+	public static final int PI_GPIO27 = 27;
+
 	/* level: 0-1 */
 
 	public static final int PI_OFF = 0;
@@ -239,6 +267,17 @@ public interface JPigpio {
 	
 	public static final int PI_SPI_CHANNEL0 = 0;
 	public static final int PI_SPI_CHANNEL1 = 1;
+	
+	public static final int PI_SPI_CE0 = PI_GPIO8;
+	public static final int PI_SPI_CE1 = PI_GPIO7;
+	public static final int PI_SPI_MOSI = PI_GPIO10;
+	public static final int PI_SPI_MISO = PI_GPIO9;
+	public static final int PI_SPI_SCLK = PI_GPIO11;
+	
+	/* I2C */
+	public static final int PI_I2C1_SDA = PI_GPIO2;
+	public static final int PI_I2C1_SCL = PI_GPIO3;
+	
 
 } // End of interface
 // End of file

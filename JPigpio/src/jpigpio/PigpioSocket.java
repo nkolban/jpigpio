@@ -447,14 +447,14 @@ public class PigpioSocket extends CommonPigpio {
 	} // End of gpioSetPullUpDown
 
 	@Override
-	public int gpioRead(int pin) throws PigpioException {
+	public boolean gpioRead(int pin) throws PigpioException {
 		try {
 			writeInt(READ, pin, 0, 0);
 			int rc = readPigpioResponse();
 			if (rc < 0) {
 				throw new PigpioException(rc);
 			}
-			return rc;
+			return rc != 0;
 		} catch (IOException e) {
 			throw new PigpioException("gpioRead", e);
 		}

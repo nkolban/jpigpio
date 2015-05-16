@@ -82,7 +82,7 @@ void JNICALL Java_jpigpio_Pigpio_gpioSetMode(JNIEnv *env, jobject obj, jint gpio
  */
 jint JNICALL Java_jpigpio_Pigpio_gpioGetMode(JNIEnv *env, jobject obj, jint gpio) {
 	return gpioGetMode(gpio);
-}
+} // End of Java_jpigpio_Pigpio_gpioGetMode
 
 /*
  * Class:     jpigpio_Pigpio
@@ -95,16 +95,16 @@ void JNICALL Java_jpigpio_Pigpio_gpioSetPullUpDown(JNIEnv *env, jobject obj, jin
 		(*env)->Throw(env, createPigpioException(env, rc));
 		return;
 	}
-}
+} // End of Java_jpigpio_Pigpio_gpioSetPullUpDown
 
 /*
  * Class:     jpigpio_Pigpio
  * Method:    gpioRead
- * Signature: (I)I
+ * Signature: (I)Z
  */
-jint JNICALL Java_jpigpio_Pigpio_gpioRead(JNIEnv *env, jobject obj, jint gpio) {
+jboolean JNICALL Java_jpigpio_Pigpio_gpioRead(JNIEnv *env, jobject obj, jint gpio) {
 	return gpioRead(gpio);
-}
+} // End of Java_jpigpio_Pigpio_gpioRead
 
 /*
  * Class:     jpigpio_Pigpio

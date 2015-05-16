@@ -50,9 +50,9 @@ JNIEXPORT void JNICALL Java_jpigpio_Pigpio_gpioSetPullUpDown
 /*
  * Class:     jpigpio_Pigpio
  * Method:    gpioRead
- * Signature: (I)I
+ * Signature: (I)Z
  */
-JNIEXPORT jint JNICALL Java_jpigpio_Pigpio_gpioRead
+JNIEXPORT jboolean JNICALL Java_jpigpio_Pigpio_gpioRead
   (JNIEnv *, jobject, jint);
 
 /*

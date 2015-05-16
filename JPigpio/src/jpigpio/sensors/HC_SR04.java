@@ -29,8 +29,8 @@ public class HC_SR04 {
 	
 	
 	/**
-	 * 
-	 * @return
+	 * Get the sensor measured distance to the target in meters.
+	 * @return The distance to the target in meters or -1 if not determined.
 	 * @throws PigpioException
 	 */
 	public double getMetricDistance() throws PigpioException {

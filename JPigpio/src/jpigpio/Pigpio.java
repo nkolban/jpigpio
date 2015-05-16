@@ -23,7 +23,7 @@ public class Pigpio extends CommonPigpio {
 	public native void gpioSetPullUpDown(int pin, int pud) throws PigpioException;
 
 	@Override
-	public native int gpioRead(int pin) throws PigpioException;
+	public native boolean gpioRead(int pin) throws PigpioException;
 
 	@Override
 	public native void gpioWrite(int pin, boolean value) throws PigpioException;
