@@ -7,29 +7,41 @@ import jpigpio.Utils;
 public class SPI {
 	private int handle;
 	private JPigpio pigpio;
-	
+	private boolean debug;
+
 	public SPI(JPigpio pigpio, int channel, int baudRate, int flags) throws PigpioException {
 		this.pigpio = pigpio;
+		this.debug = false;
 		handle = pigpio.spiOpen(channel, baudRate, flags);
-	}
-	
+	} // End of constructor
+
 	public void close() throws PigpioException {
 		pigpio.spiClose(handle);
-	}
+	} // End of close
+
 	public void read(byte data[]) throws PigpioException {
 		pigpio.spiRead(handle, data);
-		System.out.println("spiRead: " + Utils.dumpData(data));
-	}
-	
+		if (debug) {
+			System.out.println("spiRead: " + Utils.dumpData(data));
+		}
+	} // End of read
+
 	public void write(byte data[]) throws PigpioException {
-		System.out.println("spiWrite: " + Utils.dumpData(data));
+		if (debug) {
+			System.out.println("spiWrite: " + Utils.dumpData(data));
+		}
 		pigpio.spiWrite(handle, data);
-	}
-	
+
+	} // End of write
+
 	public void xfer(byte txData[], byte rxData[]) throws PigpioException {
-		System.out.print("xfer: " + Utils.dumpData(txData));
+		if (debug) {
+			System.out.print("xfer: " + Utils.dumpData(txData));
+		}
 		pigpio.spiXfer(handle, txData, rxData);
-		System.out.println(" " + Utils.dumpData(rxData));
-	}
+		if (debug) {
+			System.out.println(" " + Utils.dumpData(rxData));
+		}
+	} // End of xfer
 } // End of class
 // End of file

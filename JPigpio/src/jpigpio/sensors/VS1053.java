@@ -1,7 +1,10 @@
 package jpigpio.sensors;
 
+import java.io.File;
+import java.io.IOException;
+
+import jpigpio.FileIO;
 import jpigpio.JPigpio;
-import jpigpio.Pigpio;
 import jpigpio.PigpioException;
 import jpigpio.Utils;
 import jpigpio.impl.SPI;
@@ -90,15 +93,15 @@ public class VS1053 {
 
 	/* SCI_STATUS bits */
 
-	private final int SS_REFERENCE_SEL_B = 0;/* VS1063, VS1053 */
-	private final int SS_AD_CLOCK_B = 1;/* VS1063, VS1053 */
+	private final int SS_REFERENCE_SEL_B = 0;
+	private final int SS_AD_CLOCK_B = 1;
 	private final int SS_APDOWN1_B = 2;
 	private final int SS_APDOWN2_B = 3;
 	private final int SS_VER_B = 4;
-	private final int SS_VCM_DISABLE_B = 10;/* VS1063, VS1053 */
-	private final int SS_VCM_OVERLOAD_B = 11;/* VS1063, VS1053 */
-	private final int SS_SWING_B = 12;/* VS1063, VS1053 */
-	private final int SS_DO_NOT_JUMP_B = 15; /* VS1063, VS1053 */
+	private final int SS_VCM_DISABLE_B = 10;
+	private final int SS_VCM_OVERLOAD_B = 11;
+	private final int SS_SWING_B = 12;
+	private final int SS_DO_NOT_JUMP_B = 15;
 
 	private final int SS_REFERENCE_SEL = (1 << 0); /* VS1063, VS1053 */
 	private final int SS_AVOL = (1 << 0); /* VS1033, VS1003, VS1103, VS1011 */
@@ -130,70 +133,59 @@ public class VS1053 {
 
 	// /* SCI_BASS bits */
 	//
-	// #define ST_AMPLITUDE_B 12
-	// #define ST_FREQLIMIT_B 8
-	// #define SB_AMPLITUDE_B 4
-	// #define SB_FREQLIMIT_B 0
-	//
-	// #define ST_AMPLITUDE (1<<12)
-	// #define ST_FREQLIMIT (1<< 8)
-	// #define SB_AMPLITUDE (1<< 4)
-	// #define SB_FREQLIMIT (1<< 0)
-	//
-	// #define ST_AMPLITUDE_BITS 4
-	// #define ST_AMPLITUDE_MASK 0xf000
-	// #define ST_FREQLIMIT_BITS 4
-	// #define ST_FREQLIMIT_MASK 0x0f00
-	// #define SB_AMPLITUDE_BITS 4
-	// #define SB_AMPLITUDE_MASK 0x00f0
-	// #define SB_FREQLIMIT_BITS 4
-	// #define SB_FREQLIMIT_MASK 0x000f
+	private final int ST_AMPLITUDE_B = 12;
+	private final int ST_FREQLIMIT_B = 8;
+	private final int SB_AMPLITUDE_B = 4;
+	private final int SB_FREQLIMIT_B = 0;
+
+	private final int ST_AMPLITUDE = (1 << 12);
+	private final int ST_FREQLIMIT = (1 << 8);
+	private final int SB_AMPLITUDE = (1 << 4);
+	private final int SB_FREQLIMIT = (1 << 0);
+
+	private final int ST_AMPLITUDE_BITS = 4;
+	private final int ST_AMPLITUDE_MASK = 0xf000;
+	private final int ST_FREQLIMIT_BITS = 4;
+	private final int ST_FREQLIMIT_MASK = 0x0f00;
+	private final int SB_AMPLITUDE_BITS = 4;
+	private final int SB_AMPLITUDE_MASK = 0x00f0;
+	private final int SB_FREQLIMIT_BITS = 4;
+	private final int SB_FREQLIMIT_MASK = 0x000f;
 	//
 	//
 	// /* SCI_CLOCKF bits */
 	//
-	// #define SC_MULT_B 13 /* VS1063, VS1053, VS1033, VS1103, VS1003 */
-	// #define SC_ADD_B 11 /* VS1063, VS1053, VS1033, VS1003 */
-	// #define SC_FREQ_B 0 /* VS1063, VS1053, VS1033, VS1103, VS1003 */
-	//
-	// #define SC_MULT (1<<13) /* VS1063, VS1053, VS1033, VS1103, VS1003 */
-	// #define SC_ADD (1<<11) /* VS1063, VS1053, VS1033, VS1003 */
-	// #define SC_FREQ (1<< 0) /* VS1063, VS1053, VS1033, VS1103, VS1003 */
-	//
-	// #define SC_MULT_BITS 3
-	// #define SC_MULT_MASK 0xe000
-	// #define SC_ADD_BITS 2
-	// #define SC_ADD_MASK 0x1800
-	// #define SC_FREQ_BITS 11
-	// #define SC_FREQ_MASK 0x07ff
+	private final int SC_MULT_B = 13; /* VS1063, VS1053, VS1033, VS1103, VS1003 */
+	private final int SC_ADD_B = 11; /* VS1063, VS1053, VS1033, VS1003 */
+	private final int SC_FREQ_B = 0; /* VS1063, VS1053, VS1033, VS1103, VS1003 */
+
+	private final int SC_MULT = (1 << 13); /* VS1063, VS1053, VS1033, VS1103, VS1003 */
+	private final int SC_ADD = (1 << 11); /* VS1063, VS1053, VS1033, VS1003 */
+	private final int SC_FREQ = (1 << 0); /* VS1063, VS1053, VS1033, VS1103, VS1003 */
+
+	private final int SC_MULT_BITS = 3;
+	private final int SC_MULT_MASK = 0xe000;
+	private final int SC_ADD_BITS = 2;
+	private final int SC_ADD_MASK = 0x1800;
+	private final int SC_FREQ_BITS = 11;
+	private final int SC_FREQ_MASK = 0x07ff;
 	//
 	// /* The following macro is for VS1063, VS1053, VS1033, VS1003, VS1103.
 	// Divide hz by two when calling if SM_CLK_RANGE = 1 */
 	// #define HZ_TO_SC_FREQ(hz) (((hz)-8000000+2000)/4000)
 	//
-	// /* The following macro is for VS1011.
-	// The macro will automatically set the clock doubler if XTALI < 16 MHz */
-	// #define HZ_TO_SCI_CLOCKF(hz) ((((hz)<16000000)?0x8000:0)+((hz)+1000)/2000)
+
 	//
-	// /* Following are for VS1003 and VS1033 */
-	// #define SC_MULT_03_10X 0x0000
-	// #define SC_MULT_03_15X 0x2000
-	// #define SC_MULT_03_20X 0x4000
-	// #define SC_MULT_03_25X 0x6000
-	// #define SC_MULT_03_30X 0x8000
-	// #define SC_MULT_03_35X 0xa000
-	// #define SC_MULT_03_40X 0xc000
-	// #define SC_MULT_03_45X 0xe000
 	//
 	// /* Following are for VS1053 and VS1063 */
-	// #define SC_MULT_53_10X 0x0000
-	// #define SC_MULT_53_20X 0x2000
-	// #define SC_MULT_53_25X 0x4000
-	// #define SC_MULT_53_30X 0x6000
-	// #define SC_MULT_53_35X 0x8000
-	// #define SC_MULT_53_40X 0xa000
-	// #define SC_MULT_53_45X 0xc000
-	// #define SC_MULT_53_50X 0xe000
+	// private final int SC_MULT_53_10X= 0x0000;
+	// private final int SC_MULT_53_20X =0x2000;
+	// private final int SC_MULT_53_25X =0x4000;
+	// private final int SC_MULT_53_30X =0x6000;
+	// private final int SC_MULT_53_35X =0x8000;
+	// private final int SC_MULT_53_40X =0xa000;
+	// private final int SC_MULT_53_45X =0xc000;
+	// private final int SC_MULT_53_50X =0xe000;
 	//
 	// /* Following are for VS1003 and VS1033 */
 	// #define SC_ADD_03_00X 0x0000
@@ -221,8 +213,6 @@ public class VS1053 {
 	// #define SCI_WRAM_Y_OFFSET 0x4000
 	// #define SCI_WRAM_I_OFFSET 0x8000
 	// #define SCI_WRAM_IO_OFFSET 0x0000 /* I/O addresses are @0xC000 -> no offset */
-	// #define SCI_WRAM_PARAMETRIC_OFFSET (0xC0C0-0x1E00) /* VS1063 */
-	// #define SCI_WRAM_Y2_OFFSET 0x0000 /* VS1063 */
 	//
 	//
 	// /* SCI_VOL bits */
@@ -238,113 +228,6 @@ public class VS1053 {
 	// #define SV_RIGHT_BITS 8
 	// #define SV_RIGHT_MASK 0x00FF
 	//
-	//
-	// /* SCI_MIXERVOL bits for VS1103 */
-	//
-	// #define SMV_ACTIVE_B 15
-	// #define SMV_GAIN3_B 10
-	// #define SMV_GAIN2_B 5
-	// #define SMV_GAIN1_B 0
-	//
-	// #define SMV_ACTIVE (1<<15)
-	// #define SMV_GAIN3 (1<<10)
-	// #define SMV_GAIN2 (1<< 5)
-	// #define SMV_GAIN1 (1<< 0)
-	//
-	// #define SMV_GAIN3_BITS 5
-	// #define SMV_GAIN3_MASK 0x7c00
-	// #define SMV_GAIN2_BITS 5
-	// #define SMV_GAIN2_MASK 0x04e0
-	// #define SMV_GAIN1_BITS 5
-	// #define SMV_GAIN1_MASK 0x001f
-	//
-	//
-	// /* SCI_ADPCMRECCTL bits for VS1103 */
-	//
-	// #define SARC_DREQ512_B 8
-	// #define SARC_OUTODADPCM_B 7
-	// #define SARC_MANUALGAIN_B 6
-	// #define SARC_GAIN4_B 0
-	//
-	// #define SARC_DREQ512 (1<<8)
-	// #define SARC_OUTODADPCM (1<<7)
-	// #define SARC_MANUALGAIN (1<<6)
-	// #define SARC_GAIN4 (1<<0)
-	//
-	// #define SARC_GAIN4_BITS 6
-	// #define SARC_GAIN4_MASK 0x003f
-	//
-	//
-	// /* SCI_RECQUALITY bits for VS1063 */
-	//
-	// #define RQ_MODE_B 14
-	// #define RQ_MULT_B 12
-	// #define RQ_OGG_PAR_SERIAL_NUMBER_B 11
-	// #define RQ_OGG_LIMIT_FRAME_LENGTH_B 10
-	// #define RQ_MP3_NO_BIT_RESERVOIR_B 10
-	// #define RQ_BITRATE_BASE_B 0
-	//
-	// #define RQ_MODE (1<<14)
-	// #define RQ_MULT (1<<12)
-	// #define RQ_OGG_PAR_SERIAL_NUMBER (1<<11)
-	// #define RQ_OGG_LIMIT_FRAME_LENGTH (1<<10)
-	// #define RQ_MP3_NO_BIT_RESERVOIR (1<<10)
-	// #define RQ_BITRATE_BASE (1<< 0)
-	//
-	// #define RQ_MODE_BITS 2
-	// #define RQ_MODE_MASK 0xc000
-	// #define RQ_MULT_BITS 2
-	// #define RQ_MULT_MASK 0x3000
-	// #define RQ_BITRATE_BASE_BITS 9
-	// #define RQ_BITRATE_BASE_MASK 0x01ff
-	//
-	// #define RQ_MODE_QUALITY 0x0000
-	// #define RQ_MODE_VBR 0x4000
-	// #define RQ_MODE_ABR 0x8000
-	// #define RQ_MODE_CBR 0xc000
-	//
-	// #define RQ_MULT_10 0x0000
-	// #define RQ_MULT_100 0x1000
-	// #define RQ_MULT_1000 0x2000
-	// #define RQ_MULT_10000 0x3000
-	//
-	//
-	// /* SCI_RECMODE bits for VS1063 */
-	//
-	// #define RM_63_CODEC_B 15
-	// #define RM_63_AEC_B 14
-	// #define RM_63_UART_TX_B 13
-	// #define RM_63_PAUSE_B 11
-	// #define RM_63_NO_RIFF_B 10
-	// #define RM_63_FORMAT_B 4
-	// #define RM_63_ADC_MODE_B 0
-	//
-	// #define RM_63_CODEC (1<<15)
-	// #define RM_63_AEC (1<<14)
-	// #define RM_63_UART_TX (1<<13)
-	// #define RM_63_PAUSE (1<<11)
-	// #define RM_63_NO_RIFF (1<<10)
-	// #define RM_63_FORMAT (1<< 4)
-	// #define RM_63_ADC_MODE (1<< 0)
-	//
-	// #define RM_63_FORMAT_BITS 4
-	// #define RM_63_FORMAT_MASK 0x00f0
-	// #define RM_63_ADCMODE_BITS 3
-	// #define RM_63_ADCMODE_MASK 0x0007
-	//
-	// #define RM_63_FORMAT_IMA_ADPCM 0x0000
-	// #define RM_63_FORMAT_PCM 0x0010
-	// #define RM_63_FORMAT_G711_ULAW 0x0020
-	// #define RM_63_FORMAT_G711_ALAW 0x0030
-	// #define RM_63_FORMAT_G722_ADPCM 0x0040
-	// #define RM_63_FORMAT_OGG_VORBIS 0x0050
-	// #define RM_63_FORMAT_MP3 0x0060
-	//
-	// #define RM_63_ADC_MODE_JOINT_AGC_STEREO 0x0000
-	// #define RM_63_ADC_MODE_DUAL_AGC_STEREO 0x0001
-	// #define RM_63_ADC_MODE_LEFT 0x0002
-	// #define RM_63_ADC_MODE_RIGHT 0x0003
-	// #define RM_63_ADC_MODE_MONO 0x0004
 	//
 	//
 	// /* SCI_RECMODE bits for VS1053 */
@@ -534,112 +417,233 @@ public class VS1053 {
 	private JPigpio pigpio;
 	private SPI sciSpi;
 	private SPI sdiSpi;
-	private int gpioXCS;
 	private int gpioDREQ;
 
-	public VS1053(JPigpio pigpio, int gpioXCS, int gpioDREQ) throws PigpioException {
+	private class Parameters {
+		private int version;
+		private int config1;
+		private int playSpeed;
+		private int byteRate;
+		private int endFillByte;
+
+		public void retrieve() throws PigpioException {
+			version = readRamFromAddress(0x1e02);
+			config1 = readRamFromAddress(0x1e03);
+			playSpeed = readRamFromAddress(0x1e04);
+			byteRate = readRamFromAddress(0x1e05);
+			endFillByte = readRamFromAddress(0x1e06);
+		}
+
+		@Override
+		public String toString() {
+			String ret = "";
+			ret += String.format("version: %d", version);
+			ret += String.format(", config1: %x", config1);
+			ret += String.format(", playSpeed: %d", playSpeed);
+			ret += String.format(", byteRate: %d", byteRate);
+			ret += String.format(", endFillByte: %d", endFillByte);
+			return ret;
+		}
+	};
+
+	public VS1053(JPigpio pigpio, int gpioDREQ) throws PigpioException {
 		this.pigpio = pigpio;
-		this.gpioXCS = gpioXCS;
 		this.gpioDREQ = gpioDREQ;
-		this.sciSpi = new SPI(pigpio, JPigpio.PI_SPI_CHANNEL0, JPigpio.PI_SPI_BAUD_500KHZ, 0);
-		this.sdiSpi = new SPI(pigpio, JPigpio.PI_SPI_CHANNEL1, JPigpio.PI_SPI_BAUD_500KHZ, 0);
+		this.sciSpi = new SPI(pigpio, JPigpio.PI_SPI_CHANNEL0, JPigpio.PI_SPI_BAUD_2MHZ, 0);
+		this.sdiSpi = new SPI(pigpio, JPigpio.PI_SPI_CHANNEL1, JPigpio.PI_SPI_BAUD_2MHZ, 0);
 	}
 
-//	private int readSci(int register) throws PigpioException {
-//		// setXCS(DEVICE_ENABLE);
-//		byte data[] = { READ, (byte) register };
-//		sciSpi.write(data);
-//		byte word[] = new byte[2];
-//		sciSpi.read(word);
-//		//System.out.println(String.format("sciRead: [%d] 0x%x 0x%x", register, word[0], word[1]));
-//		// setXCS(DEVICE_DISABLE);
-//		pigpio.gpioDelay(10, JPigpio.PI_MILLISECONDS);
-//		return Utils.byteWordToInt(word);
-//	} // End of readSci
-	
-	
+	/**
+	 * Read a value from a device register.
+	 * @param register The register to be read.
+	 * @return The value read from the device register (16 bits).
+	 * @throws PigpioException
+	 */
 	private int readSci(int register) throws PigpioException {
+		waitForReady();
 		byte txData[] = { READ, (byte) register, 0, 0 };
 		byte rxData[] = new byte[4];
 		sciSpi.xfer(txData, rxData);
 		byte word[] = new byte[2];
 		word[0] = rxData[2];
 		word[1] = rxData[3];
-		pigpio.gpioDelay(10, JPigpio.PI_MILLISECONDS);
 		return Utils.byteWordToInt(word);
 	} // End of readSci
 
+	/**
+	 * Write data to a device register
+	 * @param register The register to be written. 
+	 * @param value The value to be written to the register (16 bits).
+	 * @throws PigpioException
+	 */
 	private void writeSci(int register, int value) throws PigpioException {
-		// setXCS(DEVICE_ENABLE);
+		waitForReady();
 		byte data[] = { WRITE, (byte) register, (byte) ((value >>> 8) & 0xff), (byte) (value & 0xff) };
 		sciSpi.write(data);
-		// setXCS(DEVICE_DISABLE);
-		pigpio.gpioDelay(10, JPigpio.PI_MILLISECONDS);
-	}
-	
+	} // End of writeSci
+
+	/**
+	 * Write data to the SDI SPI data bus.
+	 * @param data The data to write to the SDI SPI data bus.
+	 * @throws PigpioException
+	 */
 	private void writeSdi(byte data[]) throws PigpioException {
+		waitForReady();
 		sdiSpi.write(data);
-	}
+	} // End of writeSdi
 
+	/**
+	 * Retrieve the device mode register value.
+	 * @return The value of the device mode register (16 bits).
+	 * @throws PigpioException
+	 */
 	public int getMode() throws PigpioException {
-		waitForReady();
 		return readSci(SCI_MODE);
-	}
+	} // End of getMode
+	
+	/**
+	 * Set the device mode register to a supplied value.
+	 * @param value The value to be placed in the mode register (16 bits).
+	 * @throws PigpioException
+	 */
+	public void setMode(int value) throws PigpioException {
+		writeSci(SCI_MODE, value);
+	} // End of setMode
 
+	/**
+	 * Retrieve the status register of the device.
+	 * @return The status register of the device (16 bits).
+	 * @throws PigpioException
+	 */
 	public int getStatus() throws PigpioException {
-		waitForReady();
 		return readSci(SCI_STATUS);
-	}
+	} // End of getStatus
 
 	public int getAudata() throws PigpioException {
-		waitForReady();
 		return readSci(SCI_AUDATA);
-	}
+	} // End of getAudata
 	
+	public void setAudata(int value) throws PigpioException {
+		writeSci(SCI_AUDATA, value);
+	} // End of setAudata
+
+	/**
+	 * Read the volume register of the device.
+	 * @return The volume register of the device (16 bits).
+	 * @throws PigpioException
+	 */
 	public int getVolume() throws PigpioException {
-		waitForReady();
 		return readSci(SCI_VOL);
-	}
+	} // End of getVolume
 	
+	/**
+	 * A volume value is replicated in the high and low bytes of the volume word
+	 * @param value The byte value of the volume
+	 * @throws PigpioException
+	 */
+	public void setVolume(int value) throws PigpioException {
+		int newValue = (value & 0xff) << 8 | (value & 0xff);
+		writeSci(SCI_VOL, newValue);
+	} // End of setVolume
+	
+
+	/**
+	 * Read the ClockF register of the device.
+	 * @return The ClockF register of the device (16 bits).
+	 * @throws PigpioException
+	 */
+	public int getClockF() throws PigpioException {
+		return readSci(SCI_CLOCKF);
+	} // End of getClockF
+	
+	/**
+	 * Set the ClockF value.
+	 * @param value The value of the ClockF register to be set.
+	 * @throws PigpioException
+	 */
+	public void setClockF(int value) throws PigpioException {
+		writeSci(SCI_CLOCKF, value);
+	} // End of setClockF
+
+	/**
+	 * Get the Bass register value.
+	 * @return The value of the Bass register.
+	 * @throws PigpioException
+	 */
 	public int getBass() throws PigpioException {
 		waitForReady();
 		return readSci(SCI_BASS);
-	}
-	
-	public void setVolume(int value) throws PigpioException {
-		waitForReady();
-		writeSci(SCI_VOL, value);
-	}
-	
+	} // End of getBass
+
+	/**
+	 * Set the Line vs Mic mode.  A value of true sets Line mode while a value of
+	 * false sets Mic mode.
+	 * @param value The mode to use.  True means use line input while false means use
+	 * Mic input.
+	 * @throws PigpioException
+	 */
 	public void setLine(boolean value) throws PigpioException {
-		waitForReady();
 		if (value) {
-			writeSci(SCI_MODE, Utils.setBit(getMode(), SM_LINE1_B));
+			setMode(Utils.setBit(getMode(), SM_LINE1_B));
 		} else {
-			writeSci(SCI_MODE, Utils.clearBit(getMode(), SM_LINE1_B));
+			setMode(Utils.clearBit(getMode(), SM_LINE1_B));
 		}
-	}
+	} // End of setLine
+	
+	/**
+	 * Enable or disable the test mode of the device.
+	 * @param mode True to enable the test mode and false to disable.
+	 * @throws PigpioException
+	 */
+	public void setTestMode(boolean mode) throws PigpioException {
+		if (mode) {
+			setMode(Utils.setBit(getMode(), SM_TESTS_B));
+		} else {
+			setMode(Utils.clearBit(getMode(), SM_TESTS_B));
+		}
+	} // End of setTestMode
 
-	private void setXCS(boolean value) throws PigpioException {
-		pigpio.gpioWrite(gpioXCS, value);
-	}
-
+	/**
+	 * Wait for the DREQ to signal that the device is ready for more work.
+	 * @throws PigpioException
+	 */
 	public void waitForReady() throws PigpioException {
 		while (!isReady()) {
 			// Loop
+			//pigpio.gpioDelay(5, JPigpio.PI_MILLISECONDS);
 		}
-	}
+	} // End of waitForReady
 
+	/**
+	 * Determine if the DREQ flags that the device is ready for more work.
+	 * @return True if the device is ready for more work.
+	 * @throws PigpioException
+	 */
 	private boolean isReady() throws PigpioException {
+		// The DREQ pin goes low when the device is busy and high when it is idle.
 		return pigpio.gpioRead(gpioDREQ);
-	}
-	
-	public void softReset() throws PigpioException {
-		waitForReady();
-		writeSci(SCI_MODE, Utils.setBit(getMode(), SM_RESET_B));
-		waitForReady();
-	}
+	} // End of isReady
 
+	/**
+	 * Perform a soft reset of the device.
+	 * @throws PigpioException
+	 */
+	public void softReset() throws PigpioException {
+		// The device can be "soft reset" by setting the SM_RESET bit of the mode register.
+		setMode(Utils.setBit(getMode(), SM_RESET_B));
+	} // End of softRest
+
+	/**
+	 * Format a data value into a string.  The data value will be data returned from one of
+	 * the registers that can be formated.
+	 * @param value The value of a register.
+	 * @param type The type of the register that is to be formatted.  One of:
+	 * <ul>
+	 * <li>AUDATA</li>
+	 * <li>MODE</li>
+	 * </ul>
+	 * @return
+	 */
 	public String format(int value, String type) {
 		long unsignedData = Integer.toUnsignedLong(value);
 		String ret = "";
@@ -650,7 +654,7 @@ public class VS1053 {
 			} else {
 				ret += "Mono";
 			}
-			return value + ": " + (unsignedData & ~0b1) + " " + ret;
+			return String.format("(0x%x): %dHz %s", unsignedData, (unsignedData & ~0b1), ret);
 		case "MODE":
 			if (Utils.isSet(value, SM_DIFF_B)) {
 				ret += "Left_Channel_Inverted";
@@ -663,6 +667,19 @@ public class VS1053 {
 			if (Utils.isSet(value, SM_TESTS_B)) {
 				ret += " SDI_Tests_allowed";
 			}
+			if (Utils.isSet(value, SM_STREAM_B)) {
+				ret += " Streaming";
+			}
+			if (Utils.isSet(value, SM_DACT_B)) {
+				ret += " DCLK_Active_Edge_Falling";
+			} else {
+				ret += " DCLK_Active_Edge_Rising";
+			}
+			if (Utils.isSet(value, SM_SDIORD_B)) {
+				ret += " LSB_First";
+			} else {
+				ret += " MSB_First";
+			}
 			if (Utils.isSet(value, SM_SDISHARE_B)) {
 				ret += " Share_SPI_Select";
 			}
@@ -672,19 +689,7 @@ public class VS1053 {
 			if (Utils.isSet(value, SM_ADPCM_B)) {
 				ret += " PCM/ADPCM_Recording_Active";
 			}
-			if (Utils.isSet(value, SM_STREAM_B)) {
-				ret += " Strean_Mode";
-			}
-			if (Utils.isSet(value, SM_SDIORD_B)) {
-				ret += " MSB_Last";
-			} else {
-				ret += " MSB_First";
-			}
-			if (Utils.isSet(value, SM_DACT_B)) {
-				ret += " DCLK_Active_Edge_Falling";
-			} else {
-				ret += " DCLK_Active_Edge_Rising";
-			}
+
 			if (Utils.isSet(value, SM_LINE1_B)) {
 				ret += " LINE1";
 			} else {
@@ -702,35 +707,152 @@ public class VS1053 {
 			return Utils.int16ToBinary(value);
 		}
 	}
-	
+
+	/**
+	 * Perform the sine test
+	 * @throws PigpioException
+	 */
 	public void startSineTest() throws PigpioException {
-		waitForReady();
-		byte data[] = {0x53, (byte)0xEF, 0x63, 126, 0,0,0,0};
+		byte data[] = { 0x53, (byte) 0xEF, 0x63, 126, 0, 0, 0, 0 };
 		writeSdi(data);
-	}
-	
+	} // End of startSineTest
+
+	/**
+	 * End the sine test
+	 * @throws PigpioException
+	 */
 	public void endSineTest() throws PigpioException {
-		waitForReady();
-		byte data[] = {0x45, (byte)0x78, 0x69, 0x74, 0,0,0,0};
+		byte data[] = { 0x45, (byte) 0x78, 0x69, 0x74, 0, 0, 0, 0 };
 		writeSdi(data);
-	}
+	} // End of endSineTest
+
 	
+	/**
+	 * Perform a memory test
+	 * @throws PigpioException
+	 */
 	public void memoryTest() throws PigpioException {
-		waitForReady();
-		byte data[] = {0x4D, (byte)0xEA, 0x6D, 0x54, 0,0,0,0};
+		byte data[] = { 0x4D, (byte) 0xEA, 0x6D, 0x54, 0, 0, 0, 0 };
 		writeSdi(data);
-		pigpio.gpioDelay(1, JPigpio.PI_SECONDS);
+		pigpio.gpioDelay(5, JPigpio.PI_SECONDS);
 		int val = readSci(SCI_HDAT0);
-		System.out.println("memoryTest: " + val);
-	}
-	
-	public void setTestMode(boolean mode) throws PigpioException {
-		waitForReady();
-		if (mode) {
-			writeSci(SCI_MODE, Utils.setBit(getMode(), SM_TESTS_B));
-		} else {
-			writeSci(SCI_MODE, Utils.clearBit(getMode(), SM_TESTS_B));
+		System.out.println(String.format("memoryTest: 0x%x", val));
+	} // End of memoryTest
+
+
+
+	/**
+	 * Set the address pointer for the next read or write of Ram operation.
+	 * @param address The address to be used to set the Ram pointer.
+	 * @throws PigpioException
+	 */
+	private void setRWAddress(int address) throws PigpioException {
+		writeSci(SCI_WRAMADDR, address);
+	} // End of setRWAddress
+
+	/**
+	 * Read 16 bits of data from a specific Ram address.
+	 * @param address The address of memory from which to read Ram.
+	 * @return 16 bits of data read from the Ram address.
+	 * @throws PigpioException
+	 */
+	private int readRamFromAddress(int address) throws PigpioException {
+		setRWAddress(address);
+		return readRam();
+	} // End of readRamFromAddress
+
+	/**
+	 * Write 16 bits of Ram data to the current Ram address.
+	 * @param value 16 bits of data.
+	 * @throws PigpioException
+	 */
+	private void writeRam(int value) throws PigpioException {
+		writeSci(SCI_WRAM, value);
+	} // End of writeRam
+
+	/**
+	 * Read Ram from the current Ram pointer.
+	 * @return 16 bits of Ram data.
+	 * @throws PigpioException
+	 */
+	private int readRam() throws PigpioException {
+		return readSci(SCI_WRAM);
+	} // End of readRam
+
+	/**
+	 * The LCtech board contains a design flaw. The GPIO 0 and 1 pins are not connected and appear to float high. What this means is that the device enters Midi mode on boot.
+	 * Correctly, these pins should be set low. One way to achieve this is to physically solder the pins but that is difficult. An alternate is the recipe found in the forum which
+	 * is to set the GPIO pins to output and explicitly set their values to 0 (low).
+	 * 
+	 * See the following for details: http://www.bajdi.com/lcsoft-vs1053-mp3-module/
+	 * 
+	 * @throws PigpioException
+	 */
+	public void disableMidi() throws PigpioException {
+		// Get current values
+		int value = getAudata();
+		if (value != 0xac45) {
+			System.out.println("Skipping midi setup");
+			return;
 		}
-	}
+		setRWAddress(0xc017);
+		value = readSci(SCI_WRAM);
+		System.out.println(String.format("Current GPIO direction: %s", Utils.int16ToBinary(value)));
+		setRWAddress(0xc019);
+		value = readSci(SCI_WRAM);
+		System.out.println(String.format("Current GPIO values: %s", Utils.int16ToBinary(value)));
+		setRWAddress(0xc017);
+		writeRam(0b11);
+		setRWAddress(0xc019);
+		writeRam(0b00);
+		softReset();
+	} // End of disableMidi
+
+	public void dump() throws PigpioException {
+		int mode = getMode();
+		System.out.println("Mode: " + Utils.int16ToBinary(mode));
+		System.out.println("Mode: " + format(mode, "MODE"));
+		System.out.println("Status: " + Utils.int16ToBinary(getStatus()));
+
+		int audata = getAudata();
+		System.out.println("Audata: " + Utils.int16ToBinary(audata));
+		System.out.println("Audata: " + format(audata, "AUDATA"));
+		System.out.println("Volume: " + Utils.int16ToBinary(getVolume()));
+		System.out.println("Bass: " + Utils.int16ToBinary(getBass()));
+		System.out.println("ClockF: " + Utils.int16ToBinary(getClockF()));
+		Parameters parameters = new Parameters();
+		parameters.retrieve();
+		System.out.println("Parameters: " + parameters);
+		System.out.println("---");
+	} // End of dump
+
+	/**
+	 * Play a data file through the device.
+	 * @param file The file to play.
+	 * @throws PigpioException
+	 */
+	public void playFile(File file) throws PigpioException {
+		FileIO fileIO = new FileIO(file);
+		long start = pigpio.gpioTick();
+		try {
+			System.out.println("Playing audio file: " + file);
+			while (true) {
+				byte data[] = fileIO.read(32);
+				if (data.length == 0) {
+					break;
+				}
+				writeSdi(data);
+				if ((pigpio.gpioTick() - start) > (5 * 1000 * 1000)) {
+					dump();
+					start = pigpio.gpioTick();
+				}
+			}
+			fileIO.close();
+			System.out.println("End of playing audio file.");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		System.out.println("End of audio ...");
+	} // End of playFile
 } // End of class
 // End of file
