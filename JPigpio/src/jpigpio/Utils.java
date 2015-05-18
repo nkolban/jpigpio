@@ -74,8 +74,16 @@ public class Utils {
 		return value | bitMask(bit);
 	}
 	
+	public static byte setBit(byte value, int bit) {
+		return (byte)(value | bitMask(bit));
+	}
+	
 	public static int clearBit(int value, int bit) {
 		return value & ~bitMask(bit);
+	}
+	
+	public static byte clearBit(byte value, int bit) {
+		return (byte)(value & ~bitMask(bit));
 	}
 	
 	public static int bitMask(int bit) {
@@ -85,6 +93,9 @@ public class Utils {
 	public static boolean isSet(int value, int bit) {
 		return (value & bitMask(bit)) != 0;
 	}
+	public static boolean isSet(byte value, int bit) {
+		return (value & bitMask(bit)) != 0;
+	}
 	
 	public static String dumpData(byte data[]) {
 		String ret = "";
@@ -92,6 +103,13 @@ public class Utils {
 			ret += String.format("%2x", data[i]).replace(' ', '0') + " ";
 		}
 		return ret;
+	}
+	
+	public static String bitString(boolean value) {
+		if (value) {
+			return "1";
+		}
+		return "0";
 	}
 } // End of class
 // End of file
