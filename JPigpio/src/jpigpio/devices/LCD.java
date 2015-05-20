@@ -3,6 +3,7 @@ package jpigpio.devices;
 import jpigpio.JPigpio;
 import jpigpio.PigpioException;
 import jpigpio.Utils;
+import jpigpio.WrongModeException;
 
 public class LCD {
 	private JPigpio pigpio;
@@ -71,6 +72,31 @@ public class LCD {
 		this.db5Gpio = db5;
 		this.db6Gpio = db6;
 		this.db7Gpio = db7;
+		
+		// Validate that all the pins are in the right mode
+		if (pigpio.gpioGetMode(registerSelectGpio) != JPigpio.PI_OUTPUT) {
+			throw new WrongModeException(registerSelectGpio);
+		}
+		if (pigpio.gpioGetMode(readWriteGpio) != JPigpio.PI_OUTPUT) {
+			throw new WrongModeException(readWriteGpio);
+		}
+		if (pigpio.gpioGetMode(enableGpio) != JPigpio.PI_OUTPUT) {
+			throw new WrongModeException(enableGpio);
+		}
+		if (pigpio.gpioGetMode(db4Gpio) != JPigpio.PI_OUTPUT) {
+			throw new WrongModeException(db4Gpio);
+		}
+		if (pigpio.gpioGetMode(db5Gpio) != JPigpio.PI_OUTPUT) {
+			throw new WrongModeException(db5Gpio);
+		}
+		if (pigpio.gpioGetMode(db6Gpio) != JPigpio.PI_OUTPUT) {
+			throw new WrongModeException(db6Gpio);
+		}
+		if (pigpio.gpioGetMode(db7Gpio) != JPigpio.PI_OUTPUT) {
+			throw new WrongModeException(db7Gpio);
+		}
+		
+		
 		this.displayMode = LCD_DISPLAYCONTROL | LCD_DISPLAYON | LCD_CURSOROFF | LCD_BLINKOFF;
 		this.functionMode = LCD_FUNCTIONSET | LCD_4BITMODE | LCD_1LINE | LCD_5x10DOTS;
 		this.entryMode = LCD_ENTRYMODESET | LCD_ENTRYLEFT | LCD_ENTRYSHIFTDECREMENT;
@@ -163,21 +189,21 @@ public class LCD {
 		write(RS_INSTRUCTION, RW_WRITE, entryMode);
 	} // End of entryModeSet
 	
-	private boolean isBusy() throws PigpioException {
-		// +----+----+-----+-----+-----+-----+-----+-----+-----+-----+
-		// | RS | RW | DB7 | DB6 | DB5 | DB4 | DB3 | DB2 | DB1 | DB0 |
-		// +----+----+-----+-----+-----+-----+-----+-----+-----+-----+
-		// | 0  | 1  |  BF | AC6 | AC5 | AC4 | AC3 | AC2 | AC1 | AC0 |
-		// +----+----+-----+-----+-----+-----+-----+-----+-----+-----+
-		System.out.println("Is busy>");
-		pigpio.gpioWrite(registerSelectGpio, RS_INSTRUCTION);
-		pigpio.gpioWrite(readWriteGpio, RW_READ);
-		pigpio.gpioWrite(enableGpio, true);
-		pigpio.gpioWrite(enableGpio, false);
-		pigpio.gpioWrite(enableGpio, true);
-		pigpio.gpioWrite(enableGpio, false);
-		return pigpio.gpioRead(db7Gpio);
-	} // End of isBusy
+//	private boolean isBusy() throws PigpioException {
+//		// +----+----+-----+-----+-----+-----+-----+-----+-----+-----+
+//		// | RS | RW | DB7 | DB6 | DB5 | DB4 | DB3 | DB2 | DB1 | DB0 |
+//		// +----+----+-----+-----+-----+-----+-----+-----+-----+-----+
+//		// | 0  | 1  |  BF | AC6 | AC5 | AC4 | AC3 | AC2 | AC1 | AC0 |
+//		// +----+----+-----+-----+-----+-----+-----+-----+-----+-----+
+//		System.out.println("Is busy>");
+//		pigpio.gpioWrite(registerSelectGpio, RS_INSTRUCTION);
+//		pigpio.gpioWrite(readWriteGpio, RW_READ);
+//		pigpio.gpioWrite(enableGpio, true);
+//		pigpio.gpioWrite(enableGpio, false);
+//		pigpio.gpioWrite(enableGpio, true);
+//		pigpio.gpioWrite(enableGpio, false);
+//		return pigpio.gpioRead(db7Gpio);
+//	} // End of isBusy
 	
 	private void writeRAM(byte value) throws PigpioException {
 		System.out.println("Write RAM>");
@@ -260,5 +286,77 @@ public class LCD {
 	private boolean is8BitMode() {
 		return (functionMode & LCD_8BITMODE) != 0;
 	} // End of is8BitMode
+	
+	/**
+	 * Set the display visibility of the LCD.
+	 * @param value True means the display is shown, false means it is switched off.
+	 * @throws PigpioException
+	 */
+	public void setDisplay(boolean value) throws PigpioException {
+		if (value) {
+			displayMode |= LCD_DISPLAYON;
+		} else {
+			displayMode &= ~LCD_DISPLAYON;
+		}
+		displayModeSet();
+	} // End of setDisplay
+	
+
+	/**
+	 * Set whether or not the cursor is shown.
+	 * @param value True means the cursor is shown, false means the cursor is hidden.
+	 * @throws PigpioException
+	 */
+	public void setCursor(boolean value) throws PigpioException {
+		if (value) {
+			displayMode |= LCD_CURSORON;
+		} else {
+			displayMode &= ~LCD_CURSORON;
+		}
+		displayModeSet();
+	} // End of setCursor
+	
+	/**
+	 * Set whether or not the cursor blinks.
+	 * @param value True means the cursor blinks, false means it does not blink.
+	 * @throws PigpioException
+	 */
+	public void setBlink(boolean value) throws PigpioException {
+		if (value) {
+			displayMode |= LCD_BLINKON;
+		} else {
+			displayMode &= ~LCD_BLINKON;
+		}
+		displayModeSet();
+	} // End of setBlink
+	
+	/**
+	 * Set the number of display lines ... either 1 or 2.
+	 * @param lines The number of lines to display.
+	 * @throws PigpioException
+	 */
+	public void setLines(int lines) throws PigpioException {
+		if (lines == 2) {
+			functionMode |= LCD_2LINE;
+		} else {
+			functionMode &= ~LCD_2LINE;
+		}
+		functionModeSet();
+	} // End of setLines
+	
+	/**
+	 * Set the height of the font.  Either 8 or 10.
+	 * @param height The height of the font.  Either 8 or 10.
+	 * @throws PigpioException
+	 */
+	public void setFontHeight(int height) throws PigpioException {
+		if (height == 10) {
+			functionMode |= LCD_5x10DOTS;
+		} else {
+			functionMode &= ~LCD_5x10DOTS;
+		}
+		functionModeSet();
+	} // End of setFontHeight
+	
 } // End of class
 // End of file

@@ -21,6 +21,12 @@ public interface JPigpio {
 	 */
 	public void gpioSetMode(int gpio, int mode) throws PigpioException;
 
+	/**
+	 * Retrieve the mode of the given gpio
+	 * @param gpio The gpio to retrieve the mode
+	 * @return The mode of the gpio
+	 * @throws PigpioException
+	 */
 	public int gpioGetMode(int gpio) throws PigpioException;
 
 	public void gpioTrigger(int gpio, long pulseLen, boolean level) throws PigpioException;
