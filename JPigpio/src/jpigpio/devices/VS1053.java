@@ -1,4 +1,4 @@
-package jpigpio.sensors;
+package jpigpio.devices;
 
 import java.io.File;
 import java.io.IOException;

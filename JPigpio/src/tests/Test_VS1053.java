@@ -6,7 +6,7 @@ import jpigpio.JPigpio;
 import jpigpio.Pigpio;
 import jpigpio.PigpioException;
 import jpigpio.Utils;
-import jpigpio.sensors.VS1053;
+import jpigpio.devices.VS1053;
 
 public class Test_VS1053 {
 	private int XRESET = JPigpio.PI_GPIO20;
