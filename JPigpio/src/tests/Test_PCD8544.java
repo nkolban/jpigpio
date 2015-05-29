@@ -21,7 +21,8 @@ public class Test_PCD8544 {
 
 	private JPigpio pigpio;
 
-	private final int ASCII[][] = { { 0x00, 0x00, 0x00, 0x00, 0x00 } // 20
+	private final int ASCII[][] = { //
+			  { 0x00, 0x00, 0x00, 0x00, 0x00 } // 20
 			, { 0x00, 0x00, 0x5f, 0x00, 0x00 } // 21 !
 			, { 0x00, 0x07, 0x00, 0x07, 0x00 } // 22 "
 			, { 0x14, 0x7f, 0x14, 0x7f, 0x14 } // 23 #
@@ -186,13 +187,13 @@ public class Test_PCD8544 {
 		for (int i = 0; i < characters.length(); i++) {
 			LcdCharacter(characters.charAt(i));
 		}
-	}
+	} // End of lcdString
 
 	private void LcdWrite(boolean dc, int data) throws PigpioException {
 		pigpio.gpioWrite(PIN_DC, dc);
 		pigpio.gpioWrite(PIN_SCE, Pigpio.PI_LOW);
-		pigpio.gpioShiftOut(PIN_SDIN, PIN_SCLK, Pigpio.PI_MSBFIRST, data);
+		pigpio.gpioShiftOut(PIN_SDIN, PIN_SCLK, Pigpio.PI_MSBFIRST, (byte)data);
 		pigpio.gpioWrite(PIN_SCE, Pigpio.PI_HIGH);
-	}
+	} // End of lcdWrite
 } // End of class
 // End of file

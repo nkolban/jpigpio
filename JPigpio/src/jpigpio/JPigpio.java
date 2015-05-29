@@ -29,6 +29,14 @@ public interface JPigpio {
 	 */
 	public int gpioGetMode(int gpio) throws PigpioException;
 
+	/**
+	 * Set the specified gpio to the level specified by level for the duration specified
+	 * by pulseLen and then set the gpio back to !level.
+	 * @param gpio The GPIO pin to pulse.
+	 * @param pulseLen The duration in useconds to hold the pulse.
+	 * @param level The level to target the pulse.
+	 * @throws PigpioException
+	 */
 	public void gpioTrigger(int gpio, long pulseLen, boolean level) throws PigpioException;
 
 	public void gpioSetPullUpDown(int gpio, int pud) throws PigpioException;
@@ -54,7 +62,31 @@ public interface JPigpio {
 	 */
 	public void gpioWrite(int gpio, boolean value) throws PigpioException;
 
-	public void gpioShiftOut(int gpioData, int gpioClock, boolean bitOrder, int value) throws PigpioException;
+	/**
+	 * Shift out a byte of data to a given pin.  Note that this function is implemented in
+	 * Javacode.
+	 * @param gpioData The gpio to which to write the data.
+	 * @param gpioClock The clock gpio to pulse.
+	 * @param bitOrder The order of the bits.  Either PI_LSBFIRST or PI_MSBFIRST.
+	 * @param value The value of the byte to write.
+	 * @throws PigpioException
+	 */
+	public void gpioShiftOut(int gpioData, int gpioClock, boolean bitOrder, byte value) throws PigpioException;
+	public void gpioShiftOut(GPIO gpioData, GPIO gpioClock, boolean bitOrder, byte value) throws PigpioException;
+	
+	/**
+	 * Shift out a byte of data to a given pin.  Note that this function is implemented in
+	 * Javacode.
+	 * @param gpioData The gpio to which to write the data.
+	 * @param gpioClock The clock gpio to pulse.
+	 * @param clockLevel The value of the clock pulse
+	 * @param bitOrder The order of the bits
+	 * @param value The value of the byte to write.
+	 * @throws PigpioException
+	 */	
+	public void gpioShiftOut(int gpioData, int gpioClock, boolean clockLevel,  boolean bitOrder, byte value) throws PigpioException;
+	public void gpioShiftOut(GPIO gpioData, GPIO gpioClock, boolean clockLevel,  boolean bitOrder, byte value) throws PigpioException;
+
 
 	/**
 	 * Set the pulse width of a specific GPIO. The pulse width is in microseconds with a value between 500 and 2500 or a value of 0 to switch the servo off.

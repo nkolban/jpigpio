@@ -2,6 +2,7 @@ package jpigpio.sensors;
 
 import jpigpio.JPigpio;
 import jpigpio.PigpioException;
+import jpigpio.WrongModeException;
 
 public class HC_SR04 {
 	private JPigpio pigpio;
@@ -15,6 +16,12 @@ public class HC_SR04 {
 		this.pigpio = pigpio;
 		this.triggerGpio = triggerGpio;
 		this.echoGpio = echoGpio;
+		if (pigpio.gpioGetMode(triggerGpio) != JPigpio.PI_OUTPUT) {
+			throw new WrongModeException(triggerGpio);
+		}
+		if (pigpio.gpioGetMode(echoGpio) != JPigpio.PI_INPUT) {
+			throw new WrongModeException(echoGpio);
+		}
 	} // End of constructor
 	
 	/**

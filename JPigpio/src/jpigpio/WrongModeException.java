@@ -6,7 +6,11 @@ package jpigpio;
  */
 public class WrongModeException extends PigpioException {
 
+	/**
+	 * The pin that is flagged as being in the wrong mode.
+	 */
 	private int pin;
+	
 	/**
 	 * 
 	 */
@@ -15,15 +19,19 @@ public class WrongModeException extends PigpioException {
 	public WrongModeException(int pin) {
 		super();
 		this.pin = pin;
-	}
+	} // End of constructor
 	
+	/**
+	 * Retrieve the pin that was flagged as being in the wrong mode.
+	 * @return
+	 */
 	public int getPin() {
 		return pin;
-	}
+	} // End of getPin
 	
 	@Override
 	public String toString() {
 		return super.toString() + ": " + pin;
-	}
+	} // End of toString
 } // End of class
 // End of file

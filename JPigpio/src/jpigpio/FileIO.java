@@ -4,16 +4,24 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 
+/**
+ * A helper class for some simple file I/O activities.
+ *
+ */
 public class FileIO {
 	private File file;
 	private FileInputStream fis;
 	
+	/**
+	 * Constructor to create a wrapper to the file.
+	 * @param file The file to be accessed.
+	 */
 	public FileIO(File file) {
 		this.file = file;
 	} // End of constructor
 	
 	/**
-	 * Read up to size bytes from the file.
+	 * Read up to <pre>size</pre> bytes from the file.
 	 * @param size The maximum size of data to return
 	 * @return An array of data.  It may be zero length if there is no data available.
 	 * @throws IOException
@@ -32,6 +40,10 @@ public class FileIO {
 		return data;
 	} // End of close
 	
+	/**
+	 * Close the file.
+	 * @throws IOException
+	 */
 	public void close() throws IOException {
 		if (fis != null) {
 			fis.close();

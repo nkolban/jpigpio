@@ -1,6 +1,7 @@
 package jpigpio.devices;
 
 import jpigpio.JPigpio;
+import jpigpio.NotImplementedException;
 import jpigpio.PigpioException;
 import jpigpio.Utils;
 import jpigpio.WrongModeException;
@@ -96,7 +97,7 @@ public class LCD {
 			throw new WrongModeException(db7Gpio);
 		}
 		
-		
+		// Set up the default values for the modes of the device.
 		this.displayMode = LCD_DISPLAYCONTROL | LCD_DISPLAYON | LCD_CURSOROFF | LCD_BLINKOFF;
 		this.functionMode = LCD_FUNCTIONSET | LCD_4BITMODE | LCD_1LINE | LCD_5x10DOTS;
 		this.entryMode = LCD_ENTRYMODESET | LCD_ENTRYLEFT | LCD_ENTRYSHIFTDECREMENT;
@@ -104,9 +105,10 @@ public class LCD {
 		
 		System.out.println(String.format("registerSelect: %d\nreadWrite: %d\nenable: %d\ndb4=%d\ndb5=%d\ndb6=%d\ndb7=%d", //
 				registerSelect, readWrite, enable, db4, db5, db6, db7));
+		
 		pigpio.gpioWrite(enableGpio, false);
+		
 		init();
-		//lines(2);
 	} // End of constructor
 	
 	private void init() throws PigpioException {
@@ -179,6 +181,7 @@ public class LCD {
 		write(RS_INSTRUCTION, RW_WRITE, (byte)(0b1000000 | (address & 0b1111111)));
 	} // End of setDDRAMAddress
 	
+	
 	private void entryModeSet() throws PigpioException {
 		// +----+----+-----+-----+-----+-----+-----+-----+-----+-----+
 		// | RS | RW | DB7 | DB6 | DB5 | DB4 | DB3 | DB2 | DB1 | DB0 |
@@ -216,9 +219,6 @@ public class LCD {
 	} // End of writeRAM
 
 	private void write4bits(boolean registerSelect, boolean readWrite, byte value) throws PigpioException {
-//		while(isBusy()) {
-//			// Do nothing
-//		}
 		pigpio.gpioWrite(registerSelectGpio, registerSelect);
 		pigpio.gpioWrite(readWriteGpio, readWrite);
 		pigpio.gpioWrite(db7Gpio, Utils.isSet(value, 3));
@@ -237,15 +237,13 @@ public class LCD {
 	} // End of write
 	
 	private void write8bits(boolean registerSelect, boolean readWrite, byte value) throws PigpioException {
-//		while(isBusy()) {
-//			// Do nothing
-//		}
-		pigpio.gpioWrite(registerSelectGpio, registerSelect);
-		pigpio.gpioWrite(readWriteGpio, readWrite);
-		pigpio.gpioWrite(db7Gpio, Utils.isSet(value, 7));
-		pigpio.gpioWrite(db6Gpio, Utils.isSet(value, 6));
-		pigpio.gpioWrite(db5Gpio, Utils.isSet(value, 5));
-		pigpio.gpioWrite(db4Gpio, Utils.isSet(value, 4));
+		throw new NotImplementedException();
+//		pigpio.gpioWrite(registerSelectGpio, registerSelect);
+//		pigpio.gpioWrite(readWriteGpio, readWrite);
+//		pigpio.gpioWrite(db7Gpio, Utils.isSet(value, 7));
+//		pigpio.gpioWrite(db6Gpio, Utils.isSet(value, 6));
+//		pigpio.gpioWrite(db5Gpio, Utils.isSet(value, 5));
+//		pigpio.gpioWrite(db4Gpio, Utils.isSet(value, 4));
 //		pigpio.gpioWrite(db3Gpio, Utils.isSet(value, 3));
 //		pigpio.gpioWrite(db2Gpio, Utils.isSet(value, 2));
 //		pigpio.gpioWrite(db1Gpio, Utils.isSet(value, 1));
@@ -253,8 +251,16 @@ public class LCD {
 
 	} // End of write
 	
+	/**
+	 * Write data to LCD.
+	 * @param registerSelect
+	 * @param readWrite
+	 * @param value The value to write.
+	 * @throws PigpioException
+	 */
 	private void write(boolean registerSelect, boolean readWrite, byte value) throws PigpioException {
 		System.out.println("Write >");
+		// If we are not in 8bit mode, then write two 4 bit values using the MSBits first.
 		if (!is8BitMode()) {
 			write4bits(registerSelect, readWrite, (byte)(value >>> 4));
 			pulseEnable();
@@ -266,7 +272,12 @@ public class LCD {
 		}
 	} // End of write
 		
-		
+	
+	/**
+	 * Write a text string to the LCD.
+	 * @param text The string of text to write.
+	 * @throws PigpioException
+	 */
 	public void write(String text) throws PigpioException {
 		byte data[] = text.getBytes();
 		for (int i=0; i<data.length; i++) {
@@ -274,6 +285,10 @@ public class LCD {
 		}
 	} // End of write
 	
+	/**
+	 * Pulse the enable pin high and then bring it back low.
+	 * @throws PigpioException
+	 */
 	private void pulseEnable() throws PigpioException {
 		pigpio.gpioWrite(enableGpio, false);
 		pigpio.gpioDelay(100);
@@ -283,6 +298,10 @@ public class LCD {
 		pigpio.gpioDelay(100);
 	} // End of pulseEnable
 	
+	/**
+	 * Return true if we are in 8 bit mode and false otherwise.
+	 * @return True if we are in 8 bit mode and false otherwise
+	 */
 	private boolean is8BitMode() {
 		return (functionMode & LCD_8BITMODE) != 0;
 	} // End of is8BitMode
@@ -336,6 +355,7 @@ public class LCD {
 	 * @throws PigpioException
 	 */
 	public void setLines(int lines) throws PigpioException {
+		assert lines == 1 || lines ==2;
 		if (lines == 2) {
 			functionMode |= LCD_2LINE;
 		} else {
@@ -350,6 +370,7 @@ public class LCD {
 	 * @throws PigpioException
 	 */
 	public void setFontHeight(int height) throws PigpioException {
+		assert height == 8 || height == 10;
 		if (height == 10) {
 			functionMode |= LCD_5x10DOTS;
 		} else {

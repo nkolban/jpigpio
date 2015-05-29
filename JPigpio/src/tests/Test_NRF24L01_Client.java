@@ -8,6 +8,8 @@ import jpigpio.devices.NRF24L01;
 
 public class Test_NRF24L01_Client {
 	private NRF24L01 nrf24l01;
+	int cePin = 17;
+	int csnPin = 18;
 
 	public static void main(String args[]) {
 		System.out.println("Test_NRF24L01_Client");
@@ -26,7 +28,9 @@ public class Test_NRF24L01_Client {
 			Utils.addShutdown(pigpio);
 			nrf24l01 = new NRF24L01(pigpio);
 			p("init");
-			nrf24l01.init(17, 18);
+			pigpio.gpioSetMode(cePin, JPigpio.PI_OUTPUT);
+			pigpio.gpioSetMode(csnPin, JPigpio.PI_OUTPUT);
+			nrf24l01.init(cePin, csnPin);
 			byte rAddr[] = { 'c', 'l', 'i', 'e', '1' };
 
 			p("setRADDR");

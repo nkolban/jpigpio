@@ -1,6 +1,10 @@
 package jpigpio;
 
 public class Utils {
+	/**
+	 * Add a handler to perform a clean termination of pigpio on termination.
+	 * @param pigpio
+	 */
 	public static void addShutdown(JPigpio pigpio) {
 		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
 			try {
@@ -9,7 +13,7 @@ public class Utils {
 				e.printStackTrace();
 			}
 		}));
-	}
+	} // End of assShutdown
 	
 	public static int mapToInt(int value, int sourceLow, int sourceHigh, int targetLow, int targetHigh) {
 		double pos = (value-sourceLow)/(double)(sourceHigh - sourceLow);
@@ -41,9 +45,15 @@ public class Utils {
 		return splitBinary4(String.format("%16s", Integer.toBinaryString(value & 0xffff)).replace(' ', '0'));
 	} // End of int16ToBinary
 	
+	/**
+	 * Given an array of 2 bytes, return an int representation using the 1st byte as
+	 * the MSByte.
+	 * @param word The 2 bytes of data.
+	 * @return An int representation of the two bytes of data.
+	 */
 	public static int byteWordToInt(byte word[]) {
 		return (int)((Byte.toUnsignedLong(word[0]) << 8) | Byte.toUnsignedLong(word[1]));
-	}
+	} // End of byteWordToInt
 	
 	/**
 	 * Split a binary string into groups of 4 characters separated by spaces
@@ -70,46 +80,102 @@ public class Utils {
 		return ret;
 	} // End of splitBinary4
 	
+	/**
+	 * Set the bit within the int.
+	 * @param value The value in which to set the bit.
+	 * @param bit The bit to set.
+	 * @return The new value with the bit set.
+	 */
 	public static int setBit(int value, int bit) {
+		assert bit >=0 && bit<16;
 		return value | bitMask(bit);
-	}
+	} // End of setBit
 	
+	/**
+	 * Set the bit within the byte.
+	 * @param value The value in which to set the bit.
+	 * @param bit The bit to set.
+	 * @return The new value with the bit set.
+	 */
 	public static byte setBit(byte value, int bit) {
+		assert bit >=0 && bit<16;
 		return (byte)(value | bitMask(bit));
-	}
+	} // End of setBit
 	
+	/**
+	 * Clear the bit within the int.
+	 * @param value The value in which the bit is to be cleared.
+	 * @param bit The bit to clear.
+	 * @return The value with the bit cleared.
+	 */
 	public static int clearBit(int value, int bit) {
+		assert bit >=0 && bit<16;
 		return value & ~bitMask(bit);
-	}
+	} // End of clear bit
 	
+	/**
+	 * Clear the bit within the byte.
+	 * @param value The value in which the bit is to be cleared.
+	 * @param bit The bit to clear.
+	 * @return The value with the bit cleared.
+	 */
 	public static byte clearBit(byte value, int bit) {
+		assert bit >=0 && bit<16;
 		return (byte)(value & ~bitMask(bit));
-	}
+	} // End of clear bit
 	
+	/**
+	 * Calculate a bitmask of the bit.
+	 * @param bit The bit to be used to calculate the bitmask.
+	 * @return The value of the bitmask.
+	 */
 	public static int bitMask(int bit) {
+		assert bit >=0 && bit<16;
 		return 1<<bit;
-	}
+	} // End of bitMask
 	
+	/**
+	 * Return true if the corresponding bit of the data is set.
+	 * @param value The data to test.
+	 * @param bit The bit to examine.
+	 * @return True if the corresponding bit in the data is set.
+	 */
 	public static boolean isSet(int value, int bit) {
+		assert bit >=0 && bit<16;
 		return (value & bitMask(bit)) != 0;
-	}
-	public static boolean isSet(byte value, int bit) {
-		return (value & bitMask(bit)) != 0;
-	}
+	} // End of isSet
 	
+	/**
+	 * Return true if the corresponding bit of the data is set.
+	 * @param value The data to test.
+	 * @param bit The bit to examine.
+	 * @return True if the corresponding bit in the data is set.
+	 */
+	public static boolean isSet(byte value, int bit) {
+		assert bit >=0 && bit<16;
+		return (value & bitMask(bit)) != 0;
+	} // End of isSet
+	
+	/**
+	 * Dump an array of bytes
+	 * @param data The data to dump
+	 * @return A string representation of the data.
+	 */
 	public static String dumpData(byte data[]) {
 		String ret = "";
 		for (int i=0; i<data.length; i++) {
 			ret += String.format("%2x", data[i]).replace(' ', '0') + " ";
 		}
 		return ret;
-	}
+	} // End of dumpData
 	
+	/**
+	 * Return a string representation of "0" or "1" as the value of a boolean.
+	 * @param value A boolean to examine.
+	 * @return The string "1" is the boolean is true and "0" if the boolean is false.
+	 */
 	public static String bitString(boolean value) {
-		if (value) {
-			return "1";
-		}
-		return "0";
-	}
+		return value?"1":"0";
+	} // End of bitString
 } // End of class
 // End of file

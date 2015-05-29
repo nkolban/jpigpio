@@ -43,5 +43,12 @@ public class SPI {
 			System.out.println(" " + Utils.dumpData(rxData));
 		}
 	} // End of xfer
+	
+	public byte xfer(byte txData) throws PigpioException {
+		byte txData1[] = {txData};
+		byte rxData[] = new byte[1];
+		xfer(txData1, rxData);
+		return rxData[0];
+	}
 } // End of class
 // End of file

@@ -1,5 +1,9 @@
 package jpigpio;
 
+/**
+ * A clas sthat defines the exceptions that can be thrown by Pigpio.
+ *
+ */
 public class PigpioException extends Exception {
 
 	private int rc = -99999999;
@@ -43,10 +47,15 @@ public class PigpioException extends Exception {
 		return String.format("errorCode=%d", rc);
 	}
 	
+	/**
+	 * Retrieve the error code that was returned by the underlying Pigpio call.
+	 * @return The error code that was returned by the underlying Pigpio call.
+	 */
 	public int getErrorCode() {
 		return rc;
 	} // End of getErrorCode
 
+	// Public constants for the error codes that can be thrown by Pigpio
 	public static final int PI_INIT_FAILED = -1; // gpioInitialise failed
 	public static final int PI_BAD_USER_GPIO = -2; // gpio not 0-31
 	public static final int PI_BAD_GPIO = -3; // gpio not 0-53

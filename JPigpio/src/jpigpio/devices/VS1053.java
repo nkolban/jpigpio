@@ -7,6 +7,7 @@ import jpigpio.FileIO;
 import jpigpio.JPigpio;
 import jpigpio.PigpioException;
 import jpigpio.Utils;
+import jpigpio.WrongModeException;
 import jpigpio.impl.SPI;
 
 /**
@@ -449,6 +450,9 @@ public class VS1053 {
 	public VS1053(JPigpio pigpio, int gpioDREQ) throws PigpioException {
 		this.pigpio = pigpio;
 		this.gpioDREQ = gpioDREQ;
+		if (pigpio.gpioGetMode(gpioDREQ) != JPigpio.PI_INPUT) {
+			throw new WrongModeException(gpioDREQ);
+		}
 		this.sciSpi = new SPI(pigpio, JPigpio.PI_SPI_CHANNEL0, JPigpio.PI_SPI_BAUD_2MHZ, 0);
 		this.sdiSpi = new SPI(pigpio, JPigpio.PI_SPI_CHANNEL1, JPigpio.PI_SPI_BAUD_2MHZ, 0);
 	}
@@ -689,7 +693,6 @@ public class VS1053 {
 			if (Utils.isSet(value, SM_ADPCM_B)) {
 				ret += " PCM/ADPCM_Recording_Active";
 			}
-
 			if (Utils.isSet(value, SM_LINE1_B)) {
 				ret += " LINE1";
 			} else {
@@ -706,7 +709,7 @@ public class VS1053 {
 			System.out.println("Unknown formatting type: " + type);
 			return Utils.int16ToBinary(value);
 		}
-	}
+	} // End of format
 
 	/**
 	 * Perform the sine test

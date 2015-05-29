@@ -6,6 +6,7 @@ import java.util.List;
 
 import jpigpio.JPigpio;
 import jpigpio.PigpioException;
+import jpigpio.WrongModeException;
 
 /**
  * The NRF24L is a wireless communication device.
@@ -128,8 +129,13 @@ public class NRF24L01 {
 	public void init(int cePin, int csnPin) throws PigpioException {
 		this.cePin = cePin;
 		this.csnPin = csnPin;
-		pigpio.gpioSetMode(cePin, JPigpio.PI_OUTPUT);
-		pigpio.gpioSetMode(csnPin, JPigpio.PI_OUTPUT);
+		if (pigpio.gpioGetMode(cePin) != JPigpio.PI_OUTPUT) {
+			throw new WrongModeException(cePin);
+		}
+		if (pigpio.gpioGetMode(csnPin) != JPigpio.PI_OUTPUT) {
+			throw new WrongModeException(csnPin);
+		}
+
 		ceLow(); // Set the device to RX
 		csnHigh(); // Set Slave Select to off
 		handle = pigpio.spiOpen(JPigpio.PI_SPI_CHANNEL0, JPigpio.PI_SPI_BAUD_500KHZ, 0);
