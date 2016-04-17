@@ -4,6 +4,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.ArrayList;
 
 import jpigpio.impl.CommonPigpio;
 
@@ -115,7 +116,7 @@ public class PigpioSocket extends CommonPigpio {
 
 	// NC
 	// 21 handle 0 0 -
-	// private final int NC = 16;
+	private final int NC = 21;
 
 	// PRG
 	// 22 gpio 0 0 -
@@ -137,17 +138,17 @@ public class PigpioSocket extends CommonPigpio {
 	// 26 0 0 0 -
 	// private final int PIGPV = 16;
 
-	// WVCLR
+	// WVCLR - waveClear
 	// 27 0 0 0 -
-	// private final int WVCLR = 16;
+	private final int WVCLR = 27;
 
-	// WVAG
+	// WVAG - waveAddGeneric
 	// 28 0 0 12*X gpioPulse_t pulse[X]
-	// private final int WVAG = 16;
+	private final int WVAG = 28;
 
-	// WVAS
+	// WVAS - waveAddSerial
 	// 29 gpio baud 12+X uint32_t databits uint32_t stophalfbits uint32_t offset uint8_t data[X]
-	// private final int WVAS = 16;
+	private final int WVAS = 29;
 
 	// WVGO
 	// 30 0 0 0 -
@@ -159,11 +160,11 @@ public class PigpioSocket extends CommonPigpio {
 
 	// WVBSY
 	// 32 0 0 0 -
-	// private final int WVBSY = 16;
+	private final int WVBSY = 32;
 
 	// WVHLT
 	// 33 0 0 0 -
-	// private final int WVHLT = 16;
+	private final int WVHLT = 33;
 
 	// WVSM
 	// 34 subcmd 0 0 -
@@ -216,9 +217,29 @@ public class PigpioSocket extends CommonPigpio {
 	// gpioDelay - MILS
 	// 47 millis 0 0 -
 	private final int MILS = 47;
-	/*
-	 * PARSE 48 N/A N/A N/A N/A WVCRE 49 0 0 0 - WVDEL 50 wave_id 0 0 - WVTX 51 wave_id 0 0 - WVTXR 52 wave_id 0 0 - WVNEW 53 0 0 0 -
-	 */
+
+	// PARSE 48 N/A N/A N/A N/A
+
+	// WVCRE waveCreate (py:
+	// 49 0 0 0
+	private final int WVCRE = 49;
+
+	// WVDEL
+	// 50 wave_id 0 0
+	private final int WVDEL = 50;
+
+	// WVTX
+	// 51 wave_id 0 0
+	private final int WVTX = 51;
+
+	// WVTXR
+	// 52 wave_id 0 0
+	private final int WVTXR = 52;
+
+	// WVNEW - waveAddNew (py: wave_add_new)
+	// 53 0 0 0 -
+	private final int WVNEW = 53;
+
 	//
 	// 2cOpen - I2CO
 	// 54 bus device 4 uint32_t flags
@@ -274,7 +295,10 @@ public class PigpioSocket extends CommonPigpio {
 	// HP 86 gpio frequency 4 uint32_t dutycycle
 	// CF1 87 arg1 arg2 X uint8_t argx[X]
 	// CF2 88 arg1 retMax X uint8_t argx[X]
-	// NOIB 99 0 0 0 -
+
+	// NOIB
+	// 99 0 0 0 -
+	private final int NOIB = 99;
 
 	/**
 	 * The hostname or IP address of the pigpio demon
@@ -286,6 +310,67 @@ public class PigpioSocket extends CommonPigpio {
 	 */
 	private int port;
 	private Socket toPigpio;
+
+	class NotificationListener implements Runnable{
+
+		DataInputStream streamNotifyIn;
+		DataOutputStream streamNotifyOut;
+		Socket piSocket;
+		int handle;
+		boolean go = true;
+
+		ArrayList<PiCallback> callbacks;
+		int monitor = 0;
+
+		public NotificationListener(String host, int port) throws PigpioException{
+			try {
+				// open additional socket used for notifications from Pi
+				piSocket = new Socket(host, port);
+
+				streamNotifyOut = new DataOutputStream(piSocket.getOutputStream());
+				streamNotifyIn = new DataInputStream(piSocket.getInputStream());
+
+				// open notification handle at PIGPIO
+				writeInt(NOIB, 0, 0, 0);
+				handle = readPigpioResponse();
+
+			} catch (IOException e) {
+				throw new PigpioException("NotificationListener", e);
+			}
+
+		}
+
+		public void stop() throws PigpioException {
+			if (go) {
+				go = false;
+				try {
+					streamNotifyOut.writeInt(Integer.reverseBytes(NC));
+					streamNotifyOut.writeInt(Integer.reverseBytes(handle));
+					streamNotifyOut.writeInt(Integer.reverseBytes(0));
+					streamNotifyOut.writeInt(Integer.reverseBytes(0));
+					streamNotifyOut.flush();
+				} catch (IOException e) {
+					throw new PigpioException("NotificationListener.stop", e);
+				}
+
+			}
+
+		}
+
+		public void append(PiCallback callback){
+			callbacks.add(callback);
+			monitor = monitor | callback.dataBit;
+
+		}
+
+		public void run(){
+			// TODO: implement
+
+		}
+
+	}
+
+
 
 	/**
 	 * The constructor of the class.
@@ -300,6 +385,40 @@ public class PigpioSocket extends CommonPigpio {
 		this.port = port;
 		gpioInitialize();
 	}
+
+	private synchronized int writeCmd(int cmd, int p1, int p2) throws IOException {
+		int resp;
+		dataOutputStream.writeInt(Integer.reverseBytes(cmd));
+		dataOutputStream.writeInt(Integer.reverseBytes(p1));
+		dataOutputStream.writeInt(Integer.reverseBytes(p2));
+		dataOutputStream.writeInt(Integer.reverseBytes(0));
+		dataOutputStream.flush();
+
+		resp = dataInputStream.readInt(); // ignore response
+		resp = dataInputStream.readInt(); // ignore response
+		resp = dataInputStream.readInt(); // ignore response
+		resp = dataInputStream.readInt(); // contains error or response
+		return Integer.reverseBytes(resp);
+	}
+
+	private synchronized int writeCmdExt(int cmd, int p1, int p2, int p3, int... ext) throws IOException {
+		int resp;
+		dataOutputStream.writeInt(Integer.reverseBytes(cmd));
+		dataOutputStream.writeInt(Integer.reverseBytes(p1));
+		dataOutputStream.writeInt(Integer.reverseBytes(p2));
+		dataOutputStream.writeInt(Integer.reverseBytes(p3));
+		for (int i:ext)
+			dataOutputStream.writeInt(Integer.reverseBytes(i));
+		dataOutputStream.flush();
+
+		resp = dataInputStream.readInt(); // ignore response
+		resp = dataInputStream.readInt(); // ignore response
+		resp = dataInputStream.readInt(); // ignore response
+		resp = dataInputStream.readInt(); // contains error or response
+		return Integer.reverseBytes(resp);
+	}
+
+
 
 	/**
 	 * Write an integer to the pigpio demon
@@ -474,6 +593,189 @@ public class PigpioSocket extends CommonPigpio {
 	}
 
 	/**
+	 * This function clears all waveforms and any data added by calls to the wave_add_* functions.
+	 *
+	 * @return The return code from close.
+	 */
+	@Override
+	public int waveClear() throws PigpioException {
+		try {
+			writeInt(WVCLR, 0, 0, 0);
+			return readPigpioResponse();
+		} catch (IOException e) {
+			throw new PigpioException("waveClear", e);
+		}
+	} // waveClear
+
+	@Override
+	public int waveAddGeneric(ArrayList<Pulse> pulses) throws PigpioException{
+		// pigpio message format
+
+		// I p1 0
+		// I p2 0
+		// I p3 pulses * 12
+		// ## extension ##
+		// III on/off/delay * pulses
+
+		byte[] ext;
+
+		if (pulses == null || pulses.size() == 0)
+			return 0;
+
+		try {
+			writeInt(WVAG,0,0,pulses.size()*12);
+			for (Pulse p:pulses)
+				writeInt(p.gpioOn, p.gpioOff, p.delay);
+			return readPigpioResponse();
+		} catch (IOException e) {
+			throw new PigpioException("waveAddGeneric", e);
+		}
+
+	}
+
+	@Override
+	public int waveAddSerial(int userGpio, int baud, byte[] data, int offset, int bbBits, int bbStop) throws PigpioException {
+
+		// pigpio message format
+
+		// I p1 gpio
+		// I p2 baud
+		// I p3 len+12
+		// ## extension ##
+		// I bb_bits
+		// I bb_stop
+		// I offset
+		// s len data bytes
+
+		if (data.length == 0)
+			return 0;
+
+		try {
+			writeInt(WVAS, userGpio, baud, data.length + 12);
+			writeInt(bbBits, bbStop, offset);
+			writeBytes(data);
+			return readPigpioResponse();
+		} catch (IOException e) {
+			throw new PigpioException("waveAddSerial", e);
+		}
+
+	}
+
+	/**
+	 * Starts a new empty waveform.
+	 *
+	 * You would not normally need to call this function as it is
+	 * automatically called after a waveform is created with the
+	 * [*wave_create*] function.
+	 *
+	 * ...
+	 * pi.wave_add_new()
+	 * ...
+	 *
+	 * @return The return code from add new.
+	 */
+	@Override
+	public int waveAddNew() throws PigpioException {
+		try {
+			writeInt(WVNEW, 0, 0, 0);
+			return readPigpioResponse();
+		} catch (IOException e) {
+			throw new PigpioException("waveAddNew", e);
+		}
+	} // waveAddNew
+
+	/**
+	 * Returns 1 if a waveform is currently being transmitted,
+	 * otherwise 0.
+	 *
+	 * ...
+	 * pi.wave_send_once(0) # send first waveform
+	 *
+	 * while pi.wave_tx_busy(): # wait for waveform to be sent
+	 * time.sleep(0.1)
+	 *
+	 * pi.wave_send_once(1) # send next waveform
+	 * ...
+	 * @return The return code from wave_tx_busy.
+	 */
+	@Override
+	public int waveTxBusy() throws PigpioException {
+		try {
+			writeInt(WVBSY, 0, 0, 0);
+			return readPigpioResponse();
+		} catch (IOException e) {
+			throw new PigpioException("waveTxBusy", e);
+		}
+	} // waveTxBusy
+
+	/**
+	 * Stops the transmission of the current waveform.
+	 *
+	 * This function is intended to stop a waveform started with
+	 * wave_send_repeat.
+	 *
+	 * ...
+	 * pi.wave_send_repeat(3)
+	 *
+	 * time.sleep(5)
+	 *
+	 * pi.wave_tx_stop()
+	 * ...
+	 * @return The return code from wave_tx_stop.
+	 */
+	@Override
+	public int waveTxStop() throws PigpioException {
+		try {
+			writeInt(WVHLT, 0, 0, 0);
+			return readPigpioResponse();
+		} catch (IOException e) {
+			throw new PigpioException("waveTxStop", e);
+		}
+	} // waveTxBusy
+
+	@Override
+	public int waveCreate() throws PigpioException {
+		try {
+			writeInt(WVCRE, 0, 0, 0);
+			return readPigpioResponse();
+		} catch (IOException e) {
+			throw new PigpioException("waveCreate", e);
+		}
+	}
+
+	@Override
+	public int waveDelete(int waveId) throws PigpioException{
+		try {
+			writeInt(WVDEL, 0, 0, 0);
+			return readPigpioResponse();
+		} catch (IOException e) {
+			throw new PigpioException("waveDelete", e);
+		}
+	}
+
+	@Override
+	public int waveSendOnce(int waveId) throws PigpioException {
+		try {
+			writeInt(WVTX, waveId, 0, 0);
+			return readPigpioResponse();
+		} catch (IOException e) {
+			throw new PigpioException("waveSendOnce", e);
+		}
+	}
+
+	@Override
+	public int waveSendRepeat(int waveId) throws PigpioException {
+		try {
+			writeInt(WVTXR, waveId, 0, 0);
+			return readPigpioResponse();
+		} catch (IOException e) {
+			throw new PigpioException("waveSendRepeat", e);
+		}
+	}
+
+	//############### I2C
+
+	/**
 	 * Open a connection to the i2c
 	 * 
 	 * @param i2cBus
@@ -588,6 +890,11 @@ public class PigpioSocket extends CommonPigpio {
 			throw new PigpioException("gpioTick", e);
 		}
 	} // End of gpioTick
+
+	@Override
+	public long getCurrentTick() throws PigpioException {
+		return gpioTick();
+	} // End of getCurrentTick
 
 	/**
 	 * Set the pulse width of a specific GPIO.  The pulse width is in microseconds

@@ -1,5 +1,7 @@
 package jpigpio;
 
+import java.util.ArrayList;
+
 /**
  * The exposed pigpio functions as Java methods.
  *
@@ -110,6 +112,280 @@ public interface JPigpio {
 
 	public long gpioTick() throws PigpioException;
 
+	public long getCurrentTick() throws PigpioException;
+
+	// ################ WAVES
+	/**
+	 * This function clears all waveforms and any data added by calls to the wave_add_* functions.
+	 *
+	 * @return The return code from close.
+	 */
+	public int waveClear() throws PigpioException;
+
+	/**
+	 * Adds a list of pulses to the current waveform.
+	 *
+	 * pulses:= list of pulses to add to the waveform.
+	 *
+	 * Returns the new total number of pulses in the current waveform.
+	 *
+	 * The pulses are interleaved in time order within the existing
+	 * waveform (if any).
+	 *
+	 * Merging allows the waveform to be built in parts, that is the
+	 * settings for GPIO#1 can be added, and then GPIO#2 etc.
+	 *
+	 * If the added waveform is intended to start after or within
+	 * the existing waveform then the first pulse should consist
+	 * solely of a delay.
+	 *
+	 * ...
+	 * G1=4
+	 * G2=24
+	 *
+	 * pi.set_mode(G1, pigpio.OUTPUT)
+	 * pi.set_mode(G2, pigpio.OUTPUT)
+	 *
+	 * flash_500=[] # flash every 500 ms
+	 * flash_100=[] # flash every 100 ms
+	 *
+	 * #                              ON     OFF  DELAY
+	 *
+	 * flash_500.append(pigpio.pulse(1<<G1, 1<<G2, 500000))
+	 * flash_500.append(pigpio.pulse(1<<G2, 1<<G1, 500000))
+	 *
+	 * flash_100.append(pigpio.pulse(1<<G1, 1<<G2, 100000))
+	 * flash_100.append(pigpio.pulse(1<<G2, 1<<G1, 100000))
+	 *
+	 * pi.wave_clear() # clear any existing waveforms
+	 *
+	 * pi.wave_add_generic(flash_500) # 500 ms flashes
+	 * f500 = pi.wave_create() # create and save id
+	 *
+	 * pi.wave_add_generic(flash_100) # 100 ms flashes
+	 * f100 = pi.wave_create() # create and save id
+	 *
+	 * pi.wave_send_repeat(f500)
+	 *
+	 * time.sleep(4)
+	 *
+	 * pi.wave_send_repeat(f100)
+	 *
+	 * time.sleep(4)
+	 *
+	 * pi.wave_send_repeat(f500)
+	 *
+	 * time.sleep(4)
+	 *
+	 * pi.wave_tx_stop() # stop waveform
+	 *
+	 * pi.wave_clear() # clear all waveforms
+	 * ...
+ 	 */
+	public int waveAddGeneric(ArrayList<Pulse> pulses) throws PigpioException;
+
+	/**
+	 * Adds a waveform representing serial data to the existing
+	 * waveform (if any).  The serial data starts [*offset*]
+	 * microseconds from the start of the waveform.
+	 *
+	 * Returns the new total number of pulses in the current waveform.
+	 *
+	 * The serial data is formatted as one start bit, [*bb_bits*]
+	 * data bits, and [*bb_stop*]/2 stop bits.
+	 *
+	 * It is legal to add serial data streams with different baud
+	 * rates to the same waveform.
+	 *
+	 * The bytes required for each character depend upon [*bb_bits*].
+	 *
+	 * For [*bb_bits*] 1-8 there will be one byte per character.
+	 * For [*bb_bits*] 9-16 there will be two bytes per character.
+	 * For [*bb_bits*] 17-32 there will be four bytes per character.
+	 *
+	 * ...
+	 * pi.wave_add_serial(4, 300, 'Hello world')
+	 *
+	 * pi.wave_add_serial(4, 300, b"Hello world")
+	 *
+	 * pi.wave_add_serial(4, 300, b'\\x23\\x01\\x00\\x45')
+	 *
+	 * pi.wave_add_serial(17, 38400, [23, 128, 234], 5000)
+	 * ...
+	 * @param gpio
+	 * 	GPIO to transmit data.  You must set the GPIO mode to output.
+	 * @param baud
+	 * 	50-1000000 bits per second.
+	 * @param data
+	 * 	the bytes to write.
+	 * @param offset
+	 * 	number of microseconds from the start of the waveform, default 0.
+	 * @param bbBits
+	 * 	number of data bits, default 8.
+	 * @param bbStop
+	 * 	number of stop half bits, default 2.
+	 * @return
+	 * 	Returns the new total number of pulses in the current waveform.
+     * @throws PigpioException
+     */
+	public int waveAddSerial(int userGpio, int baud, byte[] data, int offset, int bbBits, int bbStop) throws PigpioException;
+
+	/**
+	 * Starts a new empty waveform.
+	 *
+	 * You would not normally need to call this function as it is
+	 * automatically called after a waveform is created with the
+	 * [*wave_create*] function.
+	 *
+	 * ...
+	 * pi.wave_add_new()
+	 * ...
+	 *
+	 * @return The return code from add new.
+	 */
+	public int waveAddNew() throws PigpioException;
+
+	/**
+	 * Returns 1 if a waveform is currently being transmitted,
+	 * otherwise 0.
+	 *
+	 * ...
+	 * pi.wave_send_once(0) # send first waveform
+	 *
+	 * while pi.wave_tx_busy(): # wait for waveform to be sent
+	 * time.sleep(0.1)
+	 *
+	 * pi.wave_send_once(1) # send next waveform
+	 * ...
+	 * @return The return code from wave_tx_busy.
+	 */
+	public int waveTxBusy() throws PigpioException;
+
+	/**
+	 * Stops the transmission of the current waveform.
+	 *
+	 * This function is intended to stop a waveform started with
+	 * wave_send_repeat.
+	 *
+	 * ...
+	 * pi.wave_send_repeat(3)
+	 *
+	 * time.sleep(5)
+	 *
+	 * pi.wave_tx_stop()
+	 * ...
+	 * @return The return code from wave_tx_stop.
+	 */
+	public int waveTxStop() throws PigpioException;
+
+	/**
+	 * Creates a waveform from the data provided by the prior calls
+	 * to the [*wave_add_**] functions.
+	 *
+	 * Returns a wave id (>=0) if OK,  otherwise PI_EMPTY_WAVEFORM,
+	 * PI_TOO_MANY_CBS, PI_TOO_MANY_OOL, or PI_NO_WAVEFORM_ID.
+	 *
+	 * The data provided by the [*wave_add_**] functions is consumed by
+	 * this function.
+	 *
+	 * As many waveforms may be created as there is space available.
+	 * The wave id is passed to [*wave_send_**] to specify the waveform
+	 * to transmit.
+	 *
+	 * Normal usage would be
+	 *
+	 * Step 1. [*wave_clear*] to clear all waveforms and added data.
+	 *
+	 * Step 2. [*wave_add_**] calls to supply the waveform data.
+	 *
+	 * Step 3. [*wave_create*] to create the waveform and get a unique id
+	 *
+	 * Repeat steps 2 and 3 as needed.
+	 *
+	 * Step 4. [*wave_send_**] with the id of the waveform to transmit.
+	 *
+	 * A waveform comprises one or more pulses.
+	 *
+	 * A pulse specifies
+	 *
+	 * 1) the GPIO to be switched on at the start of the pulse.
+	 * 2) the GPIO to be switched off at the start of the pulse.
+	 * 3) the delay in microseconds before the next pulse.
+	 *
+	 * Any or all the fields can be zero.  It doesn't make any sense
+	 * to set all the fields to zero (the pulse will be ignored).
+	 *
+	 * When a waveform is started each pulse is executed in order with
+	 * the specified delay between the pulse and the next.
+	 *
+	 * ...
+	 * wid = pi.wave_create()
+	 * ...
+	 * @return
+	 * 	wave id (>=0) if OK,  otherwise PI_EMPTY_WAVEFORM, PI_TOO_MANY_CBS,
+	 * 	PI_TOO_MANY_OOL, or PI_NO_WAVEFORM_ID.
+	 * @throws PigpioException
+     */
+	public int waveCreate() throws PigpioException;
+
+	/**
+	 * This function deletes the waveform with id wave_id.
+	 *
+	 * wave_id:= >=0 (as returned by a prior call to [*wave_create*]).
+	 *
+	 * Wave ids are allocated in order, 0, 1, 2, etc.
+	 *
+	 * ...
+	 * pi.wave_delete(6) # delete waveform with id 6
+	 *
+	 * pi.wave_delete(0) # delete waveform with id 0
+	 * ...
+	 * @return The return code from wave_delete.
+	 */
+	public int waveDelete(int waveId) throws PigpioException;
+
+	/**
+	 * Transmits the waveform with id wave_id.  The waveform is sent once.
+	 *
+	 * NOTE: Any hardware PWM started by [*hardware_PWM*] will be cancelled.
+	 *
+	 * Returns the number of DMA control blocks used in the waveform.
+	 *
+	 * ...
+	 * cbs = pi.wave_send_once(wid)
+	 * ...
+	 * @param waveId
+	 *   >=0 (as returned by a prior call to [*wave_create*]).
+	 * @return
+	 * 	Returns the number of DMA control blocks used in the waveform.
+	 * @throws PigpioException
+     */
+	public int waveSendOnce(int waveId) throws PigpioException;
+
+	/**
+	 * Transmits the waveform with id wave_id.  The waveform repeats
+	 * until wave_tx_stop is called or another call to [*wave_send_**]
+	 * is made.
+	 *
+	 * NOTE: Any hardware PWM started by [*hardware_PWM*] will
+	 * be cancelled.
+	 *
+	 * Returns the number of DMA control blocks used in the waveform.
+	 *
+	 * ...
+	 * cbs = pi.wave_send_repeat(wid)
+	 * ...
+	 * @param waveId
+	 * 	>=0 (as returned by a prior call to [*wave_create*]).
+	 * @return
+	 * 	Returns the number of DMA control blocks used in the waveform.
+	 * @throws PigpioException
+     */
+	public int waveSendRepeat(int waveId) throws PigpioException;
+
+
+	// ################ I2C
+
 	public int i2cOpen(int i2cBus, int i2cAddr) throws PigpioException;
 
 	public void i2cClose(int handle) throws PigpioException;
@@ -117,6 +393,8 @@ public interface JPigpio {
 	public int i2cReadDevice(int handle, byte data[]) throws PigpioException;
 
 	public void i2cWriteDevice(int handle, byte data[]) throws PigpioException;
+
+	// ################ SPI
 
 	/**
 	 * Open an SPI channel.
@@ -242,6 +520,12 @@ public interface JPigpio {
 	public static final int PI_MICROSECONDS = 0;
 	public static final int PI_MILLISECONDS = 1;
 	public static final int PI_SECONDS = 2;
+
+	/* edges: 0-2 */
+
+	public static final int PI_RISING_EDGE = 0;
+	public static final int PI_FALLING_EDGE = 1;
+	public static final int PI_EITHER_EDGE = 2;
 
 	/* mode: 0-7 */
 
