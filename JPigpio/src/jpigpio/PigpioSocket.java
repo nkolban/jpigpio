@@ -1,10 +1,14 @@
 package jpigpio;
 
+import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.net.Socket;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Collection;
 
 import jpigpio.impl.CommonPigpio;
 
@@ -17,15 +21,10 @@ import jpigpio.impl.CommonPigpio;
  *
  */
 public class PigpioSocket extends CommonPigpio {
-	/**
-	 * A data output stream over which to write data.
-	 */
-	private DataOutputStream dataOutputStream;
 
-	/**
-	 * A data input stream over which to read data.
-	 */
-	private DataInputStream dataInputStream;
+	String host;
+	int port;
+	SocketLock slCmd; // socket for sending commands to PIGPIO
 
 	/*
 	 * COMMAND cmd p1 p2 p3 Extension
@@ -301,22 +300,14 @@ public class PigpioSocket extends CommonPigpio {
 	private final int CMD_NOIB = 99;
 
 	/**
-	 * The hostname or IP address of the pigpio demon
-	 */
-	private String address;
-
-	/**
-	 * The port number on which the pigpio demon is listening.
-	 */
-	private int port;
-	private Socket toPigpio;
-
-	/**
 	 * Notification listener runs and listens to asynchronous messages received from Pigpio daemon
 	 * triggered by subscribing to notifications.
 	 * Messages are distributed to subscribed callbacks.
 	 */
 	class NotificationListener implements Runnable{
+
+		SocketLock slNotify;  // socket for notifications
+		SocketLock slCmd; // socket for commands
 
 		DataInputStream streamNotifyIn;
 		DataOutputStream streamNotifyOut;
@@ -327,16 +318,24 @@ public class PigpioSocket extends CommonPigpio {
 		ArrayList<PiCallback> callbacks;
 		int monitor = 0;
 
-		public NotificationListener(String host, int port) throws PigpioException{
+		/**
+		 * Create notification processing thread and open additional socket on PIGPIO host
+		 * for receiving notifications.
+		 *
+		 * @param host
+		 * 	PIGPIO host
+		 * @param port
+		 * 	PIGPIO port
+		 * @throws PigpioException
+         */
+		public NotificationListener(SocketLock slCmd, String host, int port) throws PigpioException{
 			try {
-				// open additional socket used for notifications from Pi
-				piSocket = new Socket(host, port);
 
-				streamNotifyOut = new DataOutputStream(piSocket.getOutputStream());
-				streamNotifyIn = new DataInputStream(piSocket.getInputStream());
+				// open additional socket used for notifications from Pi
+				slNotify = new SocketLock(host, port);
 
 				// open notification handle at PIGPIO
-				handle = sendCmd(CMD_NOIB, 0, 0);
+				handle = slNotify.sendCmd(CMD_NOIB, 0, 0);
 
 			} catch (IOException e) {
 				throw new PigpioException("NotificationListener", e);
@@ -348,11 +347,8 @@ public class PigpioSocket extends CommonPigpio {
 			if (go) {
 				go = false;
 				try {
-					streamNotifyOut.writeInt(Integer.reverseBytes(CMD_NC));
-					streamNotifyOut.writeInt(Integer.reverseBytes(handle));
-					streamNotifyOut.writeInt(Integer.reverseBytes(0));
-					streamNotifyOut.writeInt(Integer.reverseBytes(0));
-					streamNotifyOut.flush();
+					// send command to stop notifications
+					slCmd.sendCmd(CMD_NC, handle, 0);
 				} catch (IOException e) {
 					throw new PigpioException("NotificationListener.stop", e);
 				}
@@ -365,9 +361,33 @@ public class PigpioSocket extends CommonPigpio {
 			try {
 				callbacks.add(callback);
 				monitor = monitor | callback.dataBit;
-				sendCmd(CMD_NB, handle, monitor);
+				// send command to start sending notifications for bit-map specified GPIOs
+				slCmd.sendCmd(CMD_NB, handle, monitor);
 			} catch (IOException e) {
 				throw new PigpioException("NotificationListener.append", e);
+			}
+		}
+
+		public void remove(PiCallback callback) throws PigpioException{
+			int newMonitor = 0;
+			
+			if (callbacks.remove(callback)){
+
+				// calculate new bit-map in case no other callback monitors PIGPIO of callback being removed
+				for (PiCallback c:callbacks)
+					newMonitor |= c.dataBit;
+
+				// if new bit-map differs, let PIGPIO know
+				if (newMonitor != monitor) {
+					monitor = newMonitor;
+					try {
+						slCmd.sendCmd(CMD_NB, handle, monitor);
+					} catch (IOException e) {
+						throw new PigpioException("NotificationListener.remove", e);
+					}
+				}
+
+
 			}
 		}
 
@@ -383,120 +403,15 @@ public class PigpioSocket extends CommonPigpio {
 	/**
 	 * The constructor of the class.
 	 * 
-	 * @param address
+	 * @param host
 	 *            The address of the pigpio demon.
 	 * @param port
 	 *            The port of the pigpio demon.
 	 */
-	public PigpioSocket(String address, int port) throws PigpioException {
-		this.address = address;
+	public PigpioSocket(String host, int port) throws PigpioException {
+		this.host = host;
 		this.port = port;
-		gpioInitialize();
 	}
-
-	private synchronized int sendCmd(int cmd, int p1, int p2) throws IOException {
-		int resp;
-		dataOutputStream.writeInt(Integer.reverseBytes(cmd));
-		dataOutputStream.writeInt(Integer.reverseBytes(p1));
-		dataOutputStream.writeInt(Integer.reverseBytes(p2));
-		dataOutputStream.writeInt(Integer.reverseBytes(0));
-		dataOutputStream.flush();
-
-		resp = dataInputStream.readInt(); // ignore response
-		resp = dataInputStream.readInt(); // ignore response
-		resp = dataInputStream.readInt(); // ignore response
-		resp = dataInputStream.readInt(); // contains error or response
-		return Integer.reverseBytes(resp);
-	}
-
-	private synchronized int writeCmdExt(int cmd, int p1, int p2, int p3, int... ext) throws IOException {
-		int resp;
-		dataOutputStream.writeInt(Integer.reverseBytes(cmd));
-		dataOutputStream.writeInt(Integer.reverseBytes(p1));
-		dataOutputStream.writeInt(Integer.reverseBytes(p2));
-		dataOutputStream.writeInt(Integer.reverseBytes(p3));
-		for (int i:ext)
-			dataOutputStream.writeInt(Integer.reverseBytes(i));
-		dataOutputStream.flush();
-
-		resp = dataInputStream.readInt(); // ignore response
-		resp = dataInputStream.readInt(); // ignore response
-		resp = dataInputStream.readInt(); // ignore response
-		resp = dataInputStream.readInt(); // contains error or response
-		return Integer.reverseBytes(resp);
-	}
-
-
-
-	/**
-	 * Write an integer to the pigpio demon
-	 * 
-	 * @param i
-	 *            The value of the integer to write.
-	 * @throws IOException
-	 */
-	private void writeInt(int i) throws IOException {
-		dataOutputStream.writeInt(Integer.reverseBytes(i));
-		dataOutputStream.flush();
-		// byte data[] = new byte[4];
-		// data[0] = (byte) (i & 0xff);
-		// data[1] = (byte) ((i >> 8) & 0xff);
-		// data[2] = (byte) ((i >> 16) & 0xff);
-		// data[3] = (byte) ((i >> 24) & 0xff);
-		// dataOutputStream.write(data);
-	} // End of writeInt
-
-	/**
-	 * Write a sequence of ints to the pigpio demon.
-	 * 
-	 * @param args
-	 *            A set of ints to write to the pigpio demon.
-	 * @throws IOException
-	 */
-	private void writeInt(int... args) throws IOException {
-		for (int i : args) {
-			writeInt(i);
-		}
-	} // End of writeInt
-
-	/**
-	 * Write a sequence of bytes to the pigpio demon.
-	 * 
-	 * @param data
-	 *            The sequence of bytes to write.
-	 * @throws IOException
-	 */
-	private void writeBytes(byte data[]) throws IOException {
-		dataOutputStream.write(data);
-	} // End of writeBytes
-
-	/**
-	 * Read an integer from the pigpio demon.
-	 * 
-	 * @return
-	 * @throws IOException
-	 */
-	public int readInt() throws IOException {
-		// Read 4 bytes of data
-		int r = dataInputStream.readInt();
-		// System.out.println("Read: " + Integer.reverseBytes(r));
-
-		// Change the endian to Java
-		return Integer.reverseBytes(r);
-	} // End of readInt
-
-	public void readBytes(byte[] data) throws IOException {
-		dataInputStream.readFully(data);
-	} // End of readBytes
-
-	@SuppressWarnings("unused")
-	public int readPigpioResponse() throws IOException {
-		int cmd = readInt();
-		int p1 = readInt();
-		int p2 = readInt();
-		int resp = readInt();
-		return resp;
-	} // End of readPigpioResponse
 
 	/**
 	 * Initialize
@@ -506,9 +421,7 @@ public class PigpioSocket extends CommonPigpio {
 	@Override
 	public void gpioInitialize() throws PigpioException {
 		try {
-			toPigpio = new Socket(address, port);
-			dataOutputStream = new DataOutputStream(toPigpio.getOutputStream());
-			dataInputStream = new DataInputStream(toPigpio.getInputStream());
+			slCmd = new SocketLock(host, port);
 		} catch (Exception e) {
 			throw new PigpioException("gpioInitialize", e);
 		}
@@ -520,14 +433,7 @@ public class PigpioSocket extends CommonPigpio {
 	@Override
 	public void gpioTerminate() throws PigpioException {
 		try {
-			if (toPigpio != null) {
-				dataOutputStream.close();
-				dataInputStream.close();
-				toPigpio.close();
-				dataOutputStream = null;
-				dataInputStream = null;
-				toPigpio = null;
-			}
+			slCmd.terminate();
 		} catch (Exception e) {
 			throw new PigpioException("gpioTerminate", e);
 		}
@@ -536,8 +442,7 @@ public class PigpioSocket extends CommonPigpio {
 	@Override
 	public void gpioSetMode(int pin, int mode) throws PigpioException {
 		try {
-			writeInt(CMD_MODES, pin, mode, 0);
-			int rc = readPigpioResponse();
+			int rc = slCmd.sendCmd(CMD_MODES, pin, mode);
 			if (rc < 0) {
 				throw new PigpioException(rc);
 			}
@@ -549,8 +454,7 @@ public class PigpioSocket extends CommonPigpio {
 	@Override
 	public int gpioGetMode(int pin) throws PigpioException {
 		try {
-			writeInt(CMD_MODEG, pin, 0, 0);
-			int rc = readPigpioResponse();
+			int rc = slCmd.sendCmd(CMD_MODEG, pin, 0);
 			if (rc < 0) {
 				throw new PigpioException(rc);
 			}
@@ -563,8 +467,7 @@ public class PigpioSocket extends CommonPigpio {
 	@Override
 	public void gpioSetPullUpDown(int pin, int pud) throws PigpioException {
 		try {
-			writeInt(CMD_PUD, pin, pud, 0);
-			int rc = readPigpioResponse();
+			int rc = slCmd.sendCmd(CMD_PUD, pin, pud);
 			if (rc < 0) {
 				throw new PigpioException(rc);
 			}
@@ -576,8 +479,7 @@ public class PigpioSocket extends CommonPigpio {
 	@Override
 	public boolean gpioRead(int pin) throws PigpioException {
 		try {
-			writeInt(CMD_READ, pin, 0, 0);
-			int rc = readPigpioResponse();
+			int rc = slCmd.sendCmd(CMD_READ, pin, 0);
 			if (rc < 0) {
 				throw new PigpioException(rc);
 			}
@@ -590,8 +492,7 @@ public class PigpioSocket extends CommonPigpio {
 	@Override
 	public void gpioWrite(int pin, boolean value) throws PigpioException {
 		try {
-			writeInt(CMD_WRITE, pin, value?1:0, 0);
-			int rc = readPigpioResponse();
+			int rc = slCmd.sendCmd(CMD_WRITE, pin, value?1:0);
 			if (rc < 0) {
 				throw new PigpioException(rc);
 			}
@@ -605,8 +506,7 @@ public class PigpioSocket extends CommonPigpio {
 	@Override
 	public int notifyOpen() throws PigpioException {
 		try {
-			writeInt(CMD_NO, 0, 0, 0);
-			return readPigpioResponse();
+			return slCmd.sendCmd(CMD_NO, 0, 0);
 		} catch (IOException e) {
 			throw new PigpioException("notifyOpen", e);
 		}
@@ -615,8 +515,7 @@ public class PigpioSocket extends CommonPigpio {
 	@Override
 	public int notifyBegin(int handle, int bits) throws PigpioException{
 		try {
-			writeInt(CMD_NB, handle, bits, 0);
-			return readPigpioResponse();
+			return slCmd.sendCmd(CMD_NB, handle, bits);
 		} catch (IOException e) {
 			throw new PigpioException("notifyBegin", e);
 		}
@@ -625,8 +524,7 @@ public class PigpioSocket extends CommonPigpio {
 	@Override
 	public int notifyPause(int handle) throws PigpioException {
 		try {
-			writeInt(CMD_NP, handle, 0, 0);
-			return readPigpioResponse();
+			return slCmd.sendCmd(CMD_NP, handle, 0);
 		} catch (IOException e) {
 			throw new PigpioException("notifyPause", e);
 		}
@@ -636,8 +534,7 @@ public class PigpioSocket extends CommonPigpio {
 	@Override
 	public int notifyClose(int handle) throws PigpioException{
 		try {
-			writeInt(CMD_NC, handle, 0, 0);
-			return readPigpioResponse();
+			return slCmd.sendCmd(CMD_NC, handle, 0);
 		} catch (IOException e) {
 			throw new PigpioException("notifyClose", e);
 		}
@@ -654,8 +551,7 @@ public class PigpioSocket extends CommonPigpio {
 	@Override
 	public int waveClear() throws PigpioException {
 		try {
-			writeInt(CMD_WVCLR, 0, 0, 0);
-			return readPigpioResponse();
+			return slCmd.sendCmd(CMD_WVCLR, 0, 0);
 		} catch (IOException e) {
 			throw new PigpioException("waveClear", e);
 		}
@@ -671,16 +567,20 @@ public class PigpioSocket extends CommonPigpio {
 		// ## extension ##
 		// III on/off/delay * pulses
 
-		byte[] ext;
+		ByteArrayOutputStream ext = new ByteArrayOutputStream();
+		//ArrayList<Integer> ext = new ArrayList<>();
 
 		if (pulses == null || pulses.size() == 0)
 			return 0;
 
 		try {
-			writeInt(CMD_WVAG,0,0,pulses.size()*12);
-			for (Pulse p:pulses)
-				writeInt(p.gpioOn, p.gpioOff, p.delay);
-			return readPigpioResponse();
+			for (Pulse p:pulses) {
+				ext.write(Integer.reverseBytes(p.gpioOn));
+				ext.write(Integer.reverseBytes(p.gpioOff));
+				ext.write(Integer.reverseBytes(p.delay));
+			}
+			return slCmd.sendCmd(CMD_WVAG,0,0,pulses.size()*12,ext.toByteArray());
+
 		} catch (IOException e) {
 			throw new PigpioException("waveAddGeneric", e);
 		}
@@ -701,14 +601,17 @@ public class PigpioSocket extends CommonPigpio {
 		// I offset
 		// s len data bytes
 
+		ByteArrayOutputStream ext = new ByteArrayOutputStream();
+
 		if (data.length == 0)
 			return 0;
 
 		try {
-			writeInt(CMD_WVAS, userGpio, baud, data.length + 12);
-			writeInt(bbBits, bbStop, offset);
-			writeBytes(data);
-			return readPigpioResponse();
+			// compose ext
+			ext = SocketLock.streamInts(ext, bbBits, bbStop, offset);
+			ext.write(data);
+
+			return slCmd.sendCmd(CMD_WVAS, userGpio, baud, data.length + 12, ext.toByteArray());
 		} catch (IOException e) {
 			throw new PigpioException("waveAddSerial", e);
 		}
@@ -731,8 +634,7 @@ public class PigpioSocket extends CommonPigpio {
 	@Override
 	public int waveAddNew() throws PigpioException {
 		try {
-			writeInt(CMD_WVNEW, 0, 0, 0);
-			return readPigpioResponse();
+			return slCmd.sendCmd(CMD_WVNEW, 0, 0);
 		} catch (IOException e) {
 			throw new PigpioException("waveAddNew", e);
 		}
@@ -755,8 +657,7 @@ public class PigpioSocket extends CommonPigpio {
 	@Override
 	public int waveTxBusy() throws PigpioException {
 		try {
-			writeInt(CMD_WVBSY, 0, 0, 0);
-			return readPigpioResponse();
+			return slCmd.sendCmd(CMD_WVBSY, 0, 0);
 		} catch (IOException e) {
 			throw new PigpioException("waveTxBusy", e);
 		}
@@ -780,8 +681,7 @@ public class PigpioSocket extends CommonPigpio {
 	@Override
 	public int waveTxStop() throws PigpioException {
 		try {
-			writeInt(CMD_WVHLT, 0, 0, 0);
-			return readPigpioResponse();
+			return slCmd.sendCmd(CMD_WVHLT, 0, 0);
 		} catch (IOException e) {
 			throw new PigpioException("waveTxStop", e);
 		}
@@ -790,8 +690,7 @@ public class PigpioSocket extends CommonPigpio {
 	@Override
 	public int waveCreate() throws PigpioException {
 		try {
-			writeInt(CMD_WVCRE, 0, 0, 0);
-			return readPigpioResponse();
+			return slCmd.sendCmd(CMD_WVCRE, 0, 0);
 		} catch (IOException e) {
 			throw new PigpioException("waveCreate", e);
 		}
@@ -800,8 +699,7 @@ public class PigpioSocket extends CommonPigpio {
 	@Override
 	public int waveDelete(int waveId) throws PigpioException{
 		try {
-			writeInt(CMD_WVDEL, 0, 0, 0);
-			return readPigpioResponse();
+			return slCmd.sendCmd(CMD_WVDEL, 0, 0);
 		} catch (IOException e) {
 			throw new PigpioException("waveDelete", e);
 		}
@@ -810,8 +708,7 @@ public class PigpioSocket extends CommonPigpio {
 	@Override
 	public int waveSendOnce(int waveId) throws PigpioException {
 		try {
-			writeInt(CMD_WVTX, waveId, 0, 0);
-			return readPigpioResponse();
+			return slCmd.sendCmd(CMD_WVTX, waveId, 0);
 		} catch (IOException e) {
 			throw new PigpioException("waveSendOnce", e);
 		}
@@ -820,8 +717,7 @@ public class PigpioSocket extends CommonPigpio {
 	@Override
 	public int waveSendRepeat(int waveId) throws PigpioException {
 		try {
-			writeInt(CMD_WVTXR, waveId, 0, 0);
-			return readPigpioResponse();
+			return slCmd.sendCmd(CMD_WVTXR, waveId, 0);
 		} catch (IOException e) {
 			throw new PigpioException("waveSendRepeat", e);
 		}
@@ -841,8 +737,7 @@ public class PigpioSocket extends CommonPigpio {
 	@Override
 	public int i2cOpen(int i2cBus, int i2cAddr) throws PigpioException {
 		try {
-			writeInt(CMD_I2CO, i2cBus, i2cAddr, 0);
-			return readPigpioResponse();
+			return slCmd.sendCmd(CMD_I2CO, i2cBus, i2cAddr);
 		} catch (IOException e) {
 			throw new PigpioException("i2cOpen", e);
 		}
@@ -858,8 +753,7 @@ public class PigpioSocket extends CommonPigpio {
 	@Override
 	public void i2cClose(int handle) throws PigpioException {
 		try {
-			writeInt(CMD_I2CC, handle, 0, 0);
-			int rc = readPigpioResponse();
+			int rc = slCmd.sendCmd(CMD_I2CC, handle, 0);
 			if (rc < 0) {
 				throw new PigpioException(rc);
 			}
@@ -879,9 +773,8 @@ public class PigpioSocket extends CommonPigpio {
 	@Override
 	public int i2cReadDevice(int handle, byte[] data) throws PigpioException {
 		try {
-			writeInt(CMD_I2CRD, handle, data.length, 0);
-			int rc = readPigpioResponse();
-			readBytes(data);
+			int rc = slCmd.sendCmd(CMD_I2CRD, handle, data.length);
+			slCmd.readBytes(data);
 			if (rc < 0) {
 				throw new PigpioException(rc);
 			}
@@ -902,9 +795,7 @@ public class PigpioSocket extends CommonPigpio {
 	@Override
 	public void i2cWriteDevice(int handle, byte[] data) throws PigpioException {
 		try {
-			writeInt(CMD_I2CWD, handle, 0, data.length);
-			writeBytes(data);
-			int rc = readPigpioResponse();
+			int rc = slCmd.sendCmd(CMD_I2CWD, handle, 0, data.length, data);
 			if (rc < 0) {
 				throw new PigpioException(rc);
 			}
@@ -922,8 +813,7 @@ public class PigpioSocket extends CommonPigpio {
 	@Override
 	public void gpioDelay(long delay) throws PigpioException {
 		try {
-			writeInt(CMD_MILS, (int)delay, 0, 0);
-			readPigpioResponse();
+			slCmd.sendCmd(CMD_MILS, (int)delay, 0);
 			return;
 		} catch (IOException e) {
 			throw new PigpioException("gpioDelay", e);
@@ -938,8 +828,7 @@ public class PigpioSocket extends CommonPigpio {
 	@Override
 	public long gpioTick() throws PigpioException {
 		try {
-			writeInt(CMD_TICK, 0, 0, 0);
-			return Integer.toUnsignedLong(readPigpioResponse());
+			return Integer.toUnsignedLong(slCmd.sendCmd(CMD_TICK, 0, 0));
 		} catch (IOException e) {
 			throw new PigpioException("gpioTick", e);
 		}
@@ -959,8 +848,7 @@ public class PigpioSocket extends CommonPigpio {
 	@Override
 	public void gpioServo(int gpio, int pulseWidth) throws PigpioException {
 		try {
-			writeInt(CMD_SERVO, gpio, pulseWidth, 0);
-			int rc = readPigpioResponse();
+			int rc = slCmd.sendCmd(CMD_SERVO, gpio, pulseWidth);
 			if (rc < 0) {
 				throw new PigpioException(rc);
 			}

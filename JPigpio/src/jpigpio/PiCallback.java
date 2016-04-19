@@ -5,7 +5,7 @@ package jpigpio;
  */
 interface PiCallback {
 
-    byte dataBit = 0;
+    int dataBit = 0; // bit-map representing respective GPIOs
 
     void callback();
 
