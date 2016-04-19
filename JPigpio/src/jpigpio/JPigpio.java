@@ -110,6 +110,125 @@ public interface JPigpio {
 	
 	public void gpioDelay(long delay, int type) throws PigpioException;
 
+	// ############## NOTIFICATIONS
+
+	/**
+	 * Returns a notification handle (>=0).
+	 *
+	 * A notification is a method for being notified of GPIO state
+	 * changes via a pipe.
+	 *
+	 * Pipes are only accessible from the local machine so this
+	 * function serves no purpose if you are using Python from a
+	 * remote machine.  The in-built (socket) notifications
+	 * provided by [*callback*] should be used instead.
+	 *
+	 * Notifications for handle x will be available at the pipe
+	 * named /dev/pigpiox (where x is the handle number).
+	 *
+	 * E.g. if the function returns 15 then the notifications must be
+	 * read from /dev/pigpio15.
+	 *
+	 * Notifications have the following structure.
+	 *
+	 * . .
+	 * I seqno
+	 * I flags
+	 * I tick
+	 * I level
+	 * . .
+	 *
+	 * seqno: starts at 0 each time the handle is opened and then
+	 * increments by one for each report.
+	 *
+	 * flags: two flags are defined, PI_NTFY_FLAGS_WDOG and
+	 * PI_NTFY_FLAGS_ALIVE.  If bit 5 is set (PI_NTFY_FLAGS_WDOG)
+	 * then bits 0-4 of the flags indicate a GPIO which has had a
+	 * watchdog timeout; if bit 6 is set (PI_NTFY_FLAGS_ALIVE) this
+	 * indicates a keep alive signal on the pipe/socket and is sent
+	 * once a minute in the absence of other notification activity.
+	 *
+	 * tick: the number of microseconds since system boot.  It wraps
+	 * around after 1h12m.
+	 *
+	 * level: indicates the level of each GPIO.  If bit 1<<x is set
+	 * then GPIO x is high.
+	 *
+	 * ...
+	 * h = pi.notify_open()
+	 * if h >= 0:
+	 * pi.notify_begin(h, 1234)
+	 * ...
+	 * @return
+	 * 	notification handle
+	 * @throws PigpioException
+     */
+	public int notifyOpen() throws PigpioException;
+
+	/**
+	 * Starts notifications on a handle.
+	 *
+	 * The notification sends state changes for each GPIO whose
+	 * corresponding bit in bits is set.
+	 *
+	 * The following code starts notifications for GPIO 1, 4,
+	 * 6, 7, and 10 (1234 = 0x04D2 = 0b0000010011010010).
+	 *
+	 * ...
+	 * h = pi.notify_open()
+	 * if h >= 0:
+	 * pi.notify_begin(h, 1234)
+	 * ...
+	 * @param handle
+	 * 	>=0 (as returned by a prior call to [*notify_open*])
+	 * @param bits
+	 * 	a 32 bit mask indicating the GPIO to be notified.
+	 * @return
+	 * 	error code
+	 * @throws PigpioException
+     */
+	public int notifyBegin(int handle, int bits) throws PigpioException;
+
+	/**
+	 * Pauses notifications on a handle.
+	 *
+	 * Notifications for the handle are suspended until
+	 * [*notify_begin*] is called again.
+	 *
+	 * ...
+	 * h = pi.notify_open()
+	 * if h >= 0:
+	 * pi.notify_begin(h, 1234)
+	 * ...
+	 * pi.notify_pause(h)
+	 * ...
+	 * pi.notify_begin(h, 1234)
+	 * ...
+	 * ...
+	 * @param handle
+	 * 	>=0 (as returned by a prior call to [*notify_open*])
+	 * @return error code
+	 * @throws PigpioException
+     */
+	public int notifyPause(int handle) throws PigpioException;
+
+	/**
+	 * Stops notifications on a handle and releases the handle for reuse.
+	 *
+	 * ...
+	 * h = pi.notify_open()
+	 * if h >= 0:
+	 * pi.notify_begin(h, 1234)
+	 * ...
+	 * pi.notify_close(h)
+	 * ...
+	 * ...
+	 * @param handle
+	 * 	>=0 (as returned by a prior call to [*notify_open*])
+	 * @throws PigpioException
+     */
+	public int notifyClose(int handle) throws PigpioException;
+
 	public long gpioTick() throws PigpioException;
 
 	public long getCurrentTick() throws PigpioException;

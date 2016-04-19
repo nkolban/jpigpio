@@ -30,6 +30,27 @@ public class Pigpio extends CommonPigpio {
 	@Override
 	public native void gpioWrite(int pin, boolean value) throws PigpioException;
 
+	// ################ NOTIFICATIONS
+
+	@Override
+	public int notifyOpen() throws PigpioException{
+		throw new NotImplementedException();
+	}
+
+	@Override
+	public int notifyBegin(int handle, int bits) throws PigpioException{
+		throw new NotImplementedException();
+	}
+
+	@Override
+	public int notifyPause(int handle) throws PigpioException{
+		throw new NotImplementedException();
+	}
+
+	@Override
+	public int notifyClose(int handle) throws PigpioException {
+		throw new NotImplementedException();
+	}
 
 	// ##################### WAVES
 
