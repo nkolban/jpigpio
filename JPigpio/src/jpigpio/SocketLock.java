@@ -1,12 +1,10 @@
 package jpigpio;
 
-import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.Arrays;
+
 
 /**
  * Created by Jozef on 19.04.2016.
@@ -49,11 +47,11 @@ public class SocketLock {
         out.writeInt(Integer.reverseBytes(0));
         out.flush();
 
-        resp = in.readInt(); // ignore response
-        resp = in.readInt(); // ignore response
-        resp = in.readInt(); // ignore response
-        resp = in.readInt(); // contains error or response
-        return Integer.reverseBytes(resp);
+        resp = Integer.reverseBytes(in.readInt()); // ignore response
+        resp = Integer.reverseBytes(in.readInt()); // ignore response
+        resp = Integer.reverseBytes(in.readInt()); // ignore response
+        resp = Integer.reverseBytes(in.readInt()); // contains error or response
+        return resp;
     }
 
     public synchronized int sendCmd(int cmd, int p1, int p2, int p3, byte[] ext) throws IOException {
@@ -65,11 +63,11 @@ public class SocketLock {
         out.write(ext);
         out.flush();
 
-        resp = in.readInt(); // ignore response
-        resp = in.readInt(); // ignore response
-        resp = in.readInt(); // ignore response
-        resp = in.readInt(); // contains error or response
-        return Integer.reverseBytes(resp);
+        resp = Integer.reverseBytes(in.readInt()); // ignore response
+        resp = Integer.reverseBytes(in.readInt()); // ignore response
+        resp = Integer.reverseBytes(in.readInt()); // ignore response
+        resp = Integer.reverseBytes(in.readInt()); // contains error or response
+        return resp;
     }
 
 

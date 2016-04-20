@@ -143,7 +143,7 @@ public class PigpioSocket extends CommonPigpio {
 		boolean go = true;
 		Thread thread;
 
-		ArrayList<Callback> callbacks;
+		ArrayList<Callback> callbacks = new ArrayList<>();
 		int monitor = 0;
 
 		/**
@@ -157,6 +157,7 @@ public class PigpioSocket extends CommonPigpio {
 		 * @throws PigpioException
          */
 		public NotificationListener(SocketLock slCmd, String host, int port) throws PigpioException{
+			this.slCmd = slCmd;
 			try {
 
 				// open additional socket used for notifications from Pi
@@ -235,10 +236,12 @@ public class PigpioSocket extends CommonPigpio {
 					// wait until there is whole message waiting in the input buffer
 					while (slNotify.in.available() < MESSAGE_SIZE) ;
 
-					seq = slNotify.in.readShort();
-					flags = slNotify.in.readShort();
-					tick = slNotify.in.readInt();
-					level = slNotify.in.readInt();
+					seq = Integer.reverseBytes(slNotify.in.readShort());
+					flags = Integer.reverseBytes(slNotify.in.readShort());
+					tick = Integer.reverseBytes(slNotify.in.readInt());
+					level = Integer.reverseBytes(slNotify.in.readInt());
+
+					//System.out.println("Listener - message received: seq="+seq+" flgs="+flags+" tick="+tick+" level="+level);
 
 					// no special flag, so it's normal notification
 					if (flags == 0) {
@@ -246,13 +249,21 @@ public class PigpioSocket extends CommonPigpio {
 						lastLevel = level;
 						for (Callback cb : callbacks) {
 							// check if changed GPIO is the one callback is waiting for
+							//System.out.println("#1-1 "+String.format("%32s",Integer.toBinaryString(cb.bit)));
+							//System.out.println("#1-2 "+String.format("%32s",Integer.toBinaryString(changed)));
+							//System.out.println("#1-3 "+String.format("%32s",Integer.toBinaryString(level)));
+
 							if ((cb.bit & changed) != 0) {
+								// let's assume new gpio level is "low"
 								newLevel = 0;
-								if ((cb.bit & level) != 0) {
+								//System.out.println("#2 "+changed+" : "+Integer.toBinaryString(cb.bit)+" : "+(cb.bit & changed));
+								// if the current state/level is "high"?
+								if ((cb.bit & level) != 0)
 									newLevel = 1;
-									if ((cb.edge ^ newLevel) != 0)
-										cb.func(cb.gpio, newLevel, tick);
-								}
+								//System.out.println("#3 "+changed+" : "+Integer.toBinaryString(cb.bit)+" : "+(cb.bit & changed));
+								if ((cb.edge ^ newLevel) != 0)
+									cb.func(cb.gpio, newLevel, tick);
+
 							}
 						}
 					} else

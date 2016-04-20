@@ -7,12 +7,12 @@ import static jpigpio.JPigpio.PI_RISING_EDGE;
  */
 public class Callback {
 
-    int bit = 0; // bit-map representing respective GPIOs
-    int edge = PI_RISING_EDGE;
-    int gpio = -1;
+    protected int bit = 0; // bit-map representing respective GPIOs
+    protected int edge = PI_RISING_EDGE;
+    protected int gpio = -1;
 
-    int count = 0;
-    boolean reset = false;
+    protected int count = 0;
+    protected boolean reset = false;
 
 
     public Callback(int userGpio, int edge){
