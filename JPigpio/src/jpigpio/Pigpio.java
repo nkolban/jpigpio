@@ -52,6 +52,11 @@ public class Pigpio extends CommonPigpio {
 		throw new NotImplementedException();
 	}
 
+	@Override
+	public int setWatchdog(int userGpio, int timeout) throws PigpioException{
+		throw new NotImplementedException();
+	}
+
 	// ##################### WAVES
 
 	/**

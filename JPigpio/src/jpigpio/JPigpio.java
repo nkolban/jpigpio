@@ -229,6 +229,33 @@ public interface JPigpio {
      */
 	public int notifyClose(int handle) throws PigpioException;
 
+	/**
+	 * Sets a watchdog timeout for a GPIO.
+	 *
+	 * The watchdog is nominally in milliseconds.
+	 *
+	 * Only one watchdog may be registered per GPIO.
+	 *
+	 * The watchdog may be cancelled by setting timeout to 0.
+	 *
+	 * If no level change has been detected for the GPIO for timeout
+	 * milliseconds any notification for the GPIO has a report written
+	 * to the fifo with the flags set to indicate a watchdog timeout.
+	 *
+	 * The callback class interprets the flags and will
+	 * call registered callbacks for the GPIO with level TIMEOUT.
+	 *
+	 * ...
+	 * pi.setWatchdog(23, 1000) # 1000 ms watchdog on GPIO 23
+	 * pi.setWatchdog(23, 0)    # cancel watchdog on GPIO 23
+	 * ...
+	 * @param userGpio 0-31
+	 * @param timeout 0-60000
+	 * @return
+	 * @throws PigpioException
+     */
+	public int setWatchdog(int userGpio, int timeout) throws PigpioException;
+
 	public long gpioTick() throws PigpioException;
 
 	public long getCurrentTick() throws PigpioException;

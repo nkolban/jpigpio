@@ -37,7 +37,7 @@ public class PigpioSocket extends CommonPigpio {
 	// private final int CMD_PFS = 7;		//7 gpio frequency 0 -
 
 	private final int CMD_SERVO = 8;		//8 gpio pulsewidth 0 -
-	// private final int CMD_WDOG = 9;		//9 gpio timeout 0 -
+	private final int CMD_WDOG = 9;			//9 gpio timeout 0 -
 	private final int CMD_BR1 = 10;			//10 0 0 0 -
 
 	// private final int CMD_BR2 = 11;		//11 0 0 0 -
@@ -442,6 +442,15 @@ public class PigpioSocket extends CommonPigpio {
 			throw new PigpioException("notifyClose", e);
 		}
 
+	}
+
+	@Override
+	public int setWatchdog(int userGpio, int timeout) throws PigpioException{
+		try {
+			return slCmd.sendCmd(CMD_WDOG, userGpio, timeout);
+		} catch (IOException e) {
+			throw new PigpioException("setWatchdog", e);
+		}
 	}
 
 	// ################ WAVES
