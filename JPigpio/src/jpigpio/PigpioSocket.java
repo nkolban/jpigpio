@@ -1,14 +1,8 @@
 package jpigpio;
 
 import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
-import java.lang.reflect.Array;
-import java.net.Socket;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Collection;
 
 import jpigpio.impl.CommonPigpio;
 
@@ -25,243 +19,81 @@ public class PigpioSocket extends CommonPigpio {
 	String host;
 	int port;
 	SocketLock slCmd; // socket for sending commands to PIGPIO
+	NotificationListener listener = null;
+
+	public final int MESSAGE_SIZE = 12;
 
 	/*
 	 * COMMAND cmd p1 p2 p3 Extension
 	 */
-	// CMD_MODES
-	// 0 gpio mode 0 -
-	private final int CMD_MODES = 0;
+	private final int CMD_MODES = 0;		//0 gpio mode 0 -
+	private final int CMD_MODEG = 1;		//1 gpio 0 0 -
+	private final int CMD_PUD = 2;			//2 gpio pud 0 -
+	private final int CMD_READ = 3;			//3 gpio 0 0 -
+	private final int CMD_WRITE = 4;		//4 gpio level 0 -
 
-	// CMD_MODEG
-	// 1 gpio 0 0 -
-	private final int CMD_MODEG = 1;
+	// private final int CMD_PWM = 5;		//5 gpio dutycycle 0 -
+	// private final int CMD_PRS = 6;		//6 gpio range 0 -
+	// private final int CMD_PFS = 7;		//7 gpio frequency 0 -
 
-	// CMD_PUD
-	// 2 gpio pud 0 -
-	private final int CMD_PUD = 2;
+	private final int CMD_SERVO = 8;		//8 gpio pulsewidth 0 -
+	// private final int CMD_WDOG = 9;		//9 gpio timeout 0 -
+	private final int CMD_BR1 = 10;			//10 0 0 0 -
 
-	// CMD_READ
-	// 3 gpio 0 0 -
-	private final int CMD_READ = 3;
+	// private final int CMD_BR2 = 11;		//11 0 0 0 -
+	// private final int CMD_BC1 = 12;		//12 bits 0 0 -
+	// private final int CMD_BC2 = 13;		//13 bits 0 0 -
+	// private final int CMD_BS1 = 14;		//14 bits 0 0 -
+	// private final int CMD_BS2 = 15;		//15 bits 0 0 -
 
-	// CMD_WRITE
-	// 4 gpio level 0 -
-	private final int CMD_WRITE = 4;
+	private final int CMD_TICK = 16;		//16 0 0 0 -
+	// private final int CMD_HWVER = 17;	//17 0 0 0 -
+	private final int CMD_NO = 18;			//18 0 0 0 -
+	private final int CMD_NB = 19;			//19 handle bits 0 -
+	private final int CMD_NP = 20;			//20 handle 0 0 -
+	private final int CMD_NC = 21;			//21 handle 0 0 -
 
-	// CMD_PWM
-	// 5 gpio dutycycle 0 -
-	// private final int CMD_PWM = 5;
+	// private final int CMD_PRG = 22;		//22 gpio 0 0 -
+	// private final int CMD_PFG = 23;		//23 gpio 0 0 -
+	// private final int CMD_PRRG = 24;		//24 gpio 0 0 -
+	// private final int CMD_HELP = 25;		//25 N/A N/A N/A N/A
+	// private final int CMD_PIGPV = 26;	//26 0 0 0 -
 
-	// CMD_PRS
-	// 6 gpio range 0 -
-	// private final int CMD_PRS = 6;
+	private final int CMD_WVCLR = 27;		//27 0 0 0 -
+	private final int CMD_WVAG = 28;		//28 0 0 12*X gpioPulse_t pulse[X]
+	private final int CMD_WVAS = 29;		//29 gpio baud 12+X uint32_t databits uint32_t stophalfbits uint32_t offset uint8_t data[X]
 
-	// CMD_PFS
-	// 7 gpio frequency 0 -
-	// private final int CMD_PFS = 7;
+	// private final int CMD_WVGO = 30;		//30 0 0 0 -
+	// private final int CMD_WVGOR = 31;	//31 0 0 0 -
 
-	// CMD_SERVO
-	// 8 gpio pulsewidth 0 -
-	private final int CMD_SERVO = 8;
+	private final int CMD_WVBSY = 32;		//32 0 0 0 -
+	private final int CMD_WVHLT = 33;		//33 0 0 0 -
 
-	// CMD_WDOG
-	// 9 gpio timeout 0 -
-	// private final int CMD_WDOG = 9;
+	// private final int CMD_WVSM = 34;		//34 subcmd 0 0 -
+	// private final int CMD_WVSP = 35;		//35 subcmd 0 0 -
+	// private final int CMD_WVSC = 36;		//36 subcmd 0 0 -
+	// private final int CMD_TRIG = 37;		//37 gpio pulselen 4 uint32_t level
+	// private final int CMD_PROC = 38;		//38 0 0 X uint8_t text[X]
+	// private final int CMD_PROCD = 39;	//39 script_id 0 0 -
+	// private final int CMD_PROCR = 40;	//40 script_id 0 4*X uint32_t pars[X]
+	// private final int CMD_PROCS = 41;	//41 script_id 0 0 -
+	// private final int CMD_SLRO = 42;		//42 gpio baud 4 uint32_t databits
+	// private final int CMD_SLR = 43;		//43 gpio count 0 -
+	// private final int CMD_SLRC = 44;		//44 gpio 0 0 -
+	// private final int CMD_PROCP = 45;	//45 script_id 0 0 -
+	// private final int CMD_MICS = 46;		//46 micros 0 0 -
 
-	// CMD_BR1
-	// 10 0 0 0 -
-	// private final int CMD_BR1 = 10;
-
-	// CMD_BR2
-	// 11 0 0 0 -
-	// private final int CMD_BR2 = 11;
-
-	// CMD_BC1
-	// 12 bits 0 0 -
-	// private final int CMD_BC1 = 12;
-
-	// CMD_BC2
-	// 13 bits 0 0 -
-	// private final int CMD_BC2 = 13;
-
-	// CMD_BS1
-	// 14 bits 0 0 -
-	// private final int CMD_BS1 = 14;
-
-	// CMD_BS2
-	// 15 bits 0 0 -
-	// private final int CMD_BS2 = 15;
-
-	// CMD_TICK
-	// 16 0 0 0 -
-	private final int CMD_TICK = 16;
-
-	// CMD_HWVER
-	// 17 0 0 0 -
-	// private final int CMD_HWVER = 16;
-
-	// CMD_NO
-	// 18 0 0 0 -
-	private final int CMD_NO = 18;
-
-	// CMD_NB
-	// 19 handle bits 0 -
-	private final int CMD_NB = 19;
-
-	// CMD_NP
-	// 20 handle 0 0 -
-	private final int CMD_NP = 20;
-
-	// CMD_NC
-	// 21 handle 0 0 -
-	private final int CMD_NC = 21;
-
-	// CMD_PRG
-	// 22 gpio 0 0 -
-	// private final int CMD_PRG = 16;
-
-	// CMD_PFG
-	// 23 gpio 0 0 -
-	// private final int CMD_PFG = 16;
-
-	// CMD_PRRG
-	// 24 gpio 0 0 -
-	// private final int CMD_PRRG = 16;
-
-	// CMD_HELP
-	// 25 N/A N/A N/A N/A
-	// private final int CMD_HELP = 16;
-
-	// CMD_PIGPV
-	// 26 0 0 0 -
-	// private final int CMD_PIGPV = 16;
-
-	// CMD_WVCLR - waveClear
-	// 27 0 0 0 -
-	private final int CMD_WVCLR = 27;
-
-	// CMD_WVAG - waveAddGeneric
-	// 28 0 0 12*X gpioPulse_t pulse[X]
-	private final int CMD_WVAG = 28;
-
-	// CMD_WVAS - waveAddSerial
-	// 29 gpio baud 12+X uint32_t databits uint32_t stophalfbits uint32_t offset uint8_t data[X]
-	private final int CMD_WVAS = 29;
-
-	// CMD_WVGO
-	// 30 0 0 0 -
-	// private final int CMD_WVGO = 16;
-
-	// CMD_WVGOR
-	// 31 0 0 0 -
-	// private final int CMD_WVGOR = 16;
-
-	// CMD_WVBSY
-	// 32 0 0 0 -
-	private final int CMD_WVBSY = 32;
-
-	// CMD_WVHLT
-	// 33 0 0 0 -
-	private final int CMD_WVHLT = 33;
-
-	// CMD_WVSM
-	// 34 subcmd 0 0 -
-	// private final int CMD_WVSM = 16;
-
-	// CMD_WVSP
-	// 35 subcmd 0 0 -
-	// private final int CMD_WVSP = 16;
-
-	// CMD_WVSC
-	// 36 subcmd 0 0 -
-	// private final int CMD_WVSC = 16;
-
-	// CMD_TRIG
-	// 37 gpio pulselen 4 uint32_t level
-	// private final int CMD_TRIG = 16;
-
-	// CMD_PROC
-	// 38 0 0 X uint8_t text[X]
-	// private final int CMD_PROC = 16;
-
-	// CMD_PROCD
-	// 39 script_id 0 0 -
-	// private final int CMD_PROCD = 16;
-
-	// CMD_PROCR
-	// 40 script_id 0 4*X uint32_t pars[X]
-	// private final int CMD_PROCR = 16;
-
-	// CMD_PROCS
-	// 41 script_id 0 0 -
-	// private final int CMD_PROCS = 16;
-
-	// CMD_SLRO
-	// 42 gpio baud 4 uint32_t databits SLR 43 gpio count 0 -
-	// private final int CMD_SLRO = 16;
-
-	// CMD_SLRC
-	// 44 gpio 0 0 -
-	// private final int CMD_SLRC = 16;
-
-	// CMD_PROCP
-	// 45 script_id 0 0 -
-	// private final int CMD_PROCP = 16;
-
-	// CMD_MICS
-	// 46 micros 0 0 -
-	// private final int CMD_MICS = 16;
-
-	// gpioDelay - CMD_MILS
-	// 47 millis 0 0 -
-	private final int CMD_MILS = 47;
-
-	// PARSE 48 N/A N/A N/A N/A
-
-	// CMD_WVCRE waveCreate (py:
-	// 49 0 0 0
-	private final int CMD_WVCRE = 49;
-
-	// CMD_WVDEL
-	// 50 wave_id 0 0
-	private final int CMD_WVDEL = 50;
-
-	// CMD_WVTX
-	// 51 wave_id 0 0
-	private final int CMD_WVTX = 51;
-
-	// CMD_WVTXR
-	// 52 wave_id 0 0
-	private final int CMD_WVTXR = 52;
-
-	// CMD_WVNEW - waveAddNew (py: wave_add_new)
-	// 53 0 0 0 -
-	private final int CMD_WVNEW = 53;
-
-	//
-	// 2cOpen - CMD_I2CO
-	// 54 bus device 4 uint32_t flags
-	//
-	private final int CMD_I2CO = 54;
-
-	//
-	// i2cClose - CMD_I2CC
-	// 55 handle 0 0 -
-	//
-	private final int CMD_I2CC = 55;
-
-	//
-	// i2cReadDevice - CMD_I2CRD
-	// 56 handle count 0 -
-	//
-	private final int CMD_I2CRD = 56;
-
-	//
-	// i2cWriteDevice - CMD_I2CWD
-	// 57 handle 0 X uint8_t data[X]
-	//
-	private final int CMD_I2CWD = 57;
+	private final int CMD_MILS = 47;		//47 millis 0 0 -
+	// private final int CMD_PARSE = 48;	// 48 N/A N/A N/A N/A
+	private final int CMD_WVCRE = 49;		//49 0 0 0
+	private final int CMD_WVDEL = 50;		//50 wave_id 0 0
+	private final int CMD_WVTX = 51;		//51 wave_id 0 0
+	private final int CMD_WVTXR = 52;		//52 wave_id 0 0
+	private final int CMD_WVNEW = 53;		//53 0 0 0 -
+	private final int CMD_I2CO = 54;		//54 bus device 4 uint32_t flags
+	private final int CMD_I2CC = 55;		//55 handle 0 0 -
+	private final int CMD_I2CRD = 56;		//56 handle count 0 -
+	private final int CMD_I2CWD = 57;		//57 handle 0 X uint8_t data[X]
 
 	// CMD_I2CWQ 58 handle bit 0 -
 	// CMD_I2CRS 59 handle 0 0 -
@@ -295,9 +127,7 @@ public class PigpioSocket extends CommonPigpio {
 	// CMD_CF1 87 arg1 arg2 X uint8_t argx[X]
 	// CMD_CF2 88 arg1 retMax X uint8_t argx[X]
 
-	// CMD_NOIB
-	// 99 0 0 0 -
-	private final int CMD_NOIB = 99;
+	private final int CMD_NOIB = 99;		//99 0 0 0 -
 
 	/**
 	 * Notification listener runs and listens to asynchronous messages received from Pigpio daemon
@@ -309,13 +139,11 @@ public class PigpioSocket extends CommonPigpio {
 		SocketLock slNotify;  // socket for notifications
 		SocketLock slCmd; // socket for commands
 
-		DataInputStream streamNotifyIn;
-		DataOutputStream streamNotifyOut;
-		Socket piSocket;
 		int handle;
 		boolean go = true;
+		Thread thread;
 
-		ArrayList<PiCallback> callbacks;
+		ArrayList<Callback> callbacks;
 		int monitor = 0;
 
 		/**
@@ -343,24 +171,25 @@ public class PigpioSocket extends CommonPigpio {
 
 		}
 
-		public void stop() throws PigpioException {
+		public void terminate() throws PigpioException {
 			if (go) {
 				go = false;
 				try {
 					// send command to stop notifications
 					slCmd.sendCmd(CMD_NC, handle, 0);
+					slNotify.terminate();
 				} catch (IOException e) {
-					throw new PigpioException("NotificationListener.stop", e);
+					throw new PigpioException("NotificationListener.terminate", e);
 				}
 
 			}
 
 		}
 
-		public void append(PiCallback callback) throws PigpioException{
+		public void append(Callback callback) throws PigpioException{
 			try {
 				callbacks.add(callback);
-				monitor = monitor | callback.dataBit;
+				monitor = monitor | callback.bit;
 				// send command to start sending notifications for bit-map specified GPIOs
 				slCmd.sendCmd(CMD_NB, handle, monitor);
 			} catch (IOException e) {
@@ -368,14 +197,14 @@ public class PigpioSocket extends CommonPigpio {
 			}
 		}
 
-		public void remove(PiCallback callback) throws PigpioException{
+		public void remove(Callback callback) throws PigpioException{
 			int newMonitor = 0;
-			
+
 			if (callbacks.remove(callback)){
 
 				// calculate new bit-map in case no other callback monitors PIGPIO of callback being removed
-				for (PiCallback c:callbacks)
-					newMonitor |= c.dataBit;
+				for (Callback c:callbacks)
+					newMonitor |= c.bit;
 
 				// if new bit-map differs, let PIGPIO know
 				if (newMonitor != monitor) {
@@ -391,9 +220,67 @@ public class PigpioSocket extends CommonPigpio {
 			}
 		}
 
+		@Override
 		public void run(){
-			// TODO: implement
+			int seq, flags, tick, level;
+			int changed;
+			int newLevel = 0;
+			int gpio = 0;
 
+			try {
+				int lastLevel = slCmd.sendCmd(CMD_BR1, 0, 0);
+
+				// loop until stop signal is received
+				while (this.go) {
+					// wait until there is whole message waiting in the input buffer
+					while (slNotify.in.available() < MESSAGE_SIZE) ;
+
+					seq = slNotify.in.readShort();
+					flags = slNotify.in.readShort();
+					tick = slNotify.in.readInt();
+					level = slNotify.in.readInt();
+
+					// no special flag, so it's normal notification
+					if (flags == 0) {
+						changed = level ^ lastLevel;
+						lastLevel = level;
+						for (Callback cb : callbacks) {
+							// check if changed GPIO is the one callback is waiting for
+							if ((cb.bit & changed) != 0) {
+								newLevel = 0;
+								if ((cb.bit & level) != 0) {
+									newLevel = 1;
+									if ((cb.edge ^ newLevel) != 0)
+										cb.func(cb.gpio, newLevel, tick);
+								}
+							}
+						}
+					} else
+						// is it a watchdog message?
+						if ((flags & PI_NTFY_FLAGS_WDOG) != 0) {
+							gpio = flags & PI_NTFY_FLAGS_WDOG;
+							for (Callback cb : callbacks)
+								if (cb.gpio == gpio)
+									cb.func(cb.gpio, PI_TIMEOUT, tick);
+					}
+				}
+
+				// clean-up
+				slNotify.terminate();
+			} catch (IOException e) {
+				// TODO: handle exception somehow :-)
+				//throw new PigpioException("NotificationListener.run",e);
+
+			}
+
+		}
+
+		public void start(){
+			if (thread == null)
+			{
+				thread = new Thread (this);
+				thread.start ();
+			}
 		}
 
 	}
@@ -422,6 +309,8 @@ public class PigpioSocket extends CommonPigpio {
 	public void gpioInitialize() throws PigpioException {
 		try {
 			slCmd = new SocketLock(host, port);
+			listener = new NotificationListener(slCmd, host, port);
+			listener.start();
 		} catch (Exception e) {
 			throw new PigpioException("gpioInitialize", e);
 		}
@@ -433,6 +322,9 @@ public class PigpioSocket extends CommonPigpio {
 	@Override
 	public void gpioTerminate() throws PigpioException {
 		try {
+			// stop listener thread
+			listener.terminate();
+			// stop command socket to pigpio
 			slCmd.terminate();
 		} catch (Exception e) {
 			throw new PigpioException("gpioTerminate", e);
@@ -568,17 +460,14 @@ public class PigpioSocket extends CommonPigpio {
 		// III on/off/delay * pulses
 
 		ByteArrayOutputStream ext = new ByteArrayOutputStream();
-		//ArrayList<Integer> ext = new ArrayList<>();
 
 		if (pulses == null || pulses.size() == 0)
 			return 0;
 
 		try {
-			for (Pulse p:pulses) {
-				ext.write(Integer.reverseBytes(p.gpioOn));
-				ext.write(Integer.reverseBytes(p.gpioOff));
-				ext.write(Integer.reverseBytes(p.delay));
-			}
+			for (Pulse p:pulses)
+				ext = Utils.streamReverseInt(ext, p.gpioOn, p.gpioOff, p.delay);
+
 			return slCmd.sendCmd(CMD_WVAG,0,0,pulses.size()*12,ext.toByteArray());
 
 		} catch (IOException e) {
@@ -608,7 +497,7 @@ public class PigpioSocket extends CommonPigpio {
 
 		try {
 			// compose ext
-			ext = SocketLock.streamInts(ext, bbBits, bbStop, offset);
+			ext = Utils.streamReverseInt(ext, bbBits, bbStop, offset);
 			ext.write(data);
 
 			return slCmd.sendCmd(CMD_WVAS, userGpio, baud, data.length + 12, ext.toByteArray());
@@ -872,6 +761,8 @@ public class PigpioSocket extends CommonPigpio {
 	public void gpioTrigger(int gpio, long pulseLen, boolean level) throws PigpioException {
 		throw new NotImplementedException();
 	}
+
+	// ############### SPI
 	
 	/**
 	 * Open an SPI channel.
@@ -899,7 +790,6 @@ public class PigpioSocket extends CommonPigpio {
 		throw new NotImplementedException();
 	}
 
-	
 
 	/**
 	 * Read data from SPI.
@@ -954,6 +844,53 @@ public class PigpioSocket extends CommonPigpio {
 		// TODO Auto-generated method stub
 		throw new NotImplementedException();
 	}
+
+	/**
+	 * Calls a user supplied function (a callback) whenever the
+	 * specified GPIO edge is detected.
+	 *
+	 * The user supplied callback receives three parameters, the GPIO,
+	 * the level, and the tick.
+	 *
+	 * If a user callback is not specified a default tally callback is
+	 * provided which simply counts edges.  The count may be retrieved
+	 * by calling the tally function.  The count may be reset to zero
+	 * by calling the reset_tally function.
+	 *
+	 * The callback may be cancelled by calling the cancel function.
+	 *
+	 * A GPIO may have multiple callbacks (although I can't think of
+	 * a reason to do so).
+	 *
+	 * ...
+	 * def cbf(gpio, level, tick):
+	 * print(gpio, level, tick)
+	 *
+	 * cb1 = pi.callback(22, pigpio.EITHER_EDGE, cbf)
+	 *
+	 * cb2 = pi.callback(4, pigpio.EITHER_EDGE)
+	 *
+	 * cb3 = pi.callback(17)
+	 *
+	 * print(cb3.tally())
+	 *
+	 * cb3.reset_tally()
+	 *
+	 * cb1.cancel() # To cancel callback cb1.
+	 * ...
+     * @param cb
+	 * 	user supplied callback object.
+     */
+	@Override
+	public void addCallback(Callback cb) throws PigpioException{
+		listener.append(cb);
+	}
+
+	@Override
+	public void removeCallback(Callback cb) throws PigpioException{
+		listener.remove(cb);
+	}
+
 
 } // End of class
 // End of file
