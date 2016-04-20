@@ -257,7 +257,17 @@ public class Pigpio extends CommonPigpio {
 	 * @return The time in microseconds waiting for a pulse or -1 to signfify a timeout.
 	 */
 	@Override
-	public native long gpioxPulseAndWait(int outGpio, int inGpio, long waitDuration, long pulseHoldDuration, boolean pulseLow) throws PigpioException; 
-		
+	public native long gpioxPulseAndWait(int outGpio, int inGpio, long waitDuration, long pulseHoldDuration, boolean pulseLow) throws PigpioException;
+
+	@Override
+	public void addCallback(Callback cb) throws PigpioException {
+		throw new NotImplementedException();
+	}
+
+	@Override
+	public void removeCallback(Callback cb) throws PigpioException{
+		throw new NotImplementedException();
+	}
+
 } // End of class
 // End of file

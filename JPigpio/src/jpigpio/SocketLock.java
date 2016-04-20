@@ -41,20 +41,6 @@ public class SocketLock {
 
     }
 
-    /**
-     * Helper function adding reversed ints to an output stream
-     * @param stream
-     * @param ints
-     * @return
-     */
-    public static ByteArrayOutputStream streamInts(ByteArrayOutputStream stream, int... ints){
-        for (int i:ints)
-            stream.write(Integer.reverseBytes(i));
-
-        return stream;
-
-    }
-
     public synchronized int sendCmd(int cmd, int p1, int p2) throws IOException {
         int resp;
         out.writeInt(Integer.reverseBytes(cmd));

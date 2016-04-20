@@ -1,5 +1,7 @@
 package jpigpio;
 
+import java.io.ByteArrayOutputStream;
+
 public class Utils {
 	/**
 	 * Add a handler to perform a clean termination of pigpio on termination.
@@ -177,5 +179,19 @@ public class Utils {
 	public static String bitString(boolean value) {
 		return value?"1":"0";
 	} // End of bitString
+
+	/**
+	 * Helper function adding reversed ints to an output stream
+	 * @param stream Output stream
+	 * @param ints One or more integer parameters.
+	 * @return Output stream
+	 */
+	public static ByteArrayOutputStream streamReverseInt(ByteArrayOutputStream stream, int... ints){
+		for (int i:ints)
+			stream.write(Integer.reverseBytes(i));
+		return stream;
+
+	}
+
 } // End of class
 // End of file

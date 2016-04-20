@@ -559,7 +559,7 @@ public interface JPigpio {
 	 * @throws PigpioException
 	 */
 	public int spiWrite(int handle, byte data[]) throws PigpioException;
-	
+
 	/**
 	 * Write data to SPI and in parallel, read responses.  The size of the txData and rxData arrays must
 	 * be the same.
@@ -570,6 +570,8 @@ public interface JPigpio {
 	 * @throws PigpioException
 	 */
 	public int spiXfer(int handle, byte txData[], byte rxData[]) throws PigpioException;
+
+	// ################ SERIAL
 
 	public void gpioSetAlertFunc(int gpio, Alert alert) throws PigpioException;
 	
@@ -593,6 +595,22 @@ public interface JPigpio {
 	 */
 	public long gpioxPulseAndWait(int outGpio, int inGpio, long waitDuration, long pulseHoldDuration, boolean pulseLow) throws PigpioException;
 
+	/**
+	 * Add callback listener object which would receive notifications related to
+	 * GPIO levels which listener has specified.
+	 * @param cb
+	 * 	Callback object
+	 * @throws PigpioException
+     */
+	public void addCallback(Callback cb) throws PigpioException;
+
+	/**
+	 * Remove callback listener object from notification thread.
+	 * @param cb
+	 * 	Callback object
+	 * @throws PigpioException
+     */
+	public void removeCallback(Callback cb) throws PigpioException;
 
 	public static final int PI_GPIO2 = 2;
 	public static final int PI_GPIO3 = 3;
@@ -662,6 +680,31 @@ public interface JPigpio {
 	public static final int PI_PUD_OFF = 0;
 	public static final int PI_PUD_DOWN = 1;
 	public static final int PI_PUD_UP = 2;
+
+	// script run status
+
+	public static final int PI_SCRIPT_INITING = 0;
+	public static final int PI_SCRIPT_HALTED  = 1;
+	public static final int PI_SCRIPT_RUNNING = 2;
+	public static final int PI_SCRIPT_WAITING = 3;
+	public static final int PI_SCRIPT_FAILED  = 4;
+
+	// notification flags
+
+	public static final int PI_NTFY_FLAGS_ALIVE = (1 << 6);
+	public static final int PI_NTFY_FLAGS_WDOG  = (1 << 5);
+	public static final int PI_NTFY_FLAGS_GPIO  = 31;
+
+	// wave modes
+
+	public static final int PI_WAVE_MODE_ONE_SHOT     	=0;
+	public static final int PI_WAVE_MODE_REPEAT       	=1;
+	public static final int PI_WAVE_MODE_ONE_SHOT_SYNC	=2;
+	public static final int PI_WAVE_MODE_REPEAT_SYNC  	=3;
+
+	public static final int PI_WAVE_NOT_FOUND = 9998; // Transmitted wave not found.
+	public static final int PI_NO_TX_WAVE     = 9999; // No wave being transmitted.
+
 
 	/* dutycycle: 0-range */
 
