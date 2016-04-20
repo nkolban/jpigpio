@@ -193,5 +193,27 @@ public class Utils {
 
 	}
 
+	/**
+	 *  Returns the microsecond difference between two ticks.
+	 *  This function handles rollover of ticks as ticks are only 32bit.
+	 *
+	 * ...
+	 * print(pigpio.tickDiff(4294967272, 12))
+	 * 36
+	 * ...
+	 * @param t1
+	 * 	tick 1
+	 * @param t2
+	 * 	tick 2
+     * @return
+	 * 	difference between ticks
+     */
+	public static int tickDiff(int t1, int t2){
+		int tDiff = t2 - t1;
+		if (tDiff < 0)
+			tDiff += (1 << 32);
+		return tDiff;
+	}
+
 } // End of class
 // End of file
