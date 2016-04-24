@@ -12,9 +12,11 @@ public class Pulse {
      *       Initialises a pulse.
      *
      * @param gpioOn
-     *          the GPIO to switch on at the start of the pulse.
+     * binary encoded GPIO number (1<<gpioOn) to switch on at the start of the pulse.
+     * If zero, then no GPIO will be switched on.
      * @param gpioOff
-     *          the GPIO to switch off at the start of the pulse.
+     * binary encoded GPIO number (1<<gpioOff) to switch off at the start of the pulse.
+     * If zero, then no GPIO will be switched off.
      * @param delay
      *          the delay in microseconds before the next pulse.
      */
