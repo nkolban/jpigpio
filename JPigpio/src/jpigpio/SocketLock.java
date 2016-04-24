@@ -17,6 +17,8 @@ public class SocketLock {
     DataOutputStream out;
     Socket socket;
 
+    int replyTimeout = 10000;
+
     public SocketLock(String host, int port) throws IOException {
         socket = new Socket(host, port);
         out = new DataOutputStream(socket.getOutputStream());
@@ -40,28 +42,34 @@ public class SocketLock {
     }
 
     public synchronized int sendCmd(int cmd, int p1, int p2) throws IOException {
-        int resp;
-        out.writeInt(Integer.reverseBytes(cmd));
-        out.writeInt(Integer.reverseBytes(p1));
-        out.writeInt(Integer.reverseBytes(p2));
-        out.writeInt(Integer.reverseBytes(0));
-        out.flush();
+        byte[] b = {};
 
-        resp = Integer.reverseBytes(in.readInt()); // ignore response
-        resp = Integer.reverseBytes(in.readInt()); // ignore response
-        resp = Integer.reverseBytes(in.readInt()); // ignore response
-        resp = Integer.reverseBytes(in.readInt()); // contains error or response
-        return resp;
+        return sendCmd(cmd, p1, p2, 0, b);
     }
 
     public synchronized int sendCmd(int cmd, int p1, int p2, int p3, byte[] ext) throws IOException {
-        int resp;
+        int resp, a, w;
         out.writeInt(Integer.reverseBytes(cmd));
         out.writeInt(Integer.reverseBytes(p1));
         out.writeInt(Integer.reverseBytes(p2));
         out.writeInt(Integer.reverseBytes(p3));
-        out.write(ext);
+        if (ext.length > 0)
+            out.write(ext);
         out.flush();
+
+        w = replyTimeout;
+        a = in.available();
+
+        //System.out.println("#1 "+cmd);
+        while (w > 0 && a < 16){
+            w -= 100;
+            try{ wait(100); } catch (InterruptedException e) {}
+            a = in.available();
+            //System.out.println("#2 "+a+"w="+w);
+        }
+
+        if (in.available() < 16)
+            throw new IOException("Timeout: No response from RPi withing "+ replyTimeout +" ms.");
 
         resp = Integer.reverseBytes(in.readInt()); // ignore response
         resp = Integer.reverseBytes(in.readInt()); // ignore response
