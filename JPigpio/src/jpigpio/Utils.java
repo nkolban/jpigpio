@@ -187,8 +187,12 @@ public class Utils {
 	 * @return Output stream
 	 */
 	public static ByteArrayOutputStream streamReverseInt(ByteArrayOutputStream stream, int... ints){
-		for (int i:ints)
-			stream.write(Integer.reverseBytes(i));
+		for (int i:ints) {
+			stream.write( (byte) (i & 0xFF));
+			stream.write( (byte) ((i >> 8) & 0xFF));
+			stream.write( (byte) ((i >> 16) & 0xFF));
+			stream.write( (byte) ((i >> 24) & 0xFF));
+		}
 		return stream;
 
 	}
