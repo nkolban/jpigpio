@@ -405,7 +405,7 @@ public interface JPigpio {
 	 * ...
 	 * @return The return code from wave_tx_busy.
 	 */
-	public int waveTxBusy() throws PigpioException;
+	public boolean waveTxBusy() throws PigpioException;
 
 	/**
 	 * Stops the transmission of the current waveform.

@@ -85,7 +85,7 @@ public class Pigpio extends CommonPigpio {
 	}
 
 	@Override
-	public int waveTxBusy() throws PigpioException {
+	public boolean waveTxBusy() throws PigpioException {
 		throw new NotImplementedException();
 	}
 
