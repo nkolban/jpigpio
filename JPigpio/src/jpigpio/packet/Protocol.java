@@ -17,7 +17,7 @@ public class Protocol {
     public int RX_PULSE_ZERO = 2000;        // long pulse = 0 (zero)
     public int RX_PULSE_MSGGAP = 5000;      // gap between messages
     public int RX_MSG_TIMEOUT = 1000000;    // message timeout
-    public int RX_REPEAT = 0;               // report this many same packets as a single packet
+    public int RX_REPEAT = 5;               // report this many same packets as a single packet
 
 
     public int[] SYMBOL = new int[]         // encoding of 4 bit nibbles into 8 bits (= byte) => error detection

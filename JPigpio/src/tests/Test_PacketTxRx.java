@@ -35,14 +35,11 @@ public class Test_PacketTxRx {
         Tx tx = new Tx(pi, TX, protocol);
         Rx rx = new Rx(pi, RX, protocol);
 
-        //Thread.sleep(3000);
-
         System.out.println("Transmit test message sending "+ Arrays.toString(TX_TEST_MSG) + " " + protocol.TX_REPEAT + " times");
         tx.put(TX_TEST_MSG);
-        //Thread.sleep(1000);
+
         System.out.println("Transmit test message sending "+ Arrays.toString(TX_TEST_MSG2) + " " + protocol.TX_REPEAT + " times");
         tx.put(TX_TEST_MSG2);
-        //Thread.sleep(1000);
 
         System.out.println("Waiting "+ waitForData+ " ms for data.");
 
@@ -57,8 +54,10 @@ public class Test_PacketTxRx {
 
         System.out.println("Terminating receiver.");
         rx.terminate();
+
         System.out.println("Terminating transmitter.");
         tx.terminate();
+
         System.out.println("Terminating RPi connection.");
         pi.gpioTerminate();
 

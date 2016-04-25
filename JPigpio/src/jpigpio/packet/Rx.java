@@ -150,7 +150,7 @@ public class Rx {
                     if (dataBit >= 8) {
                         data1 = data;
                         data = protocol.sym2nibble(data);
-                        System.out.println(String.format("#data: "+pulses+" = %d = data1: %X",data, data1));
+                        //System.out.println(String.format("#data: "+pulses+" = %d = data1: %X",data, data1));
 
                         // negative means: not found in nibbles => byte error
                         if (data < 0) {
@@ -173,7 +173,7 @@ public class Rx {
 
                         if (dataByte >= protocol.MSG_LENGTH) {  //packet complete?
 
-                            System.out.println("#22 "+duplicate+ " ++ "+packetError+" ++ "+protocol.RX_REPEAT+" ++ "+repeatCount);
+                            //System.out.println("#22 "+duplicate+ " ++ "+packetError+" ++ "+protocol.RX_REPEAT+" ++ "+repeatCount);
 
                             if (Utils.tickDiff(messageTick, (int)lastTick) > protocol.RX_MSG_TIMEOUT || messageTick == 0)
                                 repeatCount = 0;
