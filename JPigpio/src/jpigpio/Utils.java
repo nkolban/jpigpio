@@ -211,25 +211,5 @@ public class Utils {
 		return new String(hexChars);
 	}
 
-	public static byte[] bytes2nibbles(byte[] bytes){
-		byte[] nibb = new byte[bytes.length*2];
-
-		for (int i = 0; i<bytes.length;i++){
-			nibb[i*2] = (byte)(bytes[i] & 0xF0);
-			nibb[i*2+1] = (byte)(bytes[i] & 0x0F);
-		}
-		return nibb;
-	}
-
-	public static byte[] nibbles2bytes(byte[] nibb){
-		byte[] bytes = new byte[nibb.length/2];
-
-		for (int i = 0; i<bytes.length;i++)
-			bytes[i] = (byte)(nibb[i*2] | nibb[i*2+1]);
-
-		return bytes;
-	}
-
-
 } // End of class
 // End of file
