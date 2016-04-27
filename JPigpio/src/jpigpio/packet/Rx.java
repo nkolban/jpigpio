@@ -23,6 +23,8 @@ public class Rx {
 
     ArrayList<byte[]> messages = new ArrayList<>();
 
+    public int calledCount = 0;
+
     /**
      * Class handling all notifications coming from pigpiod.
      * Technically this means this class analyzes signals received by pigpiod
@@ -58,6 +60,8 @@ public class Rx {
 
         String pulses = "";
 
+
+
         RxCallback(int userGpio, int edge){
             super(userGpio, edge);
             try {
@@ -70,6 +74,7 @@ public class Rx {
         @Override
         public void func(int gpio, int level, long tick){
             int trans = 0;
+            calledCount ++;
 
             if (level == pi.PI_TIMEOUT) { // TIMEOUT notification received from PIGPIO?
                 try {
@@ -150,11 +155,11 @@ public class Rx {
                     if (dataBit >= 8) {
                         data1 = data;
                         data = protocol.sym2nibble(data);
-                        //System.out.println(String.format("#data: "+pulses+" = %d = data1: %X",data, data1));
+                        System.out.println(String.format("#data: "+pulses+" = %d = data1: %X",data, data1));
 
                         // negative means: not found in nibbles => byte error
                         if (data < 0) {
-                            packetError = true;
+                            //packetError = true;
                             byteErrorCount++;
                         } else {
                             // first received byte different from the same byte from previous packet

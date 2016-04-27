@@ -6,10 +6,10 @@ package jpigpio.packet;
 public class Protocol {
     public int MSG_LENGTH = 10; // message length in bytes
 
-    public int TX_PULSE_MSGGAP = 10800;     // gap between two messages
-    public int TX_PULSE_HIGH = 280;         // duration of high pulse
+    public int TX_PULSE_MSGGAP = 10800;     // gap between two messages (microsec)
+    public int TX_PULSE_HIGH = 280;         // duration of high pulse (microsec)
     public int TX_PULSE_LOW = 980;          // duration of low pulse
-    public int TX_REPEAT = 5;               // repeat transmission of each packet this many times
+    public int TX_REPEAT = 10;               // repeat transmission of each packet this many times
 
 
     public int RX_PULSE_TOOSHORT = 150;     // pulse too short to be considered meaningful
@@ -17,7 +17,7 @@ public class Protocol {
     public int RX_PULSE_ZERO = 2000;        // long pulse = 0 (zero)
     public int RX_PULSE_MSGGAP = 5000;      // gap between messages
     public int RX_MSG_TIMEOUT = 1000000;    // message timeout
-    public int RX_REPEAT = 5;               // report this many same packets as a single packet
+    public int RX_REPEAT = 0;               // report this many same packets as a single packet
 
 
     public int[] SYMBOL = new int[]         // encoding of 4 bit nibbles into 8 bits (= byte) => error detection
@@ -31,8 +31,6 @@ public class Protocol {
                 s = i;
             else
                 i++;
-        //System.out.println(String.format("Symbol %X, data1 %X",symbol,s));
-        //Arrays.asList(SYMBOL).indexOf(symbol);
         return s;
     }
 }

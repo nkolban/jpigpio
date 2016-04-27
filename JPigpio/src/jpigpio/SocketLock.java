@@ -4,6 +4,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.nio.ByteBuffer;
 
 
 /**
@@ -11,13 +12,14 @@ import java.net.Socket;
  */
 public class SocketLock {
 
-    String host;
-    int port;
+    String host;            // pigpiod host
+    int port;               // pigpiod port
+
+    Socket socket;
     DataInputStream in;
     DataOutputStream out;
-    Socket socket;
 
-    int replyTimeout = 10000;
+    int replyTimeout = 10000; //milliseconds to wait for reply from pigpiod
 
     public SocketLock(String host, int port) throws IOException {
         socket = new Socket(host, port);
@@ -43,31 +45,47 @@ public class SocketLock {
 
     public synchronized int sendCmd(int cmd, int p1, int p2) throws IOException {
         byte[] b = {};
-
         return sendCmd(cmd, p1, p2, 0, b);
     }
 
+    /**
+     * Send extended command to pigpiod and return result code
+     * @param cmd Command to send
+     * @param p1 Command parameter 1
+     * @param p2 Command parameter 2
+     * @param p3 Command parameter 3 (usually length of extended data - see paramater ext)
+     * @param ext Array of bytes containing extended data
+     * @return Command result code
+     * @throws IOException
+     */
     public synchronized int sendCmd(int cmd, int p1, int p2, int p3, byte[] ext) throws IOException {
         int resp, a, w;
-        out.writeInt(Integer.reverseBytes(cmd));
-        out.writeInt(Integer.reverseBytes(p1));
-        out.writeInt(Integer.reverseBytes(p2));
-        out.writeInt(Integer.reverseBytes(p3));
+
+        ByteBuffer bb = ByteBuffer.allocate(16+ext.length);
+
+        bb.putInt(Integer.reverseBytes(cmd));
+        bb.putInt(Integer.reverseBytes(p1));
+        bb.putInt(Integer.reverseBytes(p2));
+        bb.putInt(Integer.reverseBytes(p3));
+
         if (ext.length > 0)
-            out.write(ext);
+            bb.put(ext);
+
+        out.write(bb.array());
         out.flush();
 
         w = replyTimeout;
         a = in.available();
 
-        //System.out.println("#1 "+cmd);
+        // if by any chance there is no response from pigpiod, then wait up to
+        // specified timeout
         while (w > 0 && a < 16){
-            w -= 100;
-            try{ wait(100); } catch (InterruptedException e) {}
+            w -= 10;
+            try{ wait(10); } catch (InterruptedException e) {}
             a = in.available();
-            //System.out.println("#2 "+a+"w="+w);
         }
 
+        // throw exception if response from pigpiod has not arrived yet
         if (in.available() < 16)
             throw new IOException("Timeout: No response from RPi withing "+ replyTimeout +" ms.");
 
@@ -78,75 +96,13 @@ public class SocketLock {
         return resp;
     }
 
-
     /**
-     * Write an integer to the pigpio demon
-     *
-     * @param i
-     *            The value of the integer to write.
+     * Read all remaining bytes coming from pigpiod
+     * @param data Array to store read bytes.
      * @throws IOException
      */
-    public void writeInt(int i) throws IOException {
-        out.writeInt(Integer.reverseBytes(i));
-        out.flush();
-        // byte data[] = new byte[4];
-        // data[0] = (byte) (i & 0xff);
-        // data[1] = (byte) ((i >> 8) & 0xff);
-        // data[2] = (byte) ((i >> 16) & 0xff);
-        // data[3] = (byte) ((i >> 24) & 0xff);
-        // dataOutputStream.write(data);
-    } // End of writeInt
-
-    /**
-     * Write a sequence of ints to the pigpio demon.
-     *
-     * @param args
-     *            A set of ints to write to the pigpio demon.
-     * @throws IOException
-     */
-    public void writeInt(int... args) throws IOException {
-        for (int i : args) {
-            writeInt(i);
-        }
-    } // End of writeInt
-
-    /**
-     * Write a sequence of bytes to the pigpio demon.
-     *
-     * @param data
-     *            The sequence of bytes to write.
-     * @throws IOException
-     */
-    public void writeBytes(byte data[]) throws IOException {
-        out.write(data);
-    } // End of writeBytes
-
-    /**
-     * Read an integer from the pigpio demon.
-     *
-     * @return
-     * @throws IOException
-     */
-    public int readInt() throws IOException {
-        // Read 4 bytes of data
-        int r = in.readInt();
-        // System.out.println("Read: " + Integer.reverseBytes(r));
-
-        // Change the endian to Java
-        return Integer.reverseBytes(r);
-    } // End of readInt
-
     public void readBytes(byte[] data) throws IOException {
         in.readFully(data);
-    } // End of readBytes
-
-    @SuppressWarnings("unused")
-    public int readPigpioResponse() throws IOException {
-        int cmd = readInt();
-        int p1 = readInt();
-        int p2 = readInt();
-        int resp = readInt();
-        return resp;
-    } // End of readPigpioResponse
+    }
 
 }

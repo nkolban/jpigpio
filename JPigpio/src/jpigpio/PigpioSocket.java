@@ -1,7 +1,8 @@
 package jpigpio;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.ArrayList;
 
 import jpigpio.impl.CommonPigpio;
@@ -153,9 +154,9 @@ public class PigpioSocket extends CommonPigpio {
 		 * for receiving notifications.
 		 *
 		 * @param host
-		 * 	PIGPIO host
+		 * 	PIGPIOD host
 		 * @param port
-		 * 	PIGPIO port
+		 * 	PIGPIOD port
 		 * @throws PigpioException
          */
 		public NotificationListener(SocketLock slCmd, String host, int port) throws PigpioException{
@@ -174,7 +175,11 @@ public class PigpioSocket extends CommonPigpio {
 
 		}
 
-		public void terminate() throws PigpioException {
+        /**
+         * Tells Pigpiod to stop sending notifications & closes notification socket connection
+         * @throws PigpioException
+         */
+        public void terminate() throws PigpioException {
 			if (go) {
 				go = false;
 				try {
@@ -189,7 +194,12 @@ public class PigpioSocket extends CommonPigpio {
 
 		}
 
-		public void append(Callback callback) throws PigpioException{
+        /**
+         * Add callback object to the list of objects to call when notification is received
+         * @param callback Callback object to be added to the list
+         * @throws PigpioException
+         */
+        public void append(Callback callback) throws PigpioException{
 			try {
 				callbacks.add(callback);
 				monitor = monitor | callback.bit;
@@ -200,7 +210,12 @@ public class PigpioSocket extends CommonPigpio {
 			}
 		}
 
-		public void remove(Callback callback) throws PigpioException{
+        /**
+         * Remove object from the list of callback objects to be notified
+         * @param callback Callback object to be removed from the list.
+         * @throws PigpioException
+         */
+        public void remove(Callback callback) throws PigpioException{
 			int newMonitor = 0;
 
 			if (callbacks.remove(callback)){
@@ -236,14 +251,17 @@ public class PigpioSocket extends CommonPigpio {
 				// loop until stop signal is received
 				while (this.go) {
 					// wait until there is whole message waiting in the input buffer
-					while (slNotify.in.available() < PIGPIOD_MESSAGE_SIZE) ;
+					while (go && (slNotify.in.available() < PIGPIOD_MESSAGE_SIZE)) {
+                        Thread.sleep(20);
+                    }
+
+					if (!go) // if stopping, then exit loop (to avoid big if)
+						break;
 
 					seq = Integer.reverseBytes(slNotify.in.readShort());
 					flags = Integer.reverseBytes(slNotify.in.readShort());
 					tick = Integer.reverseBytes(slNotify.in.readInt());
 					level = Integer.reverseBytes(slNotify.in.readInt());
-
-					//System.out.println("Listener - message received: seq="+seq+" flgs="+flags+" tick="+tick+" level="+level);
 
 					// no special flag, so it's normal notification
 					if (flags == 0) {
@@ -251,14 +269,9 @@ public class PigpioSocket extends CommonPigpio {
 						lastLevel = level;
 						for (Callback cb : callbacks) {
 							// check if changed GPIO is the one callback is waiting for
-							//System.out.println("#1-1 "+String.format("%32s",Integer.toBinaryString(cb.bit)));
-							//System.out.println("#1-2 "+String.format("%32s",Integer.toBinaryString(changed)));
-							//System.out.println("#1-3 "+String.format("%32s",Integer.toBinaryString(level)));
-
 							if ((cb.bit & changed) != 0) {
 								// let's assume new gpio level is "low"
 								newLevel = 0;
-								//System.out.println("#2 "+changed+" : "+Integer.toBinaryString(cb.bit)+" : "+(cb.bit & changed));
 								// if the current state/level is "high"?
 								if ((cb.bit & level) != 0)
 									newLevel = 1;
@@ -278,12 +291,11 @@ public class PigpioSocket extends CommonPigpio {
 					}
 				}
 
-				// clean-up
-				slNotify.terminate();
 			} catch (IOException e) {
 				// TODO: handle exception somehow :-)
 				//throw new PigpioException("NotificationListener.run",e);
-
+            } catch (InterruptedException e) {
+                // TODO: handle exception somehow :-)
 			}
 
 		}
@@ -304,9 +316,9 @@ public class PigpioSocket extends CommonPigpio {
 	 * The constructor of the class.
 	 * 
 	 * @param host
-	 *            The address of the pigpio demon.
+	 *            The address of the pigpio daemon.
 	 * @param port
-	 *            The port of the pigpio demon.
+	 *            The port of the pigpio daemon.
 	 */
 	public PigpioSocket(String host, int port) throws PigpioException {
 		this.host = host;
@@ -336,10 +348,8 @@ public class PigpioSocket extends CommonPigpio {
 	public void gpioTerminate() throws PigpioException {
 		try {
 			// stop listener thread
-			//System.out.println("Terminating listener.");
 			listener.terminate();
 			// stop command socket to pigpio
-			//System.out.println("Terminating slCmd.");
 			slCmd.terminate();
 		} catch (Exception e) {
 			throw new PigpioException("gpioTerminate", e);
@@ -483,16 +493,20 @@ public class PigpioSocket extends CommonPigpio {
 		// ## extension ##
 		// III on/off/delay * pulses
 
-		ByteArrayOutputStream ext = new ByteArrayOutputStream();
+        ByteBuffer bb;
+        int ret;
 
 		if (pulses == null || pulses.size() == 0)
 			return 0;
 
 		try {
+            bb = ByteBuffer.allocate(pulses.size()*12);
+            bb.order(ByteOrder.LITTLE_ENDIAN);
 			for (Pulse p:pulses)
-				ext = Utils.streamReverseInt(ext, p.gpioOn, p.gpioOff, p.delay);
+                bb.putInt(p.gpioOn).putInt(p.gpioOff).putInt(p.delay);
 
-			return slCmd.sendCmd(CMD_WVAG,0,0,pulses.size()*12,ext.toByteArray());
+            ret = slCmd.sendCmd(CMD_WVAG,0,0,pulses.size()*12,bb.array());
+			return ret;
 
 		} catch (IOException e) {
 			throw new PigpioException("waveAddGeneric", e);
@@ -514,17 +528,17 @@ public class PigpioSocket extends CommonPigpio {
 		// I offset
 		// s len data bytes
 
-		ByteArrayOutputStream ext = new ByteArrayOutputStream();
+		ByteBuffer bb;
 
 		if (data.length == 0)
 			return 0;
 
 		try {
-			// compose ext
-			ext = Utils.streamReverseInt(ext, bbBits, bbStop, offset);
-			ext.write(data);
+            bb = ByteBuffer.allocate(12);
+            bb.order(ByteOrder.LITTLE_ENDIAN);
+            bb.putInt(bbBits).putInt(bbStop).putInt(offset);
 
-			return slCmd.sendCmd(CMD_WVAS, userGpio, baud, data.length + 12, ext.toByteArray());
+			return slCmd.sendCmd(CMD_WVAS, userGpio, baud, data.length + 12, bb.array());
 		} catch (IOException e) {
 			throw new PigpioException("waveAddSerial", e);
 		}
@@ -570,7 +584,7 @@ public class PigpioSocket extends CommonPigpio {
 	@Override
 	public boolean waveTxBusy() throws PigpioException {
 		try {
-			return (slCmd.sendCmd(CMD_WVBSY, 0, 0) > 0);
+			return (slCmd.sendCmd(CMD_WVBSY, 0, 0) != 0);
 		} catch (IOException e) {
 			throw new PigpioException("waveTxBusy", e);
 		}
@@ -687,10 +701,11 @@ public class PigpioSocket extends CommonPigpio {
 	public int i2cReadDevice(int handle, byte[] data) throws PigpioException {
 		try {
 			int rc = slCmd.sendCmd(CMD_I2CRD, handle, data.length);
-			slCmd.readBytes(data);
 			if (rc < 0) {
 				throw new PigpioException(rc);
 			}
+            slCmd.readBytes(data);
+
 			return rc;
 		} catch (IOException e) {
 			throw new PigpioException("i2cReadDevice", e);
