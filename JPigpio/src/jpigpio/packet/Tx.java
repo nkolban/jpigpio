@@ -53,7 +53,7 @@ public class Tx {
                         waveId = pi.waveCreate();
 
                         // repeat packet sending according to protocol parameters
-                        for (int r = 0; r < protocol.TX_REPEAT && !stop; r++) {
+                        for (int r = 0; r < protocol.DGRM_REPEAT_TX && !stop; r++) {
                             pi.waveSendOnce(waveId);
                             Thread.sleep(50);
                             while (pi.waveTxBusy()) {
@@ -118,7 +118,7 @@ public class Tx {
     }
 
     /**
-     * Construct array of pulses from message data
+     * Construct array of pulses from datagram data
      * @param data Data (4bit nibbles) to be transmitted
      * @return ArrayList of Pulses
      */
@@ -126,7 +126,7 @@ public class Tx {
         ArrayList<Pulse> wf;
         int dataByte;
 
-        // Define a single message waveform
+        // Define a single datagram waveform
         wf = new ArrayList<>();
         // Pre Message low gap
         wf.add(new Pulse(0, txBit, protocol.TX_PULSE_MSGGAP));
@@ -137,7 +137,7 @@ public class Tx {
         for(byte i: data){
             wf.add(new Pulse(txBit,0,protocol.TX_PULSE_HIGH));
             wf.add(new Pulse(0, txBit, protocol.TX_PULSE_HIGH));
-            dataByte = protocol.SYMBOL[i & 0x0F];
+            dataByte = protocol.nibble2sym(i);
             for (byte j = 0; j<8; j++)
                 if ((dataByte & (0x80>>j)) != 0){
                     wf.add(new Pulse(txBit,0,protocol.TX_PULSE_HIGH));
@@ -170,7 +170,7 @@ public class Tx {
         int ret = 0;
         ArrayList<Pulse> wf;
 
-        if (data.length < protocol.MSG_LENGTH)
+        if (data.length < protocol.DGRM_LENGTH)
             return -1;
 
         wf = constructMessagePulses(data);

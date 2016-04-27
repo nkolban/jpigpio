@@ -14,6 +14,9 @@ public class Callback {
     protected int count = 0;
     protected boolean reset = false;
 
+    protected int byteErrorCount = 0;     //byte error count
+    protected int datagramErrorCount = 0;
+
 
     public Callback(int userGpio, int edge){
         this.gpio = userGpio;
@@ -31,6 +34,14 @@ public class Callback {
 
     public void countReset(){
         count = 0;
+    }
+
+    public int byteErrorCount(){
+        return byteErrorCount;
+    }
+
+    public int datagramErrorCount(){
+        return datagramErrorCount;
     }
 
 }

@@ -21,7 +21,7 @@ public class Test_PacketRx {
         String host = "pigpiod-host";
         int port = 8888;
 
-        int waitForData = 20000; // milliseconds to wait for packets
+        int waitForData = 10000; // milliseconds to wait for packets
         int waitStep = 2000;
 
         // protocol defines message length, repetition of messages, signal levels etc.
@@ -44,6 +44,8 @@ public class Test_PacketRx {
             System.out.println("Waiting "+ w + " ms more.");
         }
 
+        System.out.println("RX Byte Errors = "+rx.byteErrorCount());
+        System.out.println("RX Datagram Errors = "+rx.datagramErrorCount());
         System.out.println("Terminating receiver.");
         rx.terminate();
 

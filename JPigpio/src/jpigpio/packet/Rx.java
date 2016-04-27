@@ -15,15 +15,12 @@ public class Rx {
     JPigpio pi;
     int rxGpio;
 
-
     Callback cb;
 
-    // Protocol describing signal levels, message length etc.
+    // Protocol describing signal levels, datagram length etc.
     Protocol protocol;
 
     ArrayList<byte[]> messages = new ArrayList<>();
-
-    public int calledCount = 0;
 
     /**
      * Class handling all notifications coming from pigpiod.
@@ -32,35 +29,30 @@ public class Rx {
      */
     class RxCallback extends Callback {
 
-        public final int RX_STATE_IDLE = 0;
-        public final int RX_STATE_MSGSTARTFOUND = 1;
-        public final int RX_STATE_BYTESTARTFOUND = 2;
-        public final int RX_STATE_GETBYTE = 3;
+        final int RX_STATE_IDLE = 0;
+        final int RX_STATE_MSGSTARTFOUND = 1;
+        final int RX_STATE_BYTESTARTFOUND = 2;
+        final int RX_STATE_GETBYTE = 3;
 
-        public int byteErrorCount = 0;     //byte error count
-        public int packetErrorCount = 0;
+        boolean datagramError = false;
 
+        int messageTick = 0;
         long lastTick = 0;
         long pulse = 0;
         int state = RX_STATE_IDLE;
-        int data1 = 0;
+        //int data1 = 0;
 
         int repeatCount = 0;
         boolean duplicate = false;
-        int messageTick = 0;
 
         int dataBit = 0;
         int dataByte = 0;
 
-        boolean packetError = false;
-
-        byte[] message = new byte[protocol.MSG_LENGTH];
+        byte[] datagram = new byte[protocol.DGRM_LENGTH];
 
         int data = 0;
 
         String pulses = "";
-
-
 
         RxCallback(int userGpio, int edge){
             super(userGpio, edge);
@@ -74,7 +66,8 @@ public class Rx {
         @Override
         public void func(int gpio, int level, long tick){
             int trans = 0;
-            calledCount ++;
+
+            count++;  // increase called count for statistical purposes
 
             if (level == pi.PI_TIMEOUT) { // TIMEOUT notification received from PIGPIO?
                 try {
@@ -85,7 +78,7 @@ public class Rx {
                 return;
             }
 
-            pulse = tick - lastTick;
+            pulse = Utils.tickDiff(lastTick, tick);
             lastTick = (int)tick;
 
             if (pulse < protocol.RX_PULSE_TOOSHORT) // very short pulse - ignore it
@@ -108,7 +101,7 @@ public class Rx {
             switch (state) {
                 //-----------------------------
                 case RX_STATE_IDLE:
-                    if (trans == 7) { // 1 after message gap
+                    if (trans == 7) { // 1 after datagram gap
                         state = RX_STATE_MSGSTARTFOUND;
                         duplicate = true;
                     }
@@ -153,57 +146,51 @@ public class Rx {
 
                     // check if byte complete
                     if (dataBit >= 8) {
-                        data1 = data;
+
                         data = protocol.sym2nibble(data);
-                        System.out.println(String.format("#data: "+pulses+" = %d = data1: %X",data, data1));
 
                         // negative means: not found in nibbles => byte error
                         if (data < 0) {
-                            //packetError = true;
+                            datagramError = true;
                             byteErrorCount++;
                         } else {
-                            // first received byte different from the same byte from previous packet
-                            // means this packet is not a duplicate of the previous one
-                            if (data != message[dataByte]) {
+                            // first received byte different from the same byte from previous datagram
+                            // means this datagram is not a duplicate of the previous one
+                            if (data != datagram[dataByte]) {
                                 duplicate = false;
                                 repeatCount = 0;
                             }
 
-                            message[dataByte] = (byte) data;
+                            datagram[dataByte] = (byte) data;
                         }
 
                         dataByte++;
                         dataBit = 0;
                         pulses = "";
 
-                        if (dataByte >= protocol.MSG_LENGTH) {  //packet complete?
+                        if (dataByte >= protocol.DGRM_LENGTH) {  //datagram complete?
 
-                            //System.out.println("#22 "+duplicate+ " ++ "+packetError+" ++ "+protocol.RX_REPEAT+" ++ "+repeatCount);
-
-                            if (Utils.tickDiff(messageTick, (int)lastTick) > protocol.RX_MSG_TIMEOUT || messageTick == 0)
+                            if (Utils.tickDiff(messageTick, (int) lastTick) > protocol.DGRM_RX_TIMEOUT || messageTick == 0) {
                                 repeatCount = 0;
-                            else if (duplicate)
+                            } else if (duplicate)
                                 repeatCount++;
 
-                            if (repeatCount >= protocol.RX_REPEAT){
+                            if (repeatCount >= protocol.DGRM_REPEAT_RX){
                                 repeatCount = 0;
                                 duplicate = false;
                             }
 
-                            if (!packetError && !duplicate)
-                                messages.add(message.clone());
+                            // if no datagram error (or ignoring datagram errors) and not duplicate
+                            if ((protocol.DGRM_KEEP_ON_ENCODING_ERROR | !datagramError) && !duplicate)
+                                messages.add(datagram.clone());
 
                             state = RX_STATE_IDLE;
                             //messageTick = messageTick;
                             messageTick = (int)tick;
 
-                            if (packetError)
-                                packetErrorCount++;
-                            packetError = false;
-
-                            //System.out.println("#99: "+Arrays.toString(message));
-                            //System.out.println("#99: BER="+byteErrorCount +" PER="+packetErrorCount);
-                            //System.out.println("#99: msgs="+messages.size());
+                            if (datagramError)
+                                datagramErrorCount++;
+                            datagramError = false;
 
                         } else
                             state = RX_STATE_BYTESTARTFOUND;
@@ -264,6 +251,14 @@ public class Rx {
             cb = null;
         }
 
+    }
+
+    public int byteErrorCount(){
+        return cb.byteErrorCount();
+    }
+
+    public int datagramErrorCount(){
+        return cb.datagramErrorCount();
     }
 
 

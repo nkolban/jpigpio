@@ -2,11 +2,9 @@ package tests;
 
 import jpigpio.PigpioException;
 import jpigpio.PigpioSocket;
-import jpigpio.Pulse;
 import jpigpio.packet.Protocol;
 import jpigpio.packet.Tx;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 
 /**
@@ -42,10 +40,10 @@ public class Test_PacketTx {
 
         tx = new Tx(pi, TX, protocol);
 
-        System.out.println("Transmit test message sending "+ Arrays.toString(TX_TEST_MSG) + " " + protocol.TX_REPEAT + " times");
+        System.out.println("Transmit test message sending "+ Arrays.toString(TX_TEST_MSG) + " " + protocol.DGRM_REPEAT_TX + " times");
         tx.put(TX_TEST_MSG);
 
-        System.out.println("Transmit test message sending "+ Arrays.toString(TX_TEST_MSG2) + " " + protocol.TX_REPEAT + " times");
+        System.out.println("Transmit test message sending "+ Arrays.toString(TX_TEST_MSG2) + " " + protocol.DGRM_REPEAT_TX + " times");
         tx.put(TX_TEST_MSG2);
 
         while (!tx.ready()) {
