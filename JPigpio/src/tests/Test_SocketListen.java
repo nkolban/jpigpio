@@ -35,7 +35,6 @@ public class Test_SocketListen {
         Callback cb = new MyCallback(gpio,JPigpio.PI_RISING_EDGE);
         try {
             JPigpio pigpio = new PigpioSocket(host, 8888);
-            //JPigpio pigpio = new Pigpio();
             pigpio.gpioInitialize();
             Utils.addShutdown(pigpio);
             pigpio.addCallback(cb);

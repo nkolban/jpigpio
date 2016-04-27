@@ -1,7 +1,5 @@
 package jpigpio;
 
-import java.io.ByteArrayOutputStream;
-
 public class Utils {
 	/**
 	 * Add a handler to perform a clean termination of pigpio on termination.
@@ -181,23 +179,6 @@ public class Utils {
 	} // End of bitString
 
 	/**
-	 * Helper function adding reversed ints to an output stream
-	 * @param stream Output stream
-	 * @param ints One or more integer parameters.
-	 * @return Output stream
-	 */
-	public static ByteArrayOutputStream streamReverseInt(ByteArrayOutputStream stream, int... ints){
-		for (int i:ints) {
-			stream.write( (byte) (i & 0xFF));
-			stream.write( (byte) ((i >> 8) & 0xFF));
-			stream.write( (byte) ((i >> 16) & 0xFF));
-			stream.write( (byte) ((i >> 24) & 0xFF));
-		}
-		return stream;
-
-	}
-
-	/**
 	 *  Returns the microsecond difference between two ticks.
 	 *  This function handles rollover of ticks as ticks are only 32bit.
 	 *
@@ -217,6 +198,17 @@ public class Utils {
 		if (tDiff < 0)
 			tDiff += (1 << 32);
 		return tDiff;
+	}
+
+	public static String bytesToHex(byte[] bytes) {
+		final char[] hexArray = "0123456789ABCDEF".toCharArray();
+		char[] hexChars = new char[bytes.length * 2];
+		for ( int j = 0; j < bytes.length; j++ ) {
+			int v = bytes[j] & 0xFF;
+			hexChars[j * 2] = hexArray[v >>> 4];
+			hexChars[j * 2 + 1] = hexArray[v & 0x0F];
+		}
+		return new String(hexChars);
 	}
 
 } // End of class
