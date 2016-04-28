@@ -15,7 +15,7 @@ public class Test_PacketRx {
 
     public static void main(String[] args) throws PigpioException, InterruptedException {
 
-        int RX = 24;    // GPIO for receiving
+        int GPIO_RX = 24;    // GPIO for receiving
 
         // pigpiod host & port
         String host = "pigpiod-host";
@@ -28,10 +28,10 @@ public class Test_PacketRx {
         Protocol protocol = new Protocol();
 
         // connect to gpigpiod instance
-        JPigpio pi = new PigpioSocket(host,port);
-        pi.gpioInitialize();
+        JPigpio pigpio = new PigpioSocket(host,port);
+        pigpio.gpioInitialize();
 
-        Rx rx = new Rx(pi, RX, protocol);
+        Rx rx = new Rx(pigpio, GPIO_RX, protocol);
 
         System.out.println("Waiting "+ waitForData+ " ms for data.");
 
@@ -50,7 +50,7 @@ public class Test_PacketRx {
         rx.terminate();
 
         System.out.println("Terminating RPi connection.");
-        pi.gpioTerminate();
+        pigpio.gpioTerminate();
 
     }
 

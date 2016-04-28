@@ -13,7 +13,7 @@ import java.util.Arrays;
 public class Test_PacketTx {
 
     // GPIO pin for transmitting
-    static int TX = 26;
+    static int GPIO_TX = 26;
 
     // pigpiod host & port
     static String host = "pigpiod-host";
@@ -38,7 +38,7 @@ public class Test_PacketTx {
         pi = new PigpioSocket(host,port);
         pi.gpioInitialize();
 
-        tx = new Tx(pi, TX, protocol);
+        tx = new Tx(pi, GPIO_TX, protocol);
 
         System.out.println("Transmit test message sending "+ Arrays.toString(TX_TEST_MSG) + " " + protocol.DGRM_REPEAT_TX + " times");
         tx.put(TX_TEST_MSG);
