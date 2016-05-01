@@ -29,8 +29,11 @@ public class Protocol {
 
     public final int DGRM_RX_TIMEOUT = 1000000;    // datagram timeout (microseconds)
 
-    public boolean DGRM_KEEP_ON_ENCODING_ERROR = true;    // receive datagram even if symbol error occured
-    // => some data will be corrupted
+    /**
+     * Set this to False to discard datagrams where encoding error was detected.
+     * Under normal operation it makes no sense to keep such datagrams.
+     */
+    public boolean DGRM_KEEP_ON_ENCODING_ERROR = false;
 
 
     //############# SIGNALING
@@ -88,8 +91,24 @@ public class Protocol {
         return SYMBOL[nibble & 0x0F];
     }
 
-    public void setDataSize(byte size){
+    /**
+     * Set maximum transmitted datagram size in bytes.
+     * @param size size in bytes
+     */
+    public void setDataSize(int size){
         DATA_SIZE = size;
+        DGRM_LENGTH = DATA_SIZE*2;
+    }
 
+    /**
+     * Set transmission repeat count. By repeating transmission multiple times you are increasing probability to
+     * receive data on the other end.
+     * This also sets receiver repeat count - eliminating duplicate datagrams caused by repetitive transmissions.
+     * @param repeatCount Count how many times datagram is going to be transmitted.
+     */
+    public void setRepeatCount(int repeatCount){
+        DGRM_REPEAT = 3;
+        DGRM_REPEAT_TX = DGRM_REPEAT;
+        DGRM_REPEAT_RX = DGRM_REPEAT;
     }
 }

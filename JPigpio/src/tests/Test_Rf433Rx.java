@@ -6,8 +6,6 @@ import jpigpio.PigpioSocket;
 import jpigpio.Utils;
 import jpigpio.packet.*;
 
-import java.util.Arrays;
-
 
 /**
  * Created by Jozef on 24.04.2016.
@@ -22,11 +20,14 @@ public class Test_Rf433Rx {
         String host = "pigpiod-host";
         int port = 8888;
 
-        int waitForData = 10000; // milliseconds to wait for packets
+        int waitForData = 20000; // milliseconds to wait for packets
         int waitStep = 2000;
 
         // protocol defines message length, repetition of messages, signal levels etc.
         Protocol protocol = new Protocol();
+
+        protocol.setRepeatCount(5); // setting this to lowe value than transmitter means duplicates will be reported
+        protocol.setDataSize(15);
 
         // connect to gpigpiod instance
         JPigpio pigpio = new PigpioSocket(host,port);
