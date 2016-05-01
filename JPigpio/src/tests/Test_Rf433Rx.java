@@ -11,7 +11,7 @@ import java.util.Arrays;
 /**
  * Created by Jozef on 24.04.2016.
  */
-public class Test_PacketRx {
+public class Test_Rf433Rx {
 
     public static void main(String[] args) throws PigpioException, InterruptedException {
 
@@ -31,23 +31,23 @@ public class Test_PacketRx {
         JPigpio pigpio = new PigpioSocket(host,port);
         pigpio.gpioInitialize();
 
-        Rx rx = new Rx(pigpio, GPIO_RX, protocol);
+        Rf433rx rf433rx = new Rf433rx(pigpio, GPIO_RX, protocol);
 
         System.out.println("Waiting "+ waitForData+ " ms for data.");
 
         int w = waitForData;
         while (w > 0){
-            while (rx.available() > 0)
-                System.out.println("Received "+Arrays.toString(rx.get()));
+            while (rf433rx.available() > 0)
+                System.out.println("Received "+Arrays.toString(rf433rx.get()));
             Thread.sleep(waitStep);
             w -= waitStep;
             System.out.println("Waiting "+ w + " ms more.");
         }
 
-        System.out.println("RX Byte Errors = "+rx.byteErrorCount());
-        System.out.println("RX Datagram Errors = "+rx.datagramErrorCount());
+        System.out.println("RX Byte Errors = "+ rf433rx.byteErrorCount());
+        System.out.println("RX Datagram Errors = "+ rf433rx.datagramErrorCount());
         System.out.println("Terminating receiver.");
-        rx.terminate();
+        rf433rx.terminate();
 
         System.out.println("Terminating RPi connection.");
         pigpio.gpioTerminate();

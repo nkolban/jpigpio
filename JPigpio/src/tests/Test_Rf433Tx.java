@@ -3,14 +3,14 @@ package tests;
 import jpigpio.PigpioException;
 import jpigpio.PigpioSocket;
 import jpigpio.packet.Protocol;
-import jpigpio.packet.Tx;
+import jpigpio.packet.Rf433tx;
 
 import java.util.Arrays;
 
 /**
  * Created by Jozef on 26.04.2016.
  */
-public class Test_PacketTx {
+public class Test_Rf433Tx {
 
     // GPIO pin for transmitting
     static int GPIO_TX = 26;
@@ -23,7 +23,7 @@ public class Test_PacketTx {
     static Protocol protocol = new Protocol();
 
     static PigpioSocket pi;
-    static Tx tx;
+    static Rf433tx rf433tx;
 
     public static void main(String[] args) throws PigpioException, InterruptedException {
 
@@ -38,22 +38,22 @@ public class Test_PacketTx {
         pi = new PigpioSocket(host,port);
         pi.gpioInitialize();
 
-        tx = new Tx(pi, GPIO_TX, protocol);
+        rf433tx = new Rf433tx(pi, GPIO_TX, protocol);
 
         System.out.println("Transmit test message sending "+ Arrays.toString(TX_TEST_MSG) + " " + protocol.DGRM_REPEAT_TX + " times");
-        tx.put(TX_TEST_MSG);
+        rf433tx.put(TX_TEST_MSG);
 
         System.out.println("Transmit test message sending "+ Arrays.toString(TX_TEST_MSG2) + " " + protocol.DGRM_REPEAT_TX + " times");
-        tx.put(TX_TEST_MSG2);
+        rf433tx.put(TX_TEST_MSG2);
 
-        while (!tx.ready()) {
+        while (!rf433tx.ready()) {
             System.out.println("Waiting for transmitter to finish its job. "+w+"ms");
             Thread.sleep(waitStep);
             w += waitStep;
         }
 
         System.out.println("Terminating transmitter.");
-        tx.terminate();
+        rf433tx.terminate();
 
         System.out.println("Terminating RPi connection.");
         pi.gpioTerminate();

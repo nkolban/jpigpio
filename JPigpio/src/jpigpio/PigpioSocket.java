@@ -22,7 +22,7 @@ public class PigpioSocket extends CommonPigpio {
 
 	SocketLock slCmd; // socket for sending commands to PIGPIO
 
-	NotificationListener listener = null;
+	NotificationRouter listener = null;
 
 	public final int PIGPIOD_MESSAGE_SIZE = 12;
 
@@ -133,11 +133,11 @@ public class PigpioSocket extends CommonPigpio {
 	private final int CMD_NOIB = 99;		//99 0 0 0 -
 
 	/**
-	 * Notification listener runs and listens to asynchronous messages received from Pigpio daemon
-	 * triggered by subscribing to notifications.
-	 * Messages are distributed to subscribed callbacks.
+	 * Notification router runs in the background thread and listens to asynchronous messages
+	 * received from Pigpio daemon triggered by subscribing to notifications.
+	 * Messages are routed to relevant subscribed notificationListeners.
 	 */
-	class NotificationListener implements Runnable{
+	class NotificationRouter implements Runnable{
 
 		SocketLock slNotify;  // socket for notifications
 		SocketLock slPiCmd; // socket for commands
@@ -146,7 +146,7 @@ public class PigpioSocket extends CommonPigpio {
 		boolean go = true;
 		Thread thread;
 
-		ArrayList<Callback> callbacks = new ArrayList<>();
+		ArrayList<NotificationListener> notificationListeners = new ArrayList<>();
 		int monitor = 0;
 
 		/**
@@ -159,7 +159,7 @@ public class PigpioSocket extends CommonPigpio {
 		 * 	PIGPIOD port
 		 * @throws PigpioException
          */
-		public NotificationListener(SocketLock slCmd, String host, int port) throws PigpioException{
+		public NotificationRouter(SocketLock slCmd, String host, int port) throws PigpioException{
 			this.slPiCmd = slCmd;
 			try {
 
@@ -170,7 +170,7 @@ public class PigpioSocket extends CommonPigpio {
 				handle = slNotify.sendCmd(CMD_NOIB, 0, 0);
 
 			} catch (IOException e) {
-				throw new PigpioException("NotificationListener", e);
+				throw new PigpioException("NotificationRouter", e);
 			}
 
 		}
@@ -187,7 +187,7 @@ public class PigpioSocket extends CommonPigpio {
 					slPiCmd.sendCmd(CMD_NC, handle, 0);
 					slNotify.terminate();
 				} catch (IOException e) {
-					throw new PigpioException("NotificationListener.terminate", e);
+					throw new PigpioException("NotificationRouter.terminate", e);
 				}
 
 			}
@@ -195,33 +195,33 @@ public class PigpioSocket extends CommonPigpio {
 		}
 
         /**
-         * Add callback object to the list of objects to call when notification is received
-         * @param callback Callback object to be added to the list
+         * Add notificationListener object to the list of objects to call when notification is received
+         * @param notificationListener NotificationListener object to be added to the list
          * @throws PigpioException
          */
-        public void append(Callback callback) throws PigpioException{
+        public void addListener(NotificationListener notificationListener) throws PigpioException{
 			try {
-				callbacks.add(callback);
-				monitor = monitor | callback.bit;
+				notificationListeners.add(notificationListener);
+				monitor = monitor | notificationListener.bit;
 				// send command to start sending notifications for bit-map specified GPIOs
 				slPiCmd.sendCmd(CMD_NB, handle, monitor);
 			} catch (IOException e) {
-				throw new PigpioException("NotificationListener.append", e);
+				throw new PigpioException("NotificationRouter.addListener", e);
 			}
 		}
 
         /**
-         * Remove object from the list of callback objects to be notified
-         * @param callback Callback object to be removed from the list.
+         * Remove object from the list of notificationListener objects to be notified
+         * @param notificationListener NotificationListener object to be removed from the list.
          * @throws PigpioException
          */
-        public void remove(Callback callback) throws PigpioException{
+        public void removeListener(NotificationListener notificationListener) throws PigpioException{
 			int newMonitor = 0;
 
-			if (callbacks.remove(callback)){
+			if (notificationListeners.remove(notificationListener)){
 
-				// calculate new bit-map in case no other callback monitors PIGPIO of callback being removed
-				for (Callback c:callbacks)
+				// calculate new bit-map in case no other notificationListener monitors PIGPIO of notificationListener being removed
+				for (NotificationListener c: notificationListeners)
 					newMonitor |= c.bit;
 
 				// if new bit-map differs, let PIGPIO know
@@ -230,7 +230,7 @@ public class PigpioSocket extends CommonPigpio {
 					try {
 						slPiCmd.sendCmd(CMD_NB, handle, monitor);
 					} catch (IOException e) {
-						throw new PigpioException("NotificationListener.remove", e);
+						throw new PigpioException("NotificationRouter.removeListener", e);
 					}
 				}
 
@@ -267,8 +267,8 @@ public class PigpioSocket extends CommonPigpio {
 					if (flags == 0) {
 						changed = level ^ lastLevel;
 						lastLevel = level;
-						for (Callback cb : callbacks) {
-							// check if changed GPIO is the one callback is waiting for
+						for (NotificationListener cb : notificationListeners) {
+							// check if changed GPIO is the one listener is waiting for
 							if ((cb.bit & changed) != 0) {
 								// let's assume new gpio level is "low"
 								newLevel = 0;
@@ -277,7 +277,7 @@ public class PigpioSocket extends CommonPigpio {
 									newLevel = 1;
 								//System.out.println("#3 "+changed+" : "+Integer.toBinaryString(cb.bit)+" : "+(cb.bit & changed));
 								if ((cb.edge ^ newLevel) != 0)
-									cb.func(cb.gpio, newLevel, tick);
+									cb.processNotification(cb.gpio, newLevel, tick);
 
 							}
 						}
@@ -285,15 +285,15 @@ public class PigpioSocket extends CommonPigpio {
 						// is it a watchdog message?
 						if ((flags & PI_NTFY_FLAGS_WDOG) != 0) {
 							gpio = flags & PI_NTFY_FLAGS_WDOG;
-							for (Callback cb : callbacks)
+							for (NotificationListener cb : notificationListeners)
 								if (cb.gpio == gpio)
-									cb.func(cb.gpio, PI_TIMEOUT, tick);
+									cb.processNotification(cb.gpio, PI_TIMEOUT, tick);
 					}
 				}
 
 			} catch (IOException e) {
 				// TODO: handle exception somehow :-)
-				//throw new PigpioException("NotificationListener.run",e);
+				//throw new PigpioException("NotificationRouter.run",e);
             } catch (InterruptedException e) {
                 // TODO: handle exception somehow :-)
 			}
@@ -334,7 +334,7 @@ public class PigpioSocket extends CommonPigpio {
 	public void gpioInitialize() throws PigpioException {
 		try {
 			slCmd = new SocketLock(host, port);
-			listener = new NotificationListener(slCmd, host, port);
+			listener = new NotificationRouter(slCmd, host, port);
 			listener.start();
 		} catch (Exception e) {
 			throw new PigpioException("gpioInitialize", e);
@@ -898,7 +898,7 @@ public class PigpioSocket extends CommonPigpio {
 	 *
 	 * The callback may be cancelled by calling the cancel function.
 	 *
-	 * A GPIO may have multiple callbacks (although I can't think of
+	 * A GPIO may have multiple notificationListeners (although I can't think of
 	 * a reason to do so).
 	 *
 	 * ...
@@ -921,13 +921,13 @@ public class PigpioSocket extends CommonPigpio {
 	 * 	user supplied callback object.
      */
 	@Override
-	public void addCallback(Callback cb) throws PigpioException{
-		listener.append(cb);
+	public void addCallback(NotificationListener cb) throws PigpioException{
+		listener.addListener(cb);
 	}
 
 	@Override
-	public void removeCallback(Callback cb) throws PigpioException{
-		listener.remove(cb);
+	public void removeCallback(NotificationListener cb) throws PigpioException{
+		listener.removeListener(cb);
 	}
 
 

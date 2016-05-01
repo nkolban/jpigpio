@@ -7,16 +7,16 @@ import jpigpio.*;
  */
 public class Test_SocketListen {
 
-    class MyCallback extends Callback {
+    class MyNotificationListener extends NotificationListener {
 
-        MyCallback(int userGpio, int edge){
+        MyNotificationListener(int userGpio, int edge){
             super(userGpio, edge);
         }
 
         @Override
-        public void func(int gpio, int level, long tick){
+        public void processNotification(int gpio, int level, long tick){
             this.count++;
-            System.out.println("MyCallback GPIO="+gpio);
+            System.out.println("MyNotificationListener GPIO="+gpio);
         }
 
     }
@@ -32,7 +32,7 @@ public class Test_SocketListen {
         String host = "pigpiod-host";
         int gpio = 21;
 
-        Callback cb = new MyCallback(gpio,JPigpio.PI_RISING_EDGE);
+        NotificationListener cb = new MyNotificationListener(gpio,JPigpio.PI_RISING_EDGE);
         try {
             JPigpio pigpio = new PigpioSocket(host, 8888);
             pigpio.gpioInitialize();

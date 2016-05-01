@@ -1,6 +1,6 @@
 package jpigpio.packet;
 
-import jpigpio.Callback;
+import jpigpio.NotificationListener;
 import jpigpio.JPigpio;
 import jpigpio.PigpioException;
 import jpigpio.Utils;
@@ -8,26 +8,30 @@ import jpigpio.Utils;
 import java.util.ArrayList;
 
 /**
- * Created by Jozef on 24.04.2016.
+ * Class implementing RF 433 MHz communication receiver (e.g. XD-RF-5V).
+ * It implements NotificationReceiver which is decoding pulses based on preset Protocol
+ * (you can tweak signalling by creating your own Protocol). NotificationListener is plugged
+ * to PigpioSocket NotificationRouter, receiving every notification received from pigpiod daemon.
+ * Received datagrams can be accessed via method get()
  */
-public class Rx {
+public class Rf433rx {
 
     JPigpio pi;
     int rxGpio;
 
-    Callback cb;
+    NotificationListener cb;
 
     // Protocol describing signal levels, datagram length etc.
     Protocol protocol;
 
-    ArrayList<byte[]> messages = new ArrayList<>();
+    ArrayList<byte[]> datagrams = new ArrayList<>();
 
     /**
      * Class handling all notifications coming from pigpiod.
      * Technically this means this class analyzes signals received by pigpiod
-     * and creates packets out of them.
+     * and creates datagrams out of them.
      */
-    class RxCallback extends Callback {
+    class RxNotificationListener extends NotificationListener {
 
         final int RX_STATE_IDLE = 0;
         final int RX_STATE_MSGSTARTFOUND = 1;
@@ -54,7 +58,7 @@ public class Rx {
 
         String pulses = "";
 
-        RxCallback(int userGpio, int edge){
+        RxNotificationListener(int userGpio, int edge){
             super(userGpio, edge);
             try {
                 lastTick = pi.getCurrentTick();
@@ -64,7 +68,7 @@ public class Rx {
         }
 
         @Override
-        public void func(int gpio, int level, long tick){
+        public void processNotification(int gpio, int level, long tick){
             int trans = 0;
 
             count++;  // increase called count for statistical purposes
@@ -91,7 +95,7 @@ public class Rx {
             } else if (pulse < protocol.RX_PULSE_ZERO) {  // normal long pulse
                 trans = level + 4;
                 pulses += "0";
-            } else if (pulse > protocol.RX_PULSE_MSGGAP) { // gap between messages
+            } else if (pulse > protocol.RX_PULSE_MSGGAP) { // gap between datagrams
                 trans = level + 6;
                 pulses += " ";
             } else
@@ -182,7 +186,7 @@ public class Rx {
 
                             // if no datagram error (or ignoring datagram errors) and not duplicate
                             if ((protocol.DGRM_KEEP_ON_ENCODING_ERROR | !datagramError) && !duplicate)
-                                messages.add(datagram.clone());
+                                datagrams.add(datagram.clone());
 
                             state = RX_STATE_IDLE;
                             //messageTick = messageTick;
@@ -203,41 +207,40 @@ public class Rx {
     }
 
 
-    public Rx (JPigpio pi, int rxGpio, Protocol protocol) throws PigpioException{
+    public Rf433rx(JPigpio pi, int rxGpio, Protocol protocol) throws PigpioException{
         this.pi = pi;
         this.rxGpio = rxGpio;
         this.protocol = protocol;
 
         pi.gpioSetMode(rxGpio, JPigpio.PI_INPUT);
 
-        setCallback(new RxCallback(rxGpio, JPigpio.PI_EITHER_EDGE));
+        setCallback(new RxNotificationListener(rxGpio, JPigpio.PI_EITHER_EDGE));
 
     }
 
-    public void setCallback(Callback callback) throws PigpioException{
-        this.cb = callback;
+    public void setCallback(NotificationListener notificationListener) throws PigpioException{
+        this.cb = notificationListener;
         pi.addCallback(cb);
     }
 
     /**
      * Get one packet from available packets.
      * Check if there are packets available before calling this method.
-     * @return
-     * Packet.
-     * IMPORTANT: Packet contains nibbles 4bit) stored in bytes.
+     * @return Datagram.
+     * IMPORTANT: Datagram contains nibbles 4bit) stored in bytes.
      * @throws IndexOutOfBoundsException
      */
     public byte[] get() throws IndexOutOfBoundsException {
-        return messages.remove(0);
+        return datagrams.remove(0);
     }
 
     /**
      * Returns number of packets available for pickup
      * @return
-     * Number of messages available.
+     * Number of datagrams available.
      */
     public int available(){
-        return messages.size();
+        return datagrams.size();
     }
 
     /**
@@ -253,10 +256,19 @@ public class Rx {
 
     }
 
+    /**
+     * Simple statistics of byte errors detected while receiving datagrams.
+     * High number of errors might mean low signal strength or too long datagrams.
+     * @return byte error count
+     */
     public int byteErrorCount(){
         return cb.byteErrorCount();
     }
 
+    /**
+     * Simple statistics returning number of errors in datagrams.
+     * @return number of errors in datagrams.
+     */
     public int datagramErrorCount(){
         return cb.datagramErrorCount();
     }

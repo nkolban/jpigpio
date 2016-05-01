@@ -243,7 +243,7 @@ public interface JPigpio {
 	 * to the fifo with the flags set to indicate a watchdog timeout.
 	 *
 	 * The callback class interprets the flags and will
-	 * call registered callbacks for the GPIO with level TIMEOUT.
+	 * call registered notificationListeners for the GPIO with level TIMEOUT.
 	 *
 	 * ...
 	 * pi.setWatchdog(23, 1000) # 1000 ms watchdog on GPIO 23
@@ -297,11 +297,11 @@ public interface JPigpio {
 	 *
 	 * #                              ON     OFF  DELAY
 	 *
-	 * flash_500.append(pigpio.pulse(1<<G1, 1<<G2, 500000))
-	 * flash_500.append(pigpio.pulse(1<<G2, 1<<G1, 500000))
+	 * flash_500.addListener(pigpio.pulse(1<<G1, 1<<G2, 500000))
+	 * flash_500.addListener(pigpio.pulse(1<<G2, 1<<G1, 500000))
 	 *
-	 * flash_100.append(pigpio.pulse(1<<G1, 1<<G2, 100000))
-	 * flash_100.append(pigpio.pulse(1<<G2, 1<<G1, 100000))
+	 * flash_100.addListener(pigpio.pulse(1<<G1, 1<<G2, 100000))
+	 * flash_100.addListener(pigpio.pulse(1<<G2, 1<<G1, 100000))
 	 *
 	 * pi.wave_clear() # clear any existing waveforms
 	 *
@@ -626,18 +626,18 @@ public interface JPigpio {
 	 * Add callback listener object which would receive notifications related to
 	 * GPIO levels which listener has specified.
 	 * @param cb
-	 * 	Callback object
+	 * 	NotificationListener object
 	 * @throws PigpioException
      */
-	public void addCallback(Callback cb) throws PigpioException;
+	public void addCallback(NotificationListener cb) throws PigpioException;
 
 	/**
 	 * Remove callback listener object from notification thread.
 	 * @param cb
-	 * 	Callback object
+	 * 	NotificationListener object
 	 * @throws PigpioException
      */
-	public void removeCallback(Callback cb) throws PigpioException;
+	public void removeCallback(NotificationListener cb) throws PigpioException;
 
 	public static final int PI_GPIO2 = 2;
 	public static final int PI_GPIO3 = 3;

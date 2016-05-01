@@ -7,16 +7,23 @@ import jpigpio.Pulse;
 import java.util.ArrayList;
 
 /**
- * Created by Jozef on 24.04.2016.
+ * Class implementing 433 MHz transmitter (e.g. FS1000A) using pigpiod daemon.
+ * Specific protocol (high/low signal duration, datagram/message length etc. can be cofigured
+ * by passing different Protocol object to the constructor of this class.
+ *
+ * Example usage: see Test_Rf433Tx
  */
-public class Tx {
+public class Rf433tx {
     JPigpio pi;
-    int txGpio;
+    int txGpio;  // GPIO pin transmitter is connected to
     int txBit;
 
     Protocol protocol;
     Transmitter transmitter;
 
+    /**
+     * Inner class responsible for converting pulses to pigpiod waves and transmitting them in a separate thread.
+     */
     class Transmitter implements Runnable {
 
         Thread thread;
@@ -61,7 +68,7 @@ public class Tx {
                             }
                         }
 
-                        // remove waveform after it has been transmitted
+                        // removeListener waveform after it has been transmitted
                         pi.waveDelete(waveId);
 
                         busy = false;
@@ -80,10 +87,19 @@ public class Tx {
 
         }
 
+        /**
+         * Add pulse to transmitter queue
+         * @param pulse Pulse to be transmitted
+         */
         void addWave( ArrayList<Pulse> pulse){
             this.wavePulses.add(pulse);
         }
 
+        /**
+         * Read status of transmitter.
+         * @return true if not transmitting and there are no pulses waiting to be transmitted
+         * @throws PigpioException
+         */
         boolean ready() throws PigpioException {
             return this.wavePulses.size() == 0 && !busy;
         }
@@ -97,6 +113,10 @@ public class Tx {
             }
         }
 
+        /**
+         * Stop transmitter
+         * @throws PigpioException
+         */
         void stop() throws PigpioException{
             this.stop = true;
             pi.waveTxStop();
@@ -104,7 +124,7 @@ public class Tx {
 
     }
 
-    public Tx(JPigpio pi, int txGpio, Protocol protocol) throws PigpioException {
+    public Rf433tx(JPigpio pi, int txGpio, Protocol protocol) throws PigpioException {
         this.pi = pi;
         this.txGpio = txGpio;
         this.txBit = (1<< txGpio);

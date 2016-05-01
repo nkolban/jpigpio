@@ -6,14 +6,14 @@ package jpigpio.packet;
 public class Protocol {
 
     //############# SIGNALING
-    public final int TX_PULSE_MSGGAP = 10800;     // gap between two messages (microsec)
+    public final int TX_PULSE_MSGGAP = 10800;     // gap between two datagrams (microsec)
     public final int TX_PULSE_HIGH = 280;         // duration of high pulse (microsec)
     public final int TX_PULSE_LOW = 980;          // duration of low pulse (microsec)
 
     public final int RX_PULSE_TOOSHORT = 150;     // pulse too short to be considered meaningful (microsec)
     public final int RX_PULSE_ONE = 500;          // short pulse = 1 (one) (microsec)
     public final int RX_PULSE_ZERO = 2000;        // long pulse = 0 (zero) (microsec)
-    public final int RX_PULSE_MSGGAP = 5000;      // gap between messages (microsec)
+    public final int RX_PULSE_MSGGAP = 5000;      // gap between datagrams (microsec)
 
     //############# DATAGRAMS
     public final int DGRM_LENGTH = 10;            // datagram length in bytes
