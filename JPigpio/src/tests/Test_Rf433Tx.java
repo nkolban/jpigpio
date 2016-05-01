@@ -2,6 +2,7 @@ package tests;
 
 import jpigpio.PigpioException;
 import jpigpio.PigpioSocket;
+import jpigpio.Utils;
 import jpigpio.packet.Protocol;
 import jpigpio.packet.Rf433tx;
 
@@ -28,8 +29,8 @@ public class Test_Rf433Tx {
     public static void main(String[] args) throws PigpioException, InterruptedException {
 
         // test message
-        byte[] TX_TEST_MSG = new byte[] {0,0,0,1,15,1,5,10,12,2};
-        byte[] TX_TEST_MSG2 = new byte[] {1,0,0,1,0,0,0,0,0,2};
+        byte[] TX_TEST_MSG = new byte[] {0x00,0x01,(byte)0xF1, (byte)0x5A, (byte)0xC2};
+        byte[] TX_TEST_MSG2 = new byte[] {0x10,0x0A,0x0B,0x0C,0x02};
 
         int waitStep = 2000;
         int w = 0;
@@ -40,10 +41,10 @@ public class Test_Rf433Tx {
 
         rf433tx = new Rf433tx(pi, GPIO_TX, protocol);
 
-        System.out.println("Transmit test message sending "+ Arrays.toString(TX_TEST_MSG) + " " + protocol.DGRM_REPEAT_TX + " times");
+        System.out.println("Transmit test message sending "+ Utils.bytesToHex(TX_TEST_MSG) + " " + protocol.DGRM_REPEAT_TX + " times");
         rf433tx.put(TX_TEST_MSG);
 
-        System.out.println("Transmit test message sending "+ Arrays.toString(TX_TEST_MSG2) + " " + protocol.DGRM_REPEAT_TX + " times");
+        System.out.println("Transmit test message sending "+ Utils.bytesToHex(TX_TEST_MSG2) + " " + protocol.DGRM_REPEAT_TX + " times");
         rf433tx.put(TX_TEST_MSG2);
 
         while (!rf433tx.ready()) {

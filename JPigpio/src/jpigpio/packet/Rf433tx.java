@@ -3,6 +3,7 @@ package jpigpio.packet;
 import jpigpio.JPigpio;
 import jpigpio.PigpioException;
 import jpigpio.Pulse;
+import jpigpio.Utils;
 
 import java.util.ArrayList;
 
@@ -174,26 +175,43 @@ public class Rf433tx {
         return wf;
     }
 
+
     /**
      * Converts provided data to waveforms using properties of Protocol
      * and transmits waveforms repeatedly (if required by Protocol).
      *
-     * @param data
-     * Data packet to transmit.
-     * IMPORTANT data is an array of nibbles (4bit).
+     * @param data data to be transmitted
      * @return
      * 0 - everything is OK
      * -1 - data
      * @throws PigpioException
      */
     public int put (byte[] data) throws PigpioException{
+        if (data.length != protocol.DATA_SIZE)
+            return -1;
+
+        return putNibbles(Utils.bytes2nibbles(data));
+    }
+
+    /**
+     * Converts provided nibbles (4bit stored in 8bit) to waveforms using properties of Protocol
+     * and transmits waveforms repeatedly (if required by Protocol).
+     *
+     * @param nibbles
+     * nibbles stored in bytes to transmit.
+     * @return
+     * 0 - everything is OK
+     * -1 - data
+     * @throws PigpioException
+     */
+    int putNibbles (byte[] nibbles) throws PigpioException{
         int ret = 0;
         ArrayList<Pulse> wf;
 
-        if (data.length < protocol.DGRM_LENGTH)
+        if (nibbles.length < protocol.DGRM_LENGTH)
             return -1;
 
-        wf = constructMessagePulses(data);
+        wf = constructMessagePulses(nibbles);
         transmitter.addWave(wf);
 
         return ret;

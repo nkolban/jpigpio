@@ -3,6 +3,7 @@ package tests;
 import jpigpio.JPigpio;
 import jpigpio.PigpioException;
 import jpigpio.PigpioSocket;
+import jpigpio.Utils;
 import jpigpio.packet.*;
 
 import java.util.Arrays;
@@ -38,7 +39,7 @@ public class Test_Rf433Rx {
         int w = waitForData;
         while (w > 0){
             while (rf433rx.available() > 0)
-                System.out.println("Received "+Arrays.toString(rf433rx.get()));
+                System.out.println("Received "+ Utils.bytesToHex(rf433rx.get()));
             Thread.sleep(waitStep);
             w -= waitStep;
             System.out.println("Waiting "+ w + " ms more.");

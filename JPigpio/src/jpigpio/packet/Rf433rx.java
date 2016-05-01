@@ -24,6 +24,9 @@ public class Rf433rx {
     // Protocol describing signal levels, datagram length etc.
     Protocol protocol;
 
+    /**
+     * ArrayList of datagrams received from transmitter.
+     */
     ArrayList<byte[]> datagrams = new ArrayList<>();
 
     /**
@@ -186,7 +189,7 @@ public class Rf433rx {
 
                             // if no datagram error (or ignoring datagram errors) and not duplicate
                             if ((protocol.DGRM_KEEP_ON_ENCODING_ERROR | !datagramError) && !duplicate)
-                                datagrams.add(datagram.clone());
+                                datagrams.add(Utils.nibbles2bytes(datagram));
 
                             state = RX_STATE_IDLE;
                             //messageTick = messageTick;

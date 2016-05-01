@@ -186,7 +186,7 @@ public class Utils {
 	 * print(pigpio.tickDiff(4294967272, 12))
 	 * 36
 	 * ...
-	 * @param olderTicke
+	 * @param olderTick
 	 * 	tick 1
 	 * @param tick
 	 * 	tick 2
@@ -215,7 +215,7 @@ public class Utils {
 		byte[] nibb = new byte[bytes.length*2];
 
 		for (int i = 0; i<bytes.length;i++){
-			nibb[i*2] = (byte)(bytes[i] & 0xF0);
+			nibb[i*2] = (byte)(bytes[i] >> 4);
 			nibb[i*2+1] = (byte)(bytes[i] & 0x0F);
 		}
 		return nibb;
@@ -225,7 +225,7 @@ public class Utils {
 		byte[] bytes = new byte[nibb.length/2];
 
 		for (int i = 0; i<bytes.length;i++)
-			bytes[i] = (byte)(nibb[i*2] | nibb[i*2+1]);
+			bytes[i] = (byte)(nibb[i*2]<<4 | nibb[i*2+1]);
 
 		return bytes;
 	}
