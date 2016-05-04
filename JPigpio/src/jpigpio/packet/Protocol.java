@@ -27,7 +27,7 @@ public class Protocol {
      */
     public int DGRM_REPEAT_RX = DGRM_REPEAT;
 
-    public final int DGRM_RX_TIMEOUT = 1000000;    // datagram timeout (microseconds)
+    public int DGRM_RX_TIMEOUT = 1000000;    // datagram timeout (microseconds)
 
     /**
      * Set this to False to discard datagrams where encoding error was detected.
@@ -40,37 +40,37 @@ public class Protocol {
     /**
      * gap between two datagrams (microsec)
      */
-    public final int TX_PULSE_MSGGAP = 10800;
+    public int TX_PULSE_MSGGAP = 10800;
 
     /**
      * duration of high pulse (microsec)
      */
-    public final int TX_PULSE_HIGH = 280;
+    public int TX_PULSE_HIGH = 280;
 
     /**
      * duration of low pulse (microsec)
      */
-    public final int TX_PULSE_LOW = 980;
+    public int TX_PULSE_LOW = 980;
 
     /**
      * pulse too short to be considered meaningful (microsec)
      */
-    public final int RX_PULSE_TOOSHORT = 150;
+    public int RX_PULSE_TOOSHORT = 150;
 
     /**
      * short pulse = 1 (one) (microsec)
      */
-    public final int RX_PULSE_ONE = 500;
+    public int RX_PULSE_ONE = 500;
 
     /**
      * long pulse = 0 (zero) (microsec)
      */
-    public final int RX_PULSE_ZERO = 2000;
+    public int RX_PULSE_ZERO = 2000;
 
     /**
      * gap between datagrams (microsec)
      */
-    public final int RX_PULSE_MSGGAP = 5000;
+    public int RX_PULSE_MSGGAP = 5000;
 
     //############# ENCODING
     public int[] SYMBOL = new int[]         // encoding of 4 bit nibbles into 8 bits (= byte) => error detection
