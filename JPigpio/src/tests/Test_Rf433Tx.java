@@ -14,7 +14,7 @@ import java.util.Arrays;
 public class Test_Rf433Tx {
 
     // GPIO pin for transmitting
-    static int GPIO_TX = 26;
+    static int GPIO_TX = 23;
 
     // pigpiod host & port
     static String host = "pigpiod-host";
@@ -29,15 +29,15 @@ public class Test_Rf433Tx {
     public static void main(String[] args) throws PigpioException, InterruptedException {
 
         // test message
-        byte[] TX_TEST_MSG = new byte[]  {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x11, 0x12, 0x13, 0x14};
+        byte[] TX_TEST_MSG = new byte[]  {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x11, 0x12, 0x13, 0x14, 0x15};
         byte[] TX_TEST_MSG2 = new byte[] {(byte)0xA1, (byte)0xA2, (byte)0xA3, (byte)0xA4, (byte)0xA5, (byte)0xA6, (byte)0xA7,
-                (byte)0xF1, (byte)0xF2, (byte)0xF3, (byte)0xF4, (byte)0xF5, (byte)0xF6, (byte)0xF7, (byte)0xF8};
+                (byte)0xF1, (byte)0xF2, (byte)0xF3, (byte)0xF4, (byte)0xF5, (byte)0xF6, (byte)0xF7, (byte)0xF8, (byte)0xF7};
 
         int waitStep = 2000;
         int w = 0;
 
         protocol.setRepeatCount(15);
-        protocol.setDataSize(15);
+        protocol.setDataSize(16);
 
         // gpigpiod instance
         pi = new PigpioSocket(host,port);
