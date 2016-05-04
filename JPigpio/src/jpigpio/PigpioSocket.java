@@ -323,6 +323,7 @@ public class PigpioSocket extends CommonPigpio {
 	public PigpioSocket(String host, int port) throws PigpioException {
 		this.host = host;
 		this.port = port;
+		gpioInitialize();
 	}
 
 	/**
@@ -333,9 +334,12 @@ public class PigpioSocket extends CommonPigpio {
 	@Override
 	public void gpioInitialize() throws PigpioException {
 		try {
-			slCmd = new SocketLock(host, port);
-			listener = new NotificationRouter(slCmd, host, port);
-			listener.start();
+			if (slCmd == null)
+				slCmd = new SocketLock(host, port);
+			if (listener == null) {
+				listener = new NotificationRouter(slCmd, host, port);
+				listener.start();
+			}
 		} catch (Exception e) {
 			throw new PigpioException("gpioInitialize", e);
 		}
