@@ -22,7 +22,7 @@ public class PigpioSocket extends CommonPigpio {
 
 	SocketLock slCmd; // socket for sending commands to PIGPIO
 
-	NotificationRouter listener = null;
+	NotificationRouter router = null;
 
 	public final int PIGPIOD_MESSAGE_SIZE = 12;
 
@@ -146,7 +146,7 @@ public class PigpioSocket extends CommonPigpio {
 		boolean go = true;
 		Thread thread;
 
-		ArrayList<NotificationListener> notificationListeners = new ArrayList<>();
+		ArrayList<GPIOListener> gpioListeners = new ArrayList<>();
 		int monitor = 0;
 
 		/**
@@ -195,14 +195,14 @@ public class PigpioSocket extends CommonPigpio {
 		}
 
         /**
-         * Add notificationListener object to the list of objects to call when notification is received
-         * @param notificationListener NotificationListener object to be added to the list
+         * Add GPIOListener object to the list of objects to call when notification is received
+         * @param gpioListener GPIOListener object to be added to the list
          * @throws PigpioException
          */
-        public void addListener(NotificationListener notificationListener) throws PigpioException{
+        public void addListener(GPIOListener gpioListener) throws PigpioException{
 			try {
-				notificationListeners.add(notificationListener);
-				monitor = monitor | notificationListener.bit;
+				gpioListeners.add(gpioListener);
+				monitor = monitor | gpioListener.bit;
 				// send command to start sending notifications for bit-map specified GPIOs
 				slPiCmd.sendCmd(CMD_NB, handle, monitor);
 			} catch (IOException e) {
@@ -211,17 +211,17 @@ public class PigpioSocket extends CommonPigpio {
 		}
 
         /**
-         * Remove object from the list of notificationListener objects to be notified
-         * @param notificationListener NotificationListener object to be removed from the list.
+         * Remove object from the list of GPIOListener objects to be notified
+         * @param gpioListener GPIOListener object to be removed from the list.
          * @throws PigpioException
          */
-        public void removeListener(NotificationListener notificationListener) throws PigpioException{
+        public void removeListener(GPIOListener gpioListener) throws PigpioException{
 			int newMonitor = 0;
 
-			if (notificationListeners.remove(notificationListener)){
+			if (gpioListeners.remove(gpioListener)){
 
 				// calculate new bit-map in case no other notificationListener monitors PIGPIO of notificationListener being removed
-				for (NotificationListener c: notificationListeners)
+				for (GPIOListener c: gpioListeners)
 					newMonitor |= c.bit;
 
 				// if new bit-map differs, let PIGPIO know
@@ -267,7 +267,7 @@ public class PigpioSocket extends CommonPigpio {
 					if (flags == 0) {
 						changed = level ^ lastLevel;
 						lastLevel = level;
-						for (NotificationListener cb : notificationListeners) {
+						for (GPIOListener cb : gpioListeners) {
 							// check if changed GPIO is the one listener is waiting for
 							if ((cb.bit & changed) != 0) {
 								// let's assume new gpio level is "low"
@@ -285,7 +285,7 @@ public class PigpioSocket extends CommonPigpio {
 						// is it a watchdog message?
 						if ((flags & PI_NTFY_FLAGS_WDOG) != 0) {
 							gpio = flags & PI_NTFY_FLAGS_WDOG;
-							for (NotificationListener cb : notificationListeners)
+							for (GPIOListener cb : gpioListeners)
 								if (cb.gpio == gpio)
 									cb.processNotification(cb.gpio, PI_TIMEOUT, tick);
 					}
@@ -336,9 +336,9 @@ public class PigpioSocket extends CommonPigpio {
 		try {
 			if (slCmd == null)
 				slCmd = new SocketLock(host, port);
-			if (listener == null) {
-				listener = new NotificationRouter(slCmd, host, port);
-				listener.start();
+			if (router == null) {
+				router = new NotificationRouter(slCmd, host, port);
+				router.start();
 			}
 		} catch (Exception e) {
 			throw new PigpioException("gpioInitialize", e);
@@ -352,7 +352,7 @@ public class PigpioSocket extends CommonPigpio {
 	public void gpioTerminate() throws PigpioException {
 		try {
 			// stop listener thread
-			listener.terminate();
+			router.terminate();
 			// stop command socket to pigpio
 			slCmd.terminate();
 		} catch (Exception e) {
@@ -921,17 +921,17 @@ public class PigpioSocket extends CommonPigpio {
 	 *
 	 * cb1.cancel() # To cancel callback cb1.
 	 * ...
-     * @param cb
+     * @param gpioListener
 	 * 	user supplied callback object.
      */
 	@Override
-	public void addCallback(NotificationListener cb) throws PigpioException{
-		listener.addListener(cb);
+	public void addCallback(GPIOListener gpioListener) throws PigpioException{
+		this.router.addListener(gpioListener);
 	}
 
 	@Override
-	public void removeCallback(NotificationListener cb) throws PigpioException{
-		listener.removeListener(cb);
+	public void removeCallback(GPIOListener gpioListener) throws PigpioException{
+		this.router.removeListener(gpioListener);
 	}
 
 

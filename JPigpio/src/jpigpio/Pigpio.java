@@ -265,12 +265,12 @@ public class Pigpio extends CommonPigpio {
 	public native long gpioxPulseAndWait(int outGpio, int inGpio, long waitDuration, long pulseHoldDuration, boolean pulseLow) throws PigpioException;
 
 	@Override
-	public void addCallback(NotificationListener cb) throws PigpioException {
+	public void addCallback(GPIOListener gpioListener) throws PigpioException {
 		throw new NotImplementedException();
 	}
 
 	@Override
-	public void removeCallback(NotificationListener cb) throws PigpioException{
+	public void removeCallback(GPIOListener cgpioListener) throws PigpioException{
 		throw new NotImplementedException();
 	}
 

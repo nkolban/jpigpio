@@ -14,7 +14,7 @@ import java.util.Arrays;
 public class Test_Rf433Tx {
 
     // GPIO pin for transmitting
-    static int GPIO_TX = 23;
+    static int GPIO_TX = 27;
 
     // pigpiod host & port
     static String host = "pigpiod-host";

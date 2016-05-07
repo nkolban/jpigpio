@@ -14,7 +14,7 @@ public class Test_Rf433Rx {
 
     public static void main(String[] args) throws PigpioException, InterruptedException {
 
-        int GPIO_RX = 24;    // GPIO for receiving
+        int GPIO_RX = 17;    // GPIO for receiving
 
         // pigpiod host & port
         String host = "pigpiod-host";
@@ -26,8 +26,8 @@ public class Test_Rf433Rx {
         // protocol defines message length, repetition of messages, signal levels etc.
         Protocol protocol = new Protocol();
 
-        protocol.setRepeatCount(5); // setting this to lowe value than transmitter means duplicates will be reported
-        protocol.setDataSize(15);
+        protocol.setRepeatCount(2); // setting this to lowe value than transmitter means duplicates will be reported
+        protocol.setDataSize(16);
 
         // connect to gpigpiod instance
         JPigpio pigpio = new PigpioSocket(host,port);

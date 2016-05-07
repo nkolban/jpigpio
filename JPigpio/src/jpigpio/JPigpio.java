@@ -260,7 +260,7 @@ public interface JPigpio {
 
 	public long getCurrentTick() throws PigpioException;
 
-	// ################ WAVES
+	// ################ WAVEFORMS
 	/**
 	 * This function clears all waveforms and any data added by calls to the wave_add_* functions.
 	 *
@@ -374,7 +374,7 @@ public interface JPigpio {
 	 * 	Returns the new total number of pulses in the current waveform.
      * @throws PigpioException
      */
-	public int waveAddSerial(int userGpio, int baud, byte[] data, int offset, int bbBits, int bbStop) throws PigpioException;
+	public int waveAddSerial(int gpio, int baud, byte[] data, int offset, int bbBits, int bbStop) throws PigpioException;
 
 	/**
 	 * Starts a new empty waveform.
@@ -625,19 +625,19 @@ public interface JPigpio {
 	/**
 	 * Add callback listener object which would receive notifications related to
 	 * GPIO levels which listener has specified.
-	 * @param cb
-	 * 	NotificationListener object
+	 * @param listener
+	 * 	GPIOListener object
 	 * @throws PigpioException
      */
-	public void addCallback(NotificationListener cb) throws PigpioException;
+	public void addCallback(GPIOListener listener) throws PigpioException;
 
 	/**
 	 * Remove callback listener object from notification thread.
-	 * @param cb
-	 * 	NotificationListener object
+	 * @param listener
+	 * 	GPIOListener object
 	 * @throws PigpioException
      */
-	public void removeCallback(NotificationListener cb) throws PigpioException;
+	public void removeCallback(GPIOListener listener) throws PigpioException;
 
 	public static final int PI_GPIO2 = 2;
 	public static final int PI_GPIO3 = 3;
