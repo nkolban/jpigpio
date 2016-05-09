@@ -176,9 +176,11 @@ public class Rf433rx {
                         pulses = "";
 
                         if (dataByte >= protocol.DGRM_LENGTH) {  //datagram complete?
+                            //System.out.println("#1 datagram received: "+datagram.toString());
 
                             if (Utils.tickDiff(messageTick, (int) lastTick) > protocol.DGRM_RX_TIMEOUT || messageTick == 0) {
                                 repeatCount = 0;
+                                duplicate = false;
                             } else if (duplicate)
                                 repeatCount++;
 
@@ -188,8 +190,11 @@ public class Rf433rx {
                             }
 
                             // if no datagram error (or ignoring datagram errors) and not duplicate
-                            if ((protocol.DGRM_KEEP_ON_ENCODING_ERROR | !datagramError) && !duplicate)
+                            // System.out.println("#2 conditions: "+ protocol.DGRM_KEEP_ON_ENCODING_ERROR + " : " + datagramError + " # " + duplicate);
+                            if ((protocol.DGRM_KEEP_ON_ENCODING_ERROR || !datagramError) && !duplicate) {
+                                // System.out.println("#3 datagram processed: "+datagram.toString());
                                 datagrams.add(Utils.nibbles2bytes(datagram));
+                            }
 
                             state = RX_STATE_IDLE;
                             //messageTick = messageTick;
