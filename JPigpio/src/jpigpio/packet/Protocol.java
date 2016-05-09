@@ -16,7 +16,7 @@ public class Protocol {
      */
     public int DGRM_LENGTH = DATA_SIZE*2;
 
-    public int DGRM_REPEAT = 3;
+    public int DGRM_REPEAT = 5;
     /**
      * repeat transmission of each datagram this many times to make sure at least one got through
      */
@@ -107,8 +107,16 @@ public class Protocol {
      * @param repeatCount Count how many times datagram is going to be transmitted.
      */
     public void setRepeatCount(int repeatCount){
-        DGRM_REPEAT = 3;
+        DGRM_REPEAT = repeatCount;
         DGRM_REPEAT_TX = DGRM_REPEAT;
         DGRM_REPEAT_RX = DGRM_REPEAT;
+    }
+
+    public void setRxRepeatCount(int rxRepeatCount) {
+        DGRM_REPEAT_RX = rxRepeatCount;
+    }
+
+    public void setTxRepeatCount(int txRepeatCount) {
+        DGRM_REPEAT_TX = txRepeatCount;
     }
 }
