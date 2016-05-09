@@ -21,17 +21,18 @@ public class Test_Rf433Rx {
         int port = 8888;
 
         int waitForData = 20000; // milliseconds to wait for packets
-        int waitStep = 2000;
+        int waitStep = 1000;
 
         // protocol defines message length, repetition of messages, signal levels etc.
         Protocol protocol = new Protocol();
 
-        protocol.setRepeatCount(2); // setting this to lowe value than transmitter means duplicates will be reported
+        protocol.setRepeatCount(5);
+        protocol.setRxRepeatCount(1); // setting this to lower than TX repeat count value means duplicates will be reported
         protocol.setDataSize(16);
 
         // connect to gpigpiod instance
         JPigpio pigpio = new PigpioSocket(host,port);
-        pigpio.gpioInitialize();
+        //pigpio.gpioInitialize();
 
         Rf433rx rf433rx = new Rf433rx(pigpio, GPIO_RX, protocol);
 
