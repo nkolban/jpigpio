@@ -81,7 +81,7 @@ public class SocketLock {
         // specified timeout
         while (w > 0 && a < 16){
             w -= 10;
-            try{ wait(10); } catch (InterruptedException e) {}
+            try{ Thread.sleep(10); } catch (InterruptedException e) {}
             a = in.available();
         }
 
