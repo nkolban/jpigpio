@@ -543,7 +543,87 @@ public interface JPigpio {
 	// ################ SPI
 
 	/**
-	 * Open an SPI channel.
+	 * Returns a handle for the SPI device on channel.  Data will be
+     * transferred at baud bits per second.  The flags may be used to
+     * modify the default behaviour of 4-wire operation, mode 0,
+     * active low chip select.
+	 *
+     * An auxiliary SPI device is available on all models but the
+     * A and B and may be selected by setting the A bit in the
+     * flags. The auxiliary device has 3 chip selects and a
+     * selectable word size in bits.
+	 *
+     * spi_channel:= 0-1 (0-2 for the auxiliary SPI device).
+     *        baud:= 32K-125M (values above 30M are unlikely to work).
+     *   spi_flags:= see below.
+	 *
+     * Normally you would only use the [*spi_**] functions if
+     * you are or will be connecting to the Pi over a network.  If
+     * you will always run on the local Pi use the standard SPI
+     * module instead.
+	 *
+     * spi_flags consists of the least significant 22 bits.
+	 *
+     * . .
+     * 21 20 19 18 17 16 15 14 13 12 11 10  9  8  7  6  5  4  3  2  1  0
+     *  b  b  b  b  b  b  R  T  n  n  n  n  W  A u2 u1 u0 p2 p1 p0  m  m
+     * . .
+	 *
+     * mm defines the SPI mode.
+	 *
+     * WARNING: modes 1 and 3 do not appear to work on the auxiliary device.
+	 *
+     * . .
+     * Mode POL PHA
+     *  0    0   0
+     *  1    0   1
+     *  2    1   0
+     *  3    1   1
+     * . .
+	 *
+     * px is 0 if CEx is active low (default) and 1 for active high.
+	 *
+     * ux is 0 if the CEx GPIO is reserved for SPI (default)
+     * and 1 otherwise.
+	 *
+     * A is 0 for the standard SPI device, 1 for the auxiliary SPI.
+	 *
+     * W is 0 if the device is not 3-wire, 1 if the device is 3-wire.
+     * Standard SPI device only.
+	 *
+     * nnnn defines the number of bytes (0-15) to write before
+     * switching the MOSI line to MISO to read data.  This field
+     * is ignored if W is not set.  Standard SPI device only.
+	 *
+     * T is 1 if the least significant bit is transmitted on MOSI
+     * first, the default (0) shifts the most significant bit out
+     * first.  Auxiliary SPI device only.
+	 *
+     * R is 1 if the least significant bit is received on MISO
+     * first, the default (0) receives the most significant bit
+     * first.  Auxiliary SPI device only.
+	 *
+     * bbbbbb defines the word size in bits (0-32).  The default (0)
+     * sets 8 bits per word.  Auxiliary SPI device only.
+	 *
+     * The [*spi_read*], [*spi_write*], and [*spi_xfer*] functions
+     * transfer data packed into 1, 2, or 4 bytes according to
+     * the word size in bits.
+	 *
+     * For bits 1-8 there will be one byte per character.
+     * For bits 9-16 there will be two bytes per character.
+     * For bits 17-32 there will be four bytes per character.
+	 *
+     * E.g. 32 12-bit words will be transferred in 64 bytes.
+	 *
+     * The other bits in flags should be set to zero.
+	 *
+     * ...
+     * # open SPI device on channel 1 in mode 3 at 50000 bits per second
+	 *
+     * h = pi.spi_open(1, 50000, 3)
+     * ...
+     *
 	 * @param channel The channel to open.
 	 * @param baudRate The baud rate for transmission and reception.  Some constants are provided:
 	 * <ul>
@@ -563,14 +643,37 @@ public interface JPigpio {
 	public int spiOpen(int channel, int baudRate, int flags) throws PigpioException;
 
 	/**
-	 * Close an SPI connection previously created with spiOpen().
+	 * Closes the SPI device associated with handle.
+	 *
+	 * handle:= >=0 (as returned by a prior call to [*spi_open*]).
+     *
+	 * ...
+	 * pi.spi_close(h)
+	 * ...
+	 *
 	 * @param handle The handle to be closed.
 	 * @throws PigpioException
 	 */
 	public void spiClose(int handle) throws PigpioException;
 
 	/**
-	 * Read data from SPI.
+	 * Reads count bytes from the SPI device associated with handle.
+	 *
+	 * handle:= >=0 (as returned by a prior call to [*spi_open*]).
+	 * count:= >0, the number of bytes to read.
+	 *
+	 * The returned value is a tuple of the number of bytes read and a
+	 * bytearray containing the bytes.  If there was an error the
+	 * number of bytes read will be less than zero (and will contain
+	 * the error code).
+	 *
+	 * ...
+	 * (b, d) = pi.spi_read(h, 60) # read 60 bytes from device h
+	 * if b == 60:
+	 * # process read data
+	 * else:
+	 * # error path
+	 * ...
 	 * @param handle The handle from which to read.
 	 * @param data An array into which to read data.
 	 * @return The number of bytes actually read.
@@ -579,7 +682,20 @@ public interface JPigpio {
 	public int spiRead(int handle, byte data[]) throws PigpioException;
 	
 	/**
-	 * Write data to SPI.
+	 * Writes the data bytes to the SPI device associated with handle.
+     *
+	 * handle:= >=0 (as returned by a prior call to [*spi_open*]).
+	 * data:= the bytes to write.
+	 *
+	 * ...
+	 * pi.spi_write(0, b'\\x02\\xc0\\x80') # write 3 bytes to device 0
+	 *
+	 * pi.spi_write(0, b'defgh')        # write 5 bytes to device 0
+	 *
+	 * pi.spi_write(0, "def")           # write 3 bytes to device 0
+	 *
+	 * pi.spi_write(1, [2, 192, 128])   # write 3 bytes to device 1
+	 * ...
 	 * @param handle The handle into which to write.
 	 * @param data An array of data to write to SPI.
 	 * @return The number of bytes actually written
@@ -588,8 +704,26 @@ public interface JPigpio {
 	public int spiWrite(int handle, byte data[]) throws PigpioException;
 
 	/**
-	 * Write data to SPI and in parallel, read responses.  The size of the txData and rxData arrays must
-	 * be the same.
+	 * Writes the data bytes to the SPI device associated with handle,
+	 * returning the data bytes read from the device.
+	 *
+	 * handle:= >=0 (as returned by a prior call to [*spi_open*]).
+	 * data:= the bytes to write.
+	 *
+	 * The returned value is a tuple of the number of bytes read and a
+	 * bytearray containing the bytes.  If there was an error the
+	 * number of bytes read will be less than zero (and will contain
+	 * the error code).
+	 *
+	 * ...
+	 * (count, rx_data) = pi.spi_xfer(h, b'\\x01\\x80\\x00')
+	 *
+	 * (count, rx_data) = pi.spi_xfer(h, [1, 128, 0])
+	 *
+	 * (count, rx_data) = pi.spi_xfer(h, b"hello")
+	 *
+	 * (count, rx_data) = pi.spi_xfer(h, "hello")
+	 * ...
 	 * @param handle The handle into which to write.
 	 * @param txData An array of data to write.
 	 * @param rxData An array of data to read.

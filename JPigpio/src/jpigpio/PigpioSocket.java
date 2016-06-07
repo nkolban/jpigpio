@@ -111,11 +111,13 @@ public class PigpioSocket extends CommonPigpio {
 	// CMD_I2CWI 68 handle register X uint8_t bvs[X]
 	// CMD_I2CPC 69 handle register 4 uint32_t word
 	// CMD_I2CPK 70 handle register X uint8_t data[X]
-	// CMD_SPIO 71 channel baud 4 uint32_t flags
-	// CMD_SPIC 72 handle 0 0 -
-	// CMD_SPIR 73 handle count 0 -
-	// CMD_SPIW 74 handle 0 X uint8_t data[X]
-	// CMD_SPIX 75 handle 0 X uint8_t data[X]
+
+	private final int CMD_SPIO = 71; 		// 71 channel baud 4 uint32_t flags
+	private final int CMD_SPIC = 72;		// 72 handle 0 0 -
+	private final int CMD_SPIR = 73;		// 73 handle count 0 -
+	private final int CMD_SPIW = 74;		// 74 handle 0 X uint8_t data[X]
+	private final int CMD_SPIX = 75;		// 75 handle 0 X uint8_t data[X]
+
 	// CMD_SERO 76 baud flags X uint8_t device[X]
 	// CMD_SERC 77 handle 0 0 -
 	// CMD_SERRB 78 handle 0 0 -
@@ -808,7 +810,7 @@ public class PigpioSocket extends CommonPigpio {
 	// ############### SPI
 	
 	/**
-	 * Open an SPI channel.
+	 *
 	 * @param spiChannel The channel to open.
 	 * @param spiBaudRate The baud rate for transmition and receiption
 	 * @param flags Control flags
@@ -817,8 +819,21 @@ public class PigpioSocket extends CommonPigpio {
 	 */
 	@Override
 	public int spiOpen(int spiChannel, int spiBaudRate, int flags) throws PigpioException {
-		// TODO Auto-generated method stub
-		throw new NotImplementedException();
+		int rc = 0;
+		try {
+			ByteBuffer bb = ByteBuffer.allocate(4);
+			bb.order(ByteOrder.LITTLE_ENDIAN);
+			bb.putInt(flags);
+
+			rc = slCmd.sendCmd(CMD_SPIO, spiChannel, spiBaudRate, 4, bb.array());
+			if (rc < 0)
+				throw new PigpioException(rc);
+
+		} catch (IOException e) {
+			throw new PigpioException("spiOpen failed",e);
+		}
+
+		return rc;
 	}
 
 
@@ -829,8 +844,11 @@ public class PigpioSocket extends CommonPigpio {
 	 */
 	@Override
 	public void spiClose(int handle) throws PigpioException {
-		// TODO Auto-generated method stub
-		throw new NotImplementedException();
+		try {
+			slCmd.sendCmd(CMD_SPIC, handle, 0);
+		} catch (IOException e) {
+			throw new PigpioException("spiClose failed",e);
+		}
 	}
 
 
@@ -843,8 +861,19 @@ public class PigpioSocket extends CommonPigpio {
 	 */
 	@Override
 	public int spiRead(int handle, byte[] data) throws PigpioException {
-		// TODO Auto-generated method stub
-		throw new NotImplementedException();
+		int rc = 0;
+
+		try {
+			rc = slCmd.sendCmd(CMD_SPIR, handle, data.length);
+			if (rc < 0)
+				throw new PigpioException(rc);
+			if (rc > 0)
+				slCmd.readBytes(data);
+
+			return rc;
+		} catch (IOException e) {
+			throw new PigpioException("spiRead failed", e);
+		}
 	}
 
 	/**
@@ -856,8 +885,17 @@ public class PigpioSocket extends CommonPigpio {
 	 */
 	@Override
 	public int spiWrite(int handle, byte[] data) throws PigpioException {
-		// TODO Auto-generated method stub
-		throw new NotImplementedException();
+		int rc = 0;
+		try {
+			rc = slCmd.sendCmd(CMD_SPIW, handle, 0, data.length, data);
+			if (rc < 0) {
+				throw new PigpioException(rc);
+			}
+		} catch (IOException e) {
+			throw new PigpioException("spiWrite failed",e);
+		}
+
+		return rc;
 	}
 
 	/**
@@ -871,8 +909,20 @@ public class PigpioSocket extends CommonPigpio {
 	 */
 	@Override
 	public int spiXfer(int handle, byte[] txData, byte[] rxData) throws PigpioException {
-		// TODO Auto-generated method stub
-		throw new NotImplementedException();
+		int rc = 0;
+
+		try {
+			rc = slCmd.sendCmd(CMD_SPIX, handle, 0, txData.length, txData);
+			if (rc > 0)
+				slCmd.readBytes(rxData);
+			else if (rc < 0)
+				throw new PigpioException(rc);
+
+		} catch (IOException e) {
+			throw new PigpioException("spiXfer failed", e);
+		}
+
+		return rc;
 	}
 
 	@Override
