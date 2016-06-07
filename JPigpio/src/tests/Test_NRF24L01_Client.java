@@ -1,15 +1,12 @@
 package tests;
 
-import jpigpio.JPigpio;
-import jpigpio.Pigpio;
-import jpigpio.PigpioException;
-import jpigpio.Utils;
+import jpigpio.*;
 import jpigpio.devices.NRF24L01;
 
 public class Test_NRF24L01_Client {
 	private NRF24L01 nrf24l01;
-	int cePin = 17;
-	int csnPin = 18;
+	int cePin = 22;  //GPIO number, e.g. GPIO 22 = PIN 15
+	int csnPin = 8;  //GPIO number, e.g. GPIO 8 = PIN 24
 
 	public static void main(String args[]) {
 		System.out.println("Test_NRF24L01_Client");
@@ -20,9 +17,10 @@ public class Test_NRF24L01_Client {
 	public void run() {
 
 		try {
-			// JPigpio pigpio = new PigpioSocket("raspi", 8888);
+
 			System.out.println("NRF24L01 - Client");
-			JPigpio pigpio = new Pigpio();
+			JPigpio pigpio = new PigpioSocket("pigpiod-host", 8888);
+			//JPigpio pigpio = new Pigpio();
 			// pigpio.setDebug(true);
 			pigpio.gpioInitialize();
 			Utils.addShutdown(pigpio);
