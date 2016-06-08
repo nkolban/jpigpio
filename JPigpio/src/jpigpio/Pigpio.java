@@ -162,6 +162,57 @@ public class Pigpio extends CommonPigpio {
 	public native void gpioServo(int gpio, int pulseWidth) throws PigpioException;
 
 	@Override
+	public void setServoPulseWidth(int gpio, int pulseWidth) throws PigpioException {
+		gpioServo(gpio, pulseWidth);
+	}
+
+	@Override
+	public int getServoPulseWidth(int gpio) throws PigpioException{
+		throw new NotImplementedException();
+	}
+
+	// ############### PWM
+
+	@Override
+	public void setPWMDutycycle(int gpio, int dutycycle) throws PigpioException {
+		throw new NotImplementedException();
+	};
+
+	@Override
+	public int getPWMDutycycle(int gpio) throws PigpioException {
+		throw new NotImplementedException();
+	}
+
+	@Override
+	public void setPWMRange(int gpio, int range) throws PigpioException {
+		throw new NotImplementedException();
+	}
+
+	@Override
+	public int getPWMRange(int gpio) throws PigpioException {
+		throw new NotImplementedException();
+	}
+
+	@Override
+	public int getPWMRealRange(int gpio) throws PigpioException {
+		throw new NotImplementedException();
+	}
+
+	@Override
+	public int setPWMFrequency(int gpio, int frequency) throws PigpioException {
+		throw new NotImplementedException();
+	}
+
+	@Override
+	public int getPWMFrequency(int gpio) throws PigpioException {
+		throw new NotImplementedException();
+	}
+
+
+	// ###############
+
+
+	@Override
 	public native void gpioSetAlertFunc(int pin, Alert alert) throws PigpioException;
 
 	@Override

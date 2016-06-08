@@ -91,14 +91,53 @@ public interface JPigpio {
 
 
 	/**
-	 * Set the pulse width of a specific GPIO. The pulse width is in microseconds with a value between 500 and 2500 or a value of 0 to switch the servo off.
-	 * 
+	 * Starts (500-2500) or stops (0) servo pulses on the GPIO.
+	 *
+	 * The selected pulsewidth will continue to be transmitted until
+	 * changed by a subsequent call to set_servo_pulsewidth.
+	 *
+	 * The pulsewidths supported by servos varies and should probably
+	 * be determined by experiment. A value of 1500 should always be
+	 * safe and represents the mid-point of rotation.
+	 *
+	 * You can DAMAGE a servo if you command it to move beyond its
+	 * limits.
+	 *
+	 * ...
+	 * pi.set_servo_pulsewidth(17, 0)    # off
+	 * pi.set_servo_pulsewidth(17, 1000) # safe anti-clockwise
+	 * pi.set_servo_pulsewidth(17, 1500) # centre
+	 * pi.set_servo_pulsewidth(17, 2000) # safe clockwise
+	 * ...	 *
 	 * @param gpio
-	 *            The pin to use to control the servo.
+	 *            GPIO to control the servo. 0-31
 	 * @param pulseWidth
 	 *            The pulse width of the pulse (500-2500).
+	 *            0 = off
+	 *            500 = most anti-clockwise
+	 *            2500 = most clock-wise
 	 */
 	public void gpioServo(int gpio, int pulseWidth) throws PigpioException;
+
+	// setServoPulseWidth is just a wrapper for gpioServo for naming compatibility reasons
+	public void setServoPulseWidth(int gpio, int pulseWidth) throws PigpioException;
+
+	/**
+	 * Returns the servo pulsewidth being used on the GPIO.
+	 *
+	 * ...
+	 * pi.set_servo_pulsewidth(4, 525)
+	 * print(pi.get_servo_pulsewidth(4))
+	 * 525
+	 *
+	 * pi.set_servo_pulsewidth(4, 2130)
+	 * print(pi.get_servo_pulsewidth(4))
+	 * 2130
+	 * ...
+	 * @param gpio user gpio 0-31
+	 * @return Returns the servo pulsewidth.
+     */
+	public int getServoPulseWidth(int gpio) throws PigpioException;;
 
 	/**
 	 * Delay for the specified number of microseconds

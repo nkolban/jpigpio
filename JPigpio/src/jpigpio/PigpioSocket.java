@@ -35,9 +35,9 @@ public class PigpioSocket extends CommonPigpio {
 	private final int CMD_READ = 3;			//3 gpio 0 0 -
 	private final int CMD_WRITE = 4;		//4 gpio level 0 -
 
-	// private final int CMD_PWM = 5;		//5 gpio dutycycle 0 -
-	// private final int CMD_PRS = 6;		//6 gpio range 0 -
-	// private final int CMD_PFS = 7;		//7 gpio frequency 0 -
+	private final int CMD_PWM = 5;			//5 gpio dutycycle 0 -
+	private final int CMD_PRS = 6;			//6 gpio range 0 -
+	private final int CMD_PFS = 7;			//7 gpio frequency 0 -
 
 	private final int CMD_SERVO = 8;		//8 gpio pulsewidth 0 -
 	private final int CMD_WDOG = 9;			//9 gpio timeout 0 -
@@ -56,9 +56,9 @@ public class PigpioSocket extends CommonPigpio {
 	private final int CMD_NP = 20;			//20 handle 0 0 -
 	private final int CMD_NC = 21;			//21 handle 0 0 -
 
-	// private final int CMD_PRG = 22;		//22 gpio 0 0 -
-	// private final int CMD_PFG = 23;		//23 gpio 0 0 -
-	// private final int CMD_PRRG = 24;		//24 gpio 0 0 -
+	private final int CMD_PRG = 22;			//22 gpio 0 0 -
+	private final int CMD_PFG = 23;			//23 gpio 0 0 -
+	private final int CMD_PRRG = 24;		//24 gpio 0 0 -
 	// private final int CMD_HELP = 25;		//25 N/A N/A N/A N/A
 	// private final int CMD_PIGPV = 26;	//26 0 0 0 -
 
@@ -125,7 +125,8 @@ public class PigpioSocket extends CommonPigpio {
 	// CMD_SERR 80 handle count 0 -
 	// CMD_SERW 81 handle 0 X uint8_t data[X]
 	// CMD_SERDA 82 handle 0 0 -
-	// CMD_GDC 83 gpio 0 0 -
+
+	private final int CMD_GDC = 83;			// 83 gpio 0 0 -
 	// CMD_GPW 84 gpio 0 0 -
 	// CMD_HC 85 gpio frequency 0 -
 	// CMD_HP 86 gpio frequency 4 uint32_t dutycycle
@@ -791,6 +792,14 @@ public class PigpioSocket extends CommonPigpio {
 		}
 	} // End of gpioServo
 
+	public void setServoPulseWidth(int gpio, int pulseWidth) throws PigpioException {
+		gpioServo(gpio, pulseWidth);
+	}
+
+	public int getServoPulseWidth(int gpio) throws PigpioException {
+		throw new NotImplementedException();
+	}
+
 	/**
 	 * 
 	 * @param pin
@@ -924,6 +933,111 @@ public class PigpioSocket extends CommonPigpio {
 
 		return rc;
 	}
+
+	// ######################## PWM
+
+	// ############### PWM
+
+	public void setPWMDutycycle(int gpio, int dutycycle) throws PigpioException {
+		try {
+			slCmd.sendCmd(CMD_PWM, gpio, dutycycle);
+		} catch (IOException e) {
+			throw new PigpioException("setPWMDutycycle failed",e);
+		}
+
+	}
+
+
+	public int getPWMDutycycle(int gpio) throws PigpioException {
+		int rc = 0;
+		try {
+			rc = slCmd.sendCmd(CMD_GDC, gpio, 0);
+			if (rc < 0) {
+				throw new PigpioException(rc);
+			}
+		} catch (IOException e) {
+			throw new PigpioException("getPWMDutycycle failed",e);
+		}
+
+		return rc;
+
+	}
+
+
+	public void setPWMRange(int gpio, int range) throws PigpioException {
+		try {
+			slCmd.sendCmd(CMD_PRS, gpio, range);
+		} catch (IOException e) {
+			throw new PigpioException("setPWMRange failed",e);
+		}
+
+	}
+
+
+	public int getPWMRange(int gpio) throws PigpioException {
+		int rc = 0;
+		try {
+			rc = slCmd.sendCmd(CMD_PRG, gpio, 0);
+			if (rc < 0) {
+				throw new PigpioException(rc);
+			}
+		} catch (IOException e) {
+			throw new PigpioException("getPWMRange failed",e);
+		}
+
+		return rc;
+	}
+
+
+	public int getPWMRealRange(int gpio) throws PigpioException {
+		int rc = 0;
+		try {
+			rc = slCmd.sendCmd(CMD_PRRG, gpio, 0);
+			if (rc < 0) {
+				throw new PigpioException(rc);
+			}
+		} catch (IOException e) {
+			throw new PigpioException("getPWMRealRange failed",e);
+		}
+
+		return rc;
+	}
+
+
+	public int setPWMFrequency(int gpio, int frequency) throws PigpioException {
+
+		int rc = 0;
+		try {
+			rc = slCmd.sendCmd(CMD_PFS, gpio, frequency);
+			if (rc < 0) {
+				throw new PigpioException(rc);
+			}
+		} catch (IOException e) {
+			throw new PigpioException("setPWMFrequency failed",e);
+		}
+
+		return rc;
+
+	}
+
+
+	public int getPWMFrequency(int gpio) throws PigpioException {
+		int rc = 0;
+		try {
+			rc = slCmd.sendCmd(CMD_PFG, gpio, 0);
+			if (rc < 0) {
+				throw new PigpioException(rc);
+			}
+		} catch (IOException e) {
+			throw new PigpioException("getPWMFrequency failed",e);
+		}
+
+		return rc;
+	}
+
+
+	// ########################
+
 
 	@Override
 	public void setDebug(boolean flag) throws PigpioException {
