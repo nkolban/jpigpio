@@ -91,14 +91,53 @@ public interface JPigpio {
 
 
 	/**
-	 * Set the pulse width of a specific GPIO. The pulse width is in microseconds with a value between 500 and 2500 or a value of 0 to switch the servo off.
-	 * 
+	 * Starts (500-2500) or stops (0) servo pulses on the GPIO.
+	 *
+	 * The selected pulsewidth will continue to be transmitted until
+	 * changed by a subsequent call to set_servo_pulsewidth.
+	 *
+	 * The pulsewidths supported by servos varies and should probably
+	 * be determined by experiment. A value of 1500 should always be
+	 * safe and represents the mid-point of rotation.
+	 *
+	 * You can DAMAGE a servo if you command it to move beyond its
+	 * limits.
+	 *
+	 * ...
+	 * pi.set_servo_pulsewidth(17, 0)    # off
+	 * pi.set_servo_pulsewidth(17, 1000) # safe anti-clockwise
+	 * pi.set_servo_pulsewidth(17, 1500) # centre
+	 * pi.set_servo_pulsewidth(17, 2000) # safe clockwise
+	 * ...	 *
 	 * @param gpio
-	 *            The pin to use to control the servo.
+	 *            GPIO to control the servo. 0-31
 	 * @param pulseWidth
 	 *            The pulse width of the pulse (500-2500).
+	 *            0 = off
+	 *            500 = most anti-clockwise
+	 *            2500 = most clock-wise
 	 */
 	public void gpioServo(int gpio, int pulseWidth) throws PigpioException;
+
+	// setServoPulseWidth is just a wrapper for gpioServo for naming compatibility reasons
+	public void setServoPulseWidth(int gpio, int pulseWidth) throws PigpioException;
+
+	/**
+	 * Returns the servo pulsewidth being used on the GPIO.
+	 *
+	 * ...
+	 * pi.set_servo_pulsewidth(4, 525)
+	 * print(pi.get_servo_pulsewidth(4))
+	 * 525
+	 *
+	 * pi.set_servo_pulsewidth(4, 2130)
+	 * print(pi.get_servo_pulsewidth(4))
+	 * 2130
+	 * ...
+	 * @param gpio user gpio 0-31
+	 * @return Returns the servo pulsewidth.
+     */
+	public int getServoPulseWidth(int gpio) throws PigpioException;;
 
 	/**
 	 * Delay for the specified number of microseconds
@@ -733,6 +772,159 @@ public interface JPigpio {
 	public int spiXfer(int handle, byte txData[], byte rxData[]) throws PigpioException;
 
 	// ################ SERIAL
+
+	// ################ PWM
+
+	/**
+	 * Starts (non-zero dutycycle) or stops (0) PWM pulses on the GPIO.
+     *
+	 * The [*setPWMRange*] function can change the default range of 255.
+	 *
+	 * ...
+	 * pi.setPWMDutycycle(4,   0) # PWM off
+	 * pi.setPWMDutycycle(4,  64) # PWM 1/4 on
+	 * pi.setPWMDutycycle(4, 128) # PWM 1/2 on
+	 * pi.setPWMDutycycle(4, 192) # PWM 3/4 on
+	 * pi.setPWMDutycycle(4, 255) # PWM full on
+	 * ...
+	 *
+	 * @param gpio user gpio 0-31
+	 * @param dutycycle 0-range (range defaults to 255).
+	 * @throws PigpioException
+     */
+	public void setPWMDutycycle(int gpio, int dutycycle) throws PigpioException;
+
+	/**
+	 * Returns the PWM dutycycle being used on the GPIO.
+     *
+	 * For normal PWM the dutycycle will be out of the defined range
+	 * for the GPIO (see [*getPWMRange*]).
+	 *
+	 * If a hardware clock is active on the GPIO the reported
+	 * dutycycle will be 500000 (500k) out of 1000000 (1M).
+	 *
+	 * If hardware PWM is active on the GPIO the reported dutycycle
+	 * will be out of a 1000000 (1M).
+	 *
+	 * ...
+	 * pi.setPWMDutycycle(4, 25)
+	 * print(pi.getPWMDutycycle(4))
+	 * 25
+	 *
+	 * pi.setPWMDutycycle(4, 203)
+	 * print(pi.getPWMDutycycle(4))
+	 * 203
+	 * ...
+	 * @param gpio user gpio 0-31
+	 * @return PWM dutycycle
+	 * @throws PigpioException
+     */
+	public int getPWMDutycycle(int gpio) throws PigpioException;
+
+
+	/**
+	 * Sets the range of PWM values to be used on the GPIO.
+     *
+	 * ...
+	 * pi.set_PWM_range(9, 100)  # now  25 1/4,   50 1/2,   75 3/4 on
+	 * pi.set_PWM_range(9, 500)  # now 125 1/4,  250 1/2,  375 3/4 on
+	 * pi.set_PWM_range(9, 3000) # now 750 1/4, 1500 1/2, 2250 3/4 on
+	 * ...
+	 *
+	 * @param gpio user gpio 0-31
+	 * @param range range 25-40000
+	 * @throws PigpioException
+     */
+	public void setPWMRange(int gpio, int range) throws PigpioException;
+
+	/**
+	 * Returns the range of PWM values being used on the GPIO.
+     *
+	 * If a hardware clock or hardware PWM is active on the GPIO
+	 * the reported range will be 1000000 (1M).
+	 *
+	 * ...
+	 * pi.set_PWM_range(9, 500)
+	 * print(pi.get_PWM_range(9))
+	 * 500
+	 * ...
+	 * @param gpio user gpio 0-31
+	 * @return range of PWM values
+	 * @throws PigpioException
+     */
+	public int getPWMRange(int gpio) throws PigpioException;
+
+	/**
+	 * Returns the real (underlying) range of PWM values being
+	 * used on the GPIO.
+	 *
+	 * If a hardware clock is active on the GPIO the reported
+	 * real range will be 1000000 (1M).
+	 *
+	 * If hardware PWM is active on the GPIO the reported real range
+	 * will be approximately 250M divided by the set PWM frequency.
+	 *
+	 * ...
+	 * pi.setPWMFrequency(4, 800)
+	 * System.out.println(pi.getPWMRealRange(4))
+	 * 250
+	 * ...
+	 * @param gpio user gpio 0-31
+	 * @return the real (underlying) range of PWM values
+	 * @throws PigpioException
+     */
+	public int getPWMRealRange(int gpio) throws PigpioException;
+
+	/**
+	 * Sets the frequency (in Hz) of the PWM to be used on the GPIO.
+     *
+	 * Returns the frequency actually set.
+	 *
+	 * ...
+	 * pi.setPWMFrequency(4,0)
+	 * print(pi.getPWMFrequency(4))
+	 * 10
+	 *
+	 * pi.set_PWMFrequency(4,100000)
+	 * print(pi.getPWMFrequency(4))
+	 * 8000
+	 * ...
+	 * @param gpio user gpio 0-31
+	 * @param frequency >= 0 Hz
+	 * @throws PigpioException
+     */
+	public int setPWMFrequency(int gpio, int frequency) throws PigpioException;
+
+	/**
+	 * Returns the frequency of PWM being used on the GPIO.
+     *
+	 * Returns the frequency (in Hz) used for the GPIO.
+	 *
+	 * For normal PWM the frequency will be that defined for the GPIO
+	 * by [*setPWMFrequency*].
+	 *
+	 * If a hardware clock is active on the GPIO the reported frequency
+	 * will be that set by [*hardwareClock*].
+	 *
+	 * If hardware PWM is active on the GPIO the reported frequency
+	 * will be that set by [*hardwarePWM*].
+	 *
+	 * ...
+	 * pi.setPWMFrequency(4,0)
+	 * print(pi.getPWMFrequency(4))
+	 * 10
+	 *
+	 * pi.setPWMFrequency(4, 800)
+	 * print(pi.getPWMFrequency(4))
+	 * 800
+	 * ...
+	 * @param gpio user gpio 0-31
+	 * @return frequency (in Hz) used for the GPIO.
+	 * @throws PigpioException
+     */
+	public int getPWMFrequency(int gpio) throws PigpioException;
+
+	// ################
 
 	public void gpioSetAlertFunc(int gpio, Alert alert) throws PigpioException;
 	
