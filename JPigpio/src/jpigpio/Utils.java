@@ -17,9 +17,9 @@ public class Utils {
 	
 	public static int mapToInt(int value, int sourceLow, int sourceHigh, int targetLow, int targetHigh) {
 		double pos = (value-sourceLow)/(double)(sourceHigh - sourceLow);
-		System.out.println("Pos: " + pos);
-		System.out.println("tHigh - tLow = " + (targetHigh - targetLow));
-		System.out.println("r = " + (targetLow + ((targetHigh - targetLow) *  pos)));
+		//System.out.println("Pos: " + pos);
+		//System.out.println("tHigh - tLow = " + (targetHigh - targetLow));
+		//System.out.println("r = " + (targetLow + ((targetHigh - targetLow) *  pos)));
 		return (int)(targetLow + ((targetHigh - targetLow) *  pos));
 	}
 	
@@ -177,5 +177,58 @@ public class Utils {
 	public static String bitString(boolean value) {
 		return value?"1":"0";
 	} // End of bitString
+
+	/**
+	 *  Returns the microsecond difference between two ticks.
+	 *  This function handles rollover of ticks as ticks are only 32bit.
+	 *
+	 * ...
+	 * print(pigpio.tickDiff(4294967272, 12))
+	 * 36
+	 * ...
+	 * @param olderTick
+	 * 	tick 1
+	 * @param tick
+	 * 	tick 2
+     * @return
+	 * 	difference between ticks
+     */
+	public static int tickDiff(long olderTick, long tick) {
+		int tDiff = (int)(tick - olderTick);
+		if (tDiff < 0)
+			tDiff += (1 << 32);
+		return tDiff;
+	}
+
+	public static String bytesToHex(byte[] bytes) {
+		final char[] hexArray = "0123456789ABCDEF".toCharArray();
+		char[] hexChars = new char[bytes.length * 2];
+		for ( int j = 0; j < bytes.length; j++ ) {
+			int v = bytes[j] & 0xFF;
+			hexChars[j * 2] = hexArray[v >>> 4];
+			hexChars[j * 2 + 1] = hexArray[v & 0x0F];
+		}
+		return new String(hexChars);
+	}
+
+	public static byte[] bytes2nibbles(byte[] bytes){
+		byte[] nibb = new byte[bytes.length*2];
+
+		for (int i = 0; i<bytes.length;i++){
+			nibb[i*2] = (byte)(bytes[i] >> 4);
+			nibb[i*2+1] = (byte)(bytes[i] & 0x0F);
+		}
+		return nibb;
+	}
+
+	public static byte[] nibbles2bytes(byte[] nibb){
+		byte[] bytes = new byte[nibb.length/2];
+
+		for (int i = 0; i<bytes.length;i++)
+			bytes[i] = (byte)(nibb[i*2]<<4 | nibb[i*2+1]);
+
+		return bytes;
+	}
+
 } // End of class
 // End of file

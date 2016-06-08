@@ -2,6 +2,8 @@ package jpigpio;
 
 import jpigpio.impl.CommonPigpio;
 
+import java.util.ArrayList;
+
 public class Pigpio extends CommonPigpio {
 	static {
 		System.loadLibrary("JPigpioC");
@@ -28,6 +30,102 @@ public class Pigpio extends CommonPigpio {
 	@Override
 	public native void gpioWrite(int pin, boolean value) throws PigpioException;
 
+	// ################ NOTIFICATIONS
+
+	@Override
+	public int notifyOpen() throws PigpioException{
+		throw new NotImplementedException();
+	}
+
+	@Override
+	public int notifyBegin(int handle, int bits) throws PigpioException{
+		throw new NotImplementedException();
+	}
+
+	@Override
+	public int notifyPause(int handle) throws PigpioException{
+		throw new NotImplementedException();
+	}
+
+	@Override
+	public int notifyClose(int handle) throws PigpioException {
+		throw new NotImplementedException();
+	}
+
+	@Override
+	public int setWatchdog(int userGpio, int timeout) throws PigpioException{
+		throw new NotImplementedException();
+	}
+
+	// ##################### WAVES
+
+	/**
+	 * This function clears all waveforms and any data added by calls to the wave_add_* functions.
+	 *
+	 * @return The return code from close.
+	 */
+	@Override
+	public int waveClear() throws PigpioException {
+		throw new NotImplementedException();
+	}
+
+	@Override
+	public int waveAddGeneric(ArrayList<Pulse> pulses) throws PigpioException{
+		throw new NotImplementedException();
+	}
+
+	@Override
+	public int waveAddSerial(int userGpio, int baud, byte[] data, int offset, int bbBits, int bbStop) throws PigpioException{
+		throw new NotImplementedException();
+	}
+
+	@Override
+	public int waveAddNew() throws PigpioException {
+		throw new NotImplementedException();
+	}
+
+	@Override
+	public boolean waveTxBusy() throws PigpioException {
+		throw new NotImplementedException();
+	}
+
+	@Override
+	public int waveTxStop() throws PigpioException {
+		throw new NotImplementedException();
+	}
+
+	@Override
+	public int waveCreate() throws PigpioException {
+		throw new NotImplementedException();
+	}
+
+	@Override
+	public int waveDelete(int waveId) throws PigpioException {
+		throw new NotImplementedException();
+	}
+
+	@Override
+	public int waveSendOnce(int waveId) throws PigpioException {
+		throw new NotImplementedException();
+	}
+
+	@Override
+	public int waveSendRepeat(int waveId) throws PigpioException {
+		throw new NotImplementedException();
+	}
+
+
+	// ################ I2C
+
+	/**
+	 * Open a connection to the i2c
+	 *
+	 * @param i2cBus
+	 *            The id of the bus (1 for pi)
+	 * @param i2cAddr
+	 *            The address of the device on the bus
+	 * @return The handle for the device on the bus.
+	 */
 	@Override
 	public native int i2cOpen(int i2cBus, int i2cAddr) throws PigpioException;
 
@@ -46,6 +144,12 @@ public class Pigpio extends CommonPigpio {
 	@Override
 	public native long gpioTick() throws PigpioException;
 
+	@Override
+	public long getCurrentTick() throws PigpioException{
+		return gpioTick();
+	}
+
+
 	/**
 	 * Set the pulse width of a specific GPIO. The pulse width is in microseconds with a value between 500 and 2500 or a value of 0 to switch the servo off.
 	 * 
@@ -58,6 +162,57 @@ public class Pigpio extends CommonPigpio {
 	public native void gpioServo(int gpio, int pulseWidth) throws PigpioException;
 
 	@Override
+	public void setServoPulseWidth(int gpio, int pulseWidth) throws PigpioException {
+		gpioServo(gpio, pulseWidth);
+	}
+
+	@Override
+	public int getServoPulseWidth(int gpio) throws PigpioException{
+		throw new NotImplementedException();
+	}
+
+	// ############### PWM
+
+	@Override
+	public void setPWMDutycycle(int gpio, int dutycycle) throws PigpioException {
+		throw new NotImplementedException();
+	};
+
+	@Override
+	public int getPWMDutycycle(int gpio) throws PigpioException {
+		throw new NotImplementedException();
+	}
+
+	@Override
+	public void setPWMRange(int gpio, int range) throws PigpioException {
+		throw new NotImplementedException();
+	}
+
+	@Override
+	public int getPWMRange(int gpio) throws PigpioException {
+		throw new NotImplementedException();
+	}
+
+	@Override
+	public int getPWMRealRange(int gpio) throws PigpioException {
+		throw new NotImplementedException();
+	}
+
+	@Override
+	public int setPWMFrequency(int gpio, int frequency) throws PigpioException {
+		throw new NotImplementedException();
+	}
+
+	@Override
+	public int getPWMFrequency(int gpio) throws PigpioException {
+		throw new NotImplementedException();
+	}
+
+
+	// ###############
+
+
+	@Override
 	public native void gpioSetAlertFunc(int pin, Alert alert) throws PigpioException;
 
 	@Override
@@ -65,8 +220,8 @@ public class Pigpio extends CommonPigpio {
 
 	/**
 	 * Open an SPI channel.
-	 * @param spiChannel The channel to open.
-	 * @param spiBaudRate The baud rate for transmission and reception.  Some constants are provided:
+	 * @param channel The channel to open.
+	 * @param baudRate The baud rate for transmission and reception.  Some constants are provided:
 	 * <ul>
 	 * <li>PI_SPI_BAUD_125KHZ</li>
 	 * <li>PI_SPI_BAUD_250KHZ</li>
@@ -158,7 +313,17 @@ public class Pigpio extends CommonPigpio {
 	 * @return The time in microseconds waiting for a pulse or -1 to signfify a timeout.
 	 */
 	@Override
-	public native long gpioxPulseAndWait(int outGpio, int inGpio, long waitDuration, long pulseHoldDuration, boolean pulseLow) throws PigpioException; 
-		
+	public native long gpioxPulseAndWait(int outGpio, int inGpio, long waitDuration, long pulseHoldDuration, boolean pulseLow) throws PigpioException;
+
+	@Override
+	public void addCallback(GPIOListener gpioListener) throws PigpioException {
+		throw new NotImplementedException();
+	}
+
+	@Override
+	public void removeCallback(GPIOListener cgpioListener) throws PigpioException{
+		throw new NotImplementedException();
+	}
+
 } // End of class
 // End of file

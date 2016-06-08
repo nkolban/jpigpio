@@ -38,7 +38,7 @@ public class Test_gpioSetAlertFunc {
 			
 			// Define a callback function
 			pigpio.gpioSetAlertFunc(TESTPIN, (gpio, level, tick) -> {
-				System.out.println(String.format("Callback in Java: We received an alert on: %d with %d at %d", gpio, level, tick));
+				System.out.println(String.format("NotificationListener in Java: We received an alert on: %d with %d at %d", gpio, level, tick));
 			});
 			
 			System.out.println(String.format("Watching for changes on pin: %d", TESTPIN));
