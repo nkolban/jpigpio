@@ -293,6 +293,8 @@ public class NRF24L01 {
 	 * Test if chip is still sending.
 	 * When sending has finished return chip to listening.
 	 *
+	 * @return true if data is currently being transmitted
+	 * @throws  PigpioException on pigpiod error
 	 */
 
 	public boolean isSending() throws PigpioException {

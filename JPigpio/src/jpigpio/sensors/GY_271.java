@@ -9,8 +9,8 @@ import jpigpio.PigpioException;
  * 
  * This Java class provides a wrapper to its low level functions for use with Pigpio.
  * 
- * @author Neil Kolban
- * @date 2015-05-06
+ * author Neil Kolban
+ * date 2015-05-06
  */
 public class GY_271 {
 
@@ -118,7 +118,7 @@ public class GY_271 {
 	/**
 	 * Initialize the GY-271
 	 * 
-	 * @throws PigpioException
+	 * @throws PigpioException on pigpiod error
 	 */
 	public void initialize() throws PigpioException {
 		// Open a connection on I2C to the GY-271 device.
@@ -136,7 +136,7 @@ public class GY_271 {
 	/**
 	 * Close our usage of the I2C bus.
 	 * 
-	 * @throws PigpioException
+	 * @throws PigpioException on pigpiod error
 	 */
 	public void close() throws PigpioException {
 		pigpio.i2cClose(handle);
@@ -190,7 +190,7 @@ public class GY_271 {
 	 * Get the device id. A normal device will have an id of "H43".
 	 * 
 	 * @return The string representation of the device
-	 * @throws PigpioException
+	 * @throws PigpioException on pigpiod error
 	 */
 	public String getId() throws PigpioException {
 		byte selectRegister[] = { REGISTER_IDENT_A };

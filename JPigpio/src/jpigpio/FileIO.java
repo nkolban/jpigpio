@@ -24,7 +24,7 @@ public class FileIO {
 	 * Read up to <pre>size</pre> bytes from the file.
 	 * @param size The maximum size of data to return
 	 * @return An array of data.  It may be zero length if there is no data available.
-	 * @throws IOException
+	 * @throws IOException on IO Exception :-)
 	 */
 	public byte[] read(int size) throws IOException {
 		if (fis == null) {
@@ -42,7 +42,7 @@ public class FileIO {
 	
 	/**
 	 * Close the file.
-	 * @throws IOException
+	 * @throws IOException on IO Exception :-)
 	 */
 	public void close() throws IOException {
 		if (fis != null) {

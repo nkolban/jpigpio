@@ -304,7 +304,7 @@ public class MFRC522 {
 	/**
 	 * Get the current MFRC522 Receiver Gain (RxGain[2:0]) value.
 	 * See 9.3.3.6 / table 98 in http://www.nxp.com/documents/data_sheet/MFRC522.pdf
-	 * NOTE: Return value scrubbed with (0x07<<4)=01110000b as RCFfgReg may use reserved bits.
+	 * NOTE: Return value scrubbed with (0x07&lt;&lt;4)=01110000b as RCFfgReg may use reserved bits.
 	 * 
 	 * @return Value of the RxGain, scrubbed to the 3 bits used.
 	 */
@@ -315,7 +315,7 @@ public class MFRC522 {
 	/**
 	 * Set the MFRC522 Receiver Gain (RxGain) to value specified by given mask.
 	 * See 9.3.3.6 / table 98 in http://www.nxp.com/documents/data_sheet/MFRC522.pdf
-	 * NOTE: Given mask is scrubbed with (0x07<<4)=01110000b as RCFfgReg may use reserved bits.
+	 * NOTE: Given mask is scrubbed with (0x07&lt;&lt;4)=01110000b as RCFfgReg may use reserved bits.
 	 */
 	public void PCD_SetAntennaGain(byte mask) throws PigpioException {
 		if (PCD_GetAntennaGain() != mask) {						// only bother if there is a change

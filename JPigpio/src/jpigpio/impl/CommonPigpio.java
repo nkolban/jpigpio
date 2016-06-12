@@ -13,7 +13,7 @@ public abstract class CommonPigpio implements JPigpio {
 	 * @param gpioClock The clock gpio to pulse. The clock level is high.
 	 * @param bitOrder The order of the bits
 	 * @param value The value of the byte to write.
-	 * @throws PigpioException
+	 * @throws PigpioException  on pigpiod error
 	 */
 	@Override
 	public void gpioShiftOut(int gpioData, int gpioClock, boolean bitOrder, byte value) throws PigpioException {
@@ -32,7 +32,7 @@ public abstract class CommonPigpio implements JPigpio {
 	 * @param clockLevel The value of the clock pulse
 	 * @param bitOrder The order of the bits
 	 * @param value The value of the byte to write.
-	 * @throws PigpioException
+	 * @throws PigpioException  on pigpiod error
 	 */
 	@Override
 	public void gpioShiftOut(int gpioData, int gpioClock, boolean clockLevel, boolean bitOrder, byte value) throws PigpioException {

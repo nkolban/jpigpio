@@ -13,6 +13,8 @@ import java.util.ArrayList;
  * (you can tweak signalling by creating your own Protocol). NotificationListener is plugged
  * to PigpioSocket NotificationRouter, receiving every notification received from pigpiod daemon.
  * Received datagrams can be accessed via method get()
+ * <br><br>
+ * Work is based on Robert Tidey LightwaveRF code https://github.com/roberttidey/LightwaveRF
  */
 public class Rf433rx {
 
@@ -236,7 +238,7 @@ public class Rf433rx {
      * Check if there are packets available before calling this method.
      * @return Datagram.
      * IMPORTANT: Datagram contains nibbles 4bit) stored in bytes.
-     * @throws IndexOutOfBoundsException
+     * @throws IndexOutOfBoundsException if there is no datagram available
      */
     public byte[] get() throws IndexOutOfBoundsException {
         return datagrams.remove(0);
@@ -253,7 +255,7 @@ public class Rf433rx {
 
     /**
      * Terminate receiving thread, cancel further notifications from pigpiod.
-     * @throws PigpioException
+     * @throws PigpioException  on pigpiod error
      */
     public void terminate() throws PigpioException{
         if (cb != null) {
