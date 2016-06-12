@@ -19,7 +19,7 @@ public interface JPigpio {
 	 *            The gpio pin to set
 	 * @param mode
 	 *            The mode of the pin. One of PI_INPUT or PI_OUTPUT
-	 * @throws PigpioException
+	 * @throws PigpioException  on pigpiod error
 	 */
 	public void gpioSetMode(int gpio, int mode) throws PigpioException;
 
@@ -27,7 +27,7 @@ public interface JPigpio {
 	 * Retrieve the mode of the given gpio
 	 * @param gpio The gpio to retrieve the mode
 	 * @return The mode of the gpio
-	 * @throws PigpioException
+	 * @throws PigpioException  on pigpiod error
 	 */
 	public int gpioGetMode(int gpio) throws PigpioException;
 
@@ -37,7 +37,7 @@ public interface JPigpio {
 	 * @param gpio The GPIO pin to pulse.
 	 * @param pulseLen The duration in useconds to hold the pulse.
 	 * @param level The level to target the pulse.
-	 * @throws PigpioException
+	 * @throws PigpioException  on pigpiod error
 	 */
 	public void gpioTrigger(int gpio, long pulseLen, boolean level) throws PigpioException;
 
@@ -49,7 +49,7 @@ public interface JPigpio {
 	 * @param gpio
 	 *            The gpio pin to retrieve
 	 * @return The state of the gpio, one of PI_HIGH or PI_LOW (or equivalents)
-	 * @throws PigpioException
+	 * @throws PigpioException   on pigpiod error
 	 */
 	public boolean gpioRead(int gpio) throws PigpioException;
 
@@ -60,7 +60,7 @@ public interface JPigpio {
 	 *            The gpio pin to set
 	 * @param value
 	 *            The desired value of the new pin state. One of PI_HIGH or PI_LOW (or equivalents)
-	 * @throws PigpioException
+	 * @throws PigpioException  on pigpiod error
 	 */
 	public void gpioWrite(int gpio, boolean value) throws PigpioException;
 
@@ -71,7 +71,7 @@ public interface JPigpio {
 	 * @param gpioClock The clock gpio to pulse.
 	 * @param bitOrder The order of the bits.  Either PI_LSBFIRST or PI_MSBFIRST.
 	 * @param value The value of the byte to write.
-	 * @throws PigpioException
+	 * @throws PigpioException  on pigpiod error
 	 */
 	public void gpioShiftOut(int gpioData, int gpioClock, boolean bitOrder, byte value) throws PigpioException;
 	public void gpioShiftOut(GPIO gpioData, GPIO gpioClock, boolean bitOrder, byte value) throws PigpioException;
@@ -84,7 +84,7 @@ public interface JPigpio {
 	 * @param clockLevel The value of the clock pulse
 	 * @param bitOrder The order of the bits
 	 * @param value The value of the byte to write.
-	 * @throws PigpioException
+	 * @throws PigpioException on pigpiod error
 	 */	
 	public void gpioShiftOut(int gpioData, int gpioClock, boolean clockLevel,  boolean bitOrder, byte value) throws PigpioException;
 	public void gpioShiftOut(GPIO gpioData, GPIO gpioClock, boolean clockLevel,  boolean bitOrder, byte value) throws PigpioException;
@@ -116,6 +116,7 @@ public interface JPigpio {
 	 *            0 = off
 	 *            500 = most anti-clockwise
 	 *            2500 = most clock-wise
+	 * @throws PigpioException on pigpiod error
 	 */
 	public void gpioServo(int gpio, int pulseWidth) throws PigpioException;
 
@@ -136,14 +137,15 @@ public interface JPigpio {
 	 * ...
 	 * @param gpio user gpio 0-31
 	 * @return Returns the servo pulsewidth.
+	 * @throws PigpioException on pigpiod error
      */
 	public int getServoPulseWidth(int gpio) throws PigpioException;;
 
 	/**
 	 * Delay for the specified number of microseconds
 	 * 
-	 * @param delay
-	 *            The number of microseconds for which to block
+	 * @param delay The number of microseconds for which to block
+	 * @throws PigpioException on pigpiod error
 	 */
 	public void gpioDelay(long delay) throws PigpioException;
 	
@@ -152,7 +154,7 @@ public interface JPigpio {
 	// ############## NOTIFICATIONS
 
 	/**
-	 * Returns a notification handle (>=0).
+	 * Returns a notification handle (&gt;=0).
 	 *
 	 * A notification is a method for being notified of GPIO state
 	 * changes via a pipe.
@@ -190,17 +192,17 @@ public interface JPigpio {
 	 * tick: the number of microseconds since system boot.  It wraps
 	 * around after 1h12m.
 	 *
-	 * level: indicates the level of each GPIO.  If bit 1<<x is set
+	 * level: indicates the level of each GPIO.  If bit 1&lt;&lt;x is set
 	 * then GPIO x is high.
 	 *
 	 * ...
 	 * h = pi.notify_open()
-	 * if h >= 0:
+	 * if h &gt;= 0:
 	 * pi.notify_begin(h, 1234)
 	 * ...
 	 * @return
 	 * 	notification handle
-	 * @throws PigpioException
+	 * @throws PigpioException  on pigpiod error
      */
 	public int notifyOpen() throws PigpioException;
 
@@ -215,18 +217,16 @@ public interface JPigpio {
 	 *
 	 * ...
 	 * h = pi.notify_open()
-	 * if h >= 0:
+	 * if h &gt;= 0:
 	 * pi.notify_begin(h, 1234)
 	 * ...
 	 * @param handle
-	 * 	>=0 (as returned by a prior call to [*notify_open*])
+	 * 	&gt;=0 (as returned by a prior call to [*notify_open*])
 	 * @param bits
 	 * 	a 32 bit mask indicating the GPIO to be notified.
-	 * @return
-	 * 	error code
-	 * @throws PigpioException
+	 * @throws PigpioException  on pigpiod error
      */
-	public int notifyBegin(int handle, int bits) throws PigpioException;
+	public void notifyBegin(int handle, int bits) throws PigpioException;
 
 	/**
 	 * Pauses notifications on a handle.
@@ -236,7 +236,7 @@ public interface JPigpio {
 	 *
 	 * ...
 	 * h = pi.notify_open()
-	 * if h >= 0:
+	 * if h &gt;= 0:
 	 * pi.notify_begin(h, 1234)
 	 * ...
 	 * pi.notify_pause(h)
@@ -245,28 +245,27 @@ public interface JPigpio {
 	 * ...
 	 * ...
 	 * @param handle
-	 * 	>=0 (as returned by a prior call to [*notify_open*])
-	 * @return error code
-	 * @throws PigpioException
+	 * 	&gt;=0 (as returned by a prior call to [*notify_open*])
+	 * @throws PigpioException  on pigpiod error
      */
-	public int notifyPause(int handle) throws PigpioException;
+	public void notifyPause(int handle) throws PigpioException;
 
 	/**
 	 * Stops notifications on a handle and releases the handle for reuse.
 	 *
 	 * ...
 	 * h = pi.notify_open()
-	 * if h >= 0:
+	 * if h &gt;= 0:
 	 * pi.notify_begin(h, 1234)
 	 * ...
 	 * pi.notify_close(h)
 	 * ...
 	 * ...
 	 * @param handle
-	 * 	>=0 (as returned by a prior call to [*notify_open*])
-	 * @throws PigpioException
+	 * 	&gt;=0 (as returned by a prior call to [*notify_open*])
+	 * @throws PigpioException  on pigpiod error
      */
-	public int notifyClose(int handle) throws PigpioException;
+	public void notifyClose(int handle) throws PigpioException;
 
 	/**
 	 * Sets a watchdog timeout for a GPIO.
@@ -290,10 +289,9 @@ public interface JPigpio {
 	 * ...
 	 * @param userGpio 0-31
 	 * @param timeout 0-60000
-	 * @return
-	 * @throws PigpioException
+	 * @throws PigpioException  on pigpiod error
      */
-	public int setWatchdog(int userGpio, int timeout) throws PigpioException;
+	public void setWatchdog(int userGpio, int timeout) throws PigpioException;
 
 	public long gpioTick() throws PigpioException;
 
@@ -303,14 +301,12 @@ public interface JPigpio {
 	/**
 	 * This function clears all waveforms and any data added by calls to the wave_add_* functions.
 	 *
-	 * @return The return code from close.
+	 * @throws PigpioException  on pigpiod error
 	 */
-	public int waveClear() throws PigpioException;
+	public void waveClear() throws PigpioException;
 
 	/**
 	 * Adds a list of pulses to the current waveform.
-	 *
-	 * pulses:= list of pulses to add to the waveform.
 	 *
 	 * Returns the new total number of pulses in the current waveform.
 	 *
@@ -336,11 +332,11 @@ public interface JPigpio {
 	 *
 	 * #                              ON     OFF  DELAY
 	 *
-	 * flash_500.addListener(pigpio.pulse(1<<G1, 1<<G2, 500000))
-	 * flash_500.addListener(pigpio.pulse(1<<G2, 1<<G1, 500000))
+	 * flash_500.addListener(pigpio.pulse(1&lt;&lt;G1, 1&lt;&lt;G2, 500000))
+	 * flash_500.addListener(pigpio.pulse(1&lt;&lt;G2, 1&lt;&lt;G1, 500000))
 	 *
-	 * flash_100.addListener(pigpio.pulse(1<<G1, 1<<G2, 100000))
-	 * flash_100.addListener(pigpio.pulse(1<<G2, 1<<G1, 100000))
+	 * flash_100.addListener(pigpio.pulse(1&lt;&lt;G1, 1&lt;&lt;G2, 100000))
+	 * flash_100.addListener(pigpio.pulse(1&lt;&lt;2, 1&lt;&lt;G1, 100000))
 	 *
 	 * pi.wave_clear() # clear any existing waveforms
 	 *
@@ -366,6 +362,10 @@ public interface JPigpio {
 	 *
 	 * pi.wave_clear() # clear all waveforms
 	 * ...
+	 *
+	 * @param pulses list of pulses to add to the waveform.
+	 * @return  Returns the new total number of pulses in the current waveform.
+	 * @throws PigpioException  on pigpiod error
  	 */
 	public int waveAddGeneric(ArrayList<Pulse> pulses) throws PigpioException;
 
@@ -411,7 +411,7 @@ public interface JPigpio {
 	 * 	number of stop half bits, default 2.
 	 * @return
 	 * 	Returns the new total number of pulses in the current waveform.
-     * @throws PigpioException
+     * @throws PigpioException  on pigpiod error
      */
 	public int waveAddSerial(int gpio, int baud, byte[] data, int offset, int bbBits, int bbStop) throws PigpioException;
 
@@ -426,9 +426,9 @@ public interface JPigpio {
 	 * pi.wave_add_new()
 	 * ...
 	 *
-	 * @return The return code from add new.
+	 * @throws PigpioException  on pigpiod error
 	 */
-	public int waveAddNew() throws PigpioException;
+	public void waveAddNew() throws PigpioException;
 
 	/**
 	 * Returns 1 if a waveform is currently being transmitted,
@@ -443,6 +443,7 @@ public interface JPigpio {
 	 * pi.wave_send_once(1) # send next waveform
 	 * ...
 	 * @return The return code from wave_tx_busy.
+	 * @throws PigpioException  on pigpiod error
 	 */
 	public boolean waveTxBusy() throws PigpioException;
 
@@ -460,6 +461,7 @@ public interface JPigpio {
 	 * pi.wave_tx_stop()
 	 * ...
 	 * @return The return code from wave_tx_stop.
+	 * @throws PigpioException  on pigpiod error
 	 */
 	public int waveTxStop() throws PigpioException;
 
@@ -467,7 +469,7 @@ public interface JPigpio {
 	 * Creates a waveform from the data provided by the prior calls
 	 * to the [*wave_add_**] functions.
 	 *
-	 * Returns a wave id (>=0) if OK,  otherwise PI_EMPTY_WAVEFORM,
+	 * Returns a wave id (&gt;=0) if OK,  otherwise PI_EMPTY_WAVEFORM,
 	 * PI_TOO_MANY_CBS, PI_TOO_MANY_OOL, or PI_NO_WAVEFORM_ID.
 	 *
 	 * The data provided by the [*wave_add_**] functions is consumed by
@@ -507,16 +509,14 @@ public interface JPigpio {
 	 * wid = pi.wave_create()
 	 * ...
 	 * @return
-	 * 	wave id (>=0) if OK,  otherwise PI_EMPTY_WAVEFORM, PI_TOO_MANY_CBS,
+	 * 	wave id (&gt;=0) if OK,  otherwise PI_EMPTY_WAVEFORM, PI_TOO_MANY_CBS,
 	 * 	PI_TOO_MANY_OOL, or PI_NO_WAVEFORM_ID.
-	 * @throws PigpioException
+	 * @throws PigpioException  on pigpiod error
      */
 	public int waveCreate() throws PigpioException;
 
 	/**
 	 * This function deletes the waveform with id wave_id.
-	 *
-	 * wave_id:= >=0 (as returned by a prior call to [*wave_create*]).
 	 *
 	 * Wave ids are allocated in order, 0, 1, 2, etc.
 	 *
@@ -525,9 +525,10 @@ public interface JPigpio {
 	 *
 	 * pi.wave_delete(0) # delete waveform with id 0
 	 * ...
-	 * @return The return code from wave_delete.
+	 * @param waveId &gt;=0 (as returned by a prior call to [*wave_create*]).
+	 * @throws PigpioException  on pigpiod error
 	 */
-	public int waveDelete(int waveId) throws PigpioException;
+	public void waveDelete(int waveId) throws PigpioException;
 
 	/**
 	 * Transmits the waveform with id wave_id.  The waveform is sent once.
@@ -540,10 +541,10 @@ public interface JPigpio {
 	 * cbs = pi.wave_send_once(wid)
 	 * ...
 	 * @param waveId
-	 *   >=0 (as returned by a prior call to [*wave_create*]).
+	 *   &gt;=0 (as returned by a prior call to [*wave_create*]).
 	 * @return
 	 * 	Returns the number of DMA control blocks used in the waveform.
-	 * @throws PigpioException
+	 * @throws PigpioException  on pigpiod error
      */
 	public int waveSendOnce(int waveId) throws PigpioException;
 
@@ -561,22 +562,107 @@ public interface JPigpio {
 	 * cbs = pi.wave_send_repeat(wid)
 	 * ...
 	 * @param waveId
-	 * 	>=0 (as returned by a prior call to [*wave_create*]).
+	 * 	&gt;=0 (as returned by a prior call to [*wave_create*]).
 	 * @return
 	 * 	Returns the number of DMA control blocks used in the waveform.
-	 * @throws PigpioException
+	 * @throws PigpioException  on pigpiod error
      */
 	public int waveSendRepeat(int waveId) throws PigpioException;
 
 
 	// ################ I2C
 
+	/**
+	 * Returns a handle (&gt;=0) for the device at the I2C bus address.
+     *
+	 * i2c_flags:= 0, no flags are currently defined.
+	 *
+	 * Normally you would only use the [*i2c_**] functions if
+	 * you are or will be connecting to the Pi over a network.  If
+	 * you will always run on the local Pi use the standard SMBus
+	 * module instead.
+	 *
+	 * For the SMBus commands the low level transactions are shown
+	 * at the end of the function description.  The following
+	 * abbreviations are used.
+	 *
+	 * . .
+	 * S     (1 bit) : Start bit
+	 * P     (1 bit) : Stop bit
+	 * Rd/Wr (1 bit) : Read/Write bit. Rd equals 1, Wr equals 0.
+	 * A, NA (1 bit) : Accept and not accept bit.
+	 * Addr  (7 bits): I2C 7 bit address.
+	 * reg   (8 bits): Command byte, which often selects a register.
+	 * Data  (8 bits): A data byte.
+	 * Count (8 bits): A byte defining the length of a block operation.
+	 *
+	 * [..]: Data sent by the device.
+	 * . .
+	 *
+	 * ...
+	 * h = pi.i2c_open(1, 0x53) # open device at address 0x53 on bus 1
+	 * ...
+	 * @param i2cBus  0-1.
+	 * @param i2cAddr 0x00-0x7F.
+	 * @return Returns a handle (&gt;=0) for the device at the I2C bus address.
+	 * @throws PigpioException  on pigpiod error
+     */
 	public int i2cOpen(int i2cBus, int i2cAddr) throws PigpioException;
 
+	/**
+	 * Closes the I2C device associated with handle.
+     *
+	 * ...
+	 * pi.i2c_close(h)
+	 * ...
+	 * @param handle &gt;=0 (as returned by a prior call to [*i2c_open*]).
+	 * @throws PigpioException  on pigpiod error
+     */
 	public void i2cClose(int handle) throws PigpioException;
 
+	/**
+	 * Returns count bytes read from the raw device associated
+	 * with handle.
+	 *
+	 * . .
+	 * S Addr Rd [A] [Data] A [Data] A ... A [Data] NA P
+	 * . .
+	 *
+	 * The returned value is a tuple of the number of bytes read and a
+	 * bytearray containing the bytes.  If there was an error the
+	 * number of bytes read will be less than zero (and will contain
+	 * the error code).
+	 *
+	 * ...
+	 * (count, data) = pi.i2c_read_device(h, 12)
+	 * ...
+	 * @param handle &gt;=0 (as returned by a prior call to [*i2c_open*]).
+	 * @param data &gt;0, the number of bytes to read.
+	 * @return Returns count bytes read from the raw device associated with handle.
+	 * @throws PigpioException  on pigpiod error
+     */
 	public int i2cReadDevice(int handle, byte data[]) throws PigpioException;
 
+	/**
+	 * Writes the data bytes to the raw device associated with handle.
+     *
+	 * . .
+	 * S Addr Wr [A] data0 [A] data1 [A] ... [A] datan [A] P
+	 * . .
+	 *
+	 * ...
+	 * pi.i2c_write_device(h, b"\\x12\\x34\\xA8")
+	 *
+	 * pi.i2c_write_device(h, b"help")
+	 *
+	 * pi.i2c_write_device(h, 'help')
+	 *
+	 * pi.i2c_write_device(h, [23, 56, 231])
+	 * ...
+	 * @param handle &gt;=0 (as returned by a prior call to [*i2c_open*]).
+	 * @param data the bytes to write.
+	 * @throws PigpioException  on pigpiod error
+     */
 	public void i2cWriteDevice(int handle, byte data[]) throws PigpioException;
 
 	// ################ SPI
@@ -677,29 +763,26 @@ public interface JPigpio {
 	 * @param flags Control flags.  The flags can include:
 	 * 
 	 * @return A handle used in subsequent SPI API calls
-	 * @throws PigpioException
+	 * @throws PigpioException  on pigpiod error
 	 */
 	public int spiOpen(int channel, int baudRate, int flags) throws PigpioException;
 
 	/**
 	 * Closes the SPI device associated with handle.
 	 *
-	 * handle:= >=0 (as returned by a prior call to [*spi_open*]).
+	 * handle:= &gt;=0 (as returned by a prior call to [*spi_open*]).
      *
 	 * ...
 	 * pi.spi_close(h)
 	 * ...
 	 *
 	 * @param handle The handle to be closed.
-	 * @throws PigpioException
+	 * @throws PigpioException  on pigpiod error
 	 */
 	public void spiClose(int handle) throws PigpioException;
 
 	/**
 	 * Reads count bytes from the SPI device associated with handle.
-	 *
-	 * handle:= >=0 (as returned by a prior call to [*spi_open*]).
-	 * count:= >0, the number of bytes to read.
 	 *
 	 * The returned value is a tuple of the number of bytes read and a
 	 * bytearray containing the bytes.  If there was an error the
@@ -713,19 +796,16 @@ public interface JPigpio {
 	 * else:
 	 * # error path
 	 * ...
-	 * @param handle The handle from which to read.
+	 * @param handle The handle from which to read. &gt;=0 (as returned by a prior call to [*spi_open*]).
 	 * @param data An array into which to read data.
 	 * @return The number of bytes actually read.
-	 * @throws PigpioException
+	 * @throws PigpioException  on pigpiod error
 	 */
 	public int spiRead(int handle, byte data[]) throws PigpioException;
 	
 	/**
 	 * Writes the data bytes to the SPI device associated with handle.
      *
-	 * handle:= >=0 (as returned by a prior call to [*spi_open*]).
-	 * data:= the bytes to write.
-	 *
 	 * ...
 	 * pi.spi_write(0, b'\\x02\\xc0\\x80') # write 3 bytes to device 0
 	 *
@@ -735,19 +815,16 @@ public interface JPigpio {
 	 *
 	 * pi.spi_write(1, [2, 192, 128])   # write 3 bytes to device 1
 	 * ...
-	 * @param handle The handle into which to write.
+	 * @param handle The handle into which to write. &gt;=0 (as returned by a prior call to [*spi_open*]).
 	 * @param data An array of data to write to SPI.
 	 * @return The number of bytes actually written
-	 * @throws PigpioException
+	 * @throws PigpioException  on pigpiod error
 	 */
 	public int spiWrite(int handle, byte data[]) throws PigpioException;
 
 	/**
 	 * Writes the data bytes to the SPI device associated with handle,
 	 * returning the data bytes read from the device.
-	 *
-	 * handle:= >=0 (as returned by a prior call to [*spi_open*]).
-	 * data:= the bytes to write.
 	 *
 	 * The returned value is a tuple of the number of bytes read and a
 	 * bytearray containing the bytes.  If there was an error the
@@ -763,15 +840,135 @@ public interface JPigpio {
 	 *
 	 * (count, rx_data) = pi.spi_xfer(h, "hello")
 	 * ...
-	 * @param handle The handle into which to write.
+	 * @param handle The handle into which to write. &gt;=0 (as returned by a prior call to [*spi_open*]).
 	 * @param txData An array of data to write.
 	 * @param rxData An array of data to read.
 	 * @return The number of bytes actually transferred.
-	 * @throws PigpioException
+	 * @throws PigpioException  on pigpiod error
 	 */
 	public int spiXfer(int handle, byte txData[], byte rxData[]) throws PigpioException;
 
 	// ################ SERIAL
+
+	/**
+	 * Returns a handle for the serial tty device opened
+	 * at baud bits per second.
+	 *
+	 * Normally you would only use the [*serial_**] functions if
+	 * you are or will be connecting to the Pi over a network.  If
+	 * you will always run on the local Pi use the standard serial
+	 * module instead.
+	 *
+	 * The baud rate must be one of 50, 75, 110, 134, 150,
+	 * 200, 300, 600, 1200, 1800, 2400, 4800, 9600, 19200,
+	 * 38400, 57600, 115200, or 230400.
+	 *
+	 * ...
+	 * h1 = pi.serial_open("/dev/ttyAMA0", 300)
+	 *
+	 * h2 = pi.serial_open("/dev/ttyUSB1", 19200, 0)
+	 * ...
+	 * @param tty serial device to open
+	 * @param baudRate baud rate in bits per second, see below.
+	 * @param flags connection flags. No flags are currently defined.
+	 * @return handle for opened device
+	 * @throws PigpioException  on pigpiod error
+     */
+	public int serialOpen(String tty, int baudRate, int flags) throws PigpioException;
+
+	/**
+	 * Closes the serial device associated with handle.
+     *
+	 * ...
+	 * pi.serial_close(h1)
+	 * ...
+	 * @param handle &gt;=0 (as returned by a prior call to [*serial_open*]).
+	 * @throws PigpioException  on pigpiod error
+     */
+	public void serialClose(int handle) throws PigpioException;
+
+
+	/**
+	 * Returns a single byte from the device associated with handle.
+     *
+	 * ...
+	 * b = pi.serial_read_byte(h1)
+	 * ...
+	 * @param handle &gt;=0 (as returned by a prior call to [*serial_open*]).
+	 * @return single byte from opened device
+	 * @throws PigpioException  on pigpiod error
+     */
+	public byte serialReadByte(int handle) throws PigpioException;
+
+	/**
+	 * Writes a single byte to the device associated with handle.
+     *
+	 * ...
+	 * pi.serial_write_byte(h1, 23)
+	 *
+	 * pi.serial_write_byte(h1, ord('Z'))
+	 * ...
+	 * @param handle &gt;=0 (as returned by a prior call to [*serial_open*]).
+	 * @param data 0-255, the value to write.
+	 * @throws PigpioException  on pigpiod error
+     */
+	public void serialWriteByte(int handle, byte data) throws PigpioException;
+
+	/**
+	 * Reads up to count bytes from the device associated with handle.
+	 *
+	 * The returned value is a tuple of the number of bytes read and a
+	 * bytearray containing the bytes.  If there was an error the
+	 * number of bytes read will be less than zero (and will contain
+	 * the error code).
+	 *
+	 * ...
+	 * (b, d) = pi.serial_read(h2, 100)
+	 * if b &gt; 0:
+	 * # process read data
+	 * ...
+	 * @param handle &gt;=0 (as returned by a prior call to [*serial_open*]).
+	 * @param count &gt;0, the number of bytes to read.
+	 * @return read bytes
+	 * @throws PigpioException  on pigpiod error
+     */
+	public byte[] serialRead(int handle, int count) throws PigpioException;
+
+	/**
+	 * Writes the data bytes to the device associated with handle.
+	 *
+	 * ...
+	 * pi.serial_write(h1, b'\\x02\\x03\\x04')
+	 *
+	 * pi.serial_write(h2, b'help')
+	 *
+	 * pi.serial_write(h2, "hello")
+	 *
+	 * pi.serial_write(h1, [2, 3, 4])
+	 * ...
+	 * @param handle &gt;=0 (as returned by a prior call to [*serial_open*]).
+	 * @param data the bytes to write.
+	 * @throws PigpioException  on pigpiod error
+     */
+	public void serialWrite(int handle, byte[] data) throws PigpioException;
+
+	/**
+	 * Returns the number of bytes available to be read from the
+	 * device associated with handle.
+	 *
+	 * ...
+	 * rdy = pi.serial_data_available(h1)
+	 *
+	 * if rdy &gt; 0:
+	 * (b, d) = pi.serial_read(h1, rdy)
+	 * ...
+	 * @param handle &gt;=0 (as returned by a prior call to [*serial_open*]).
+	 * @return number of bytes available to be read
+	 * @throws PigpioException  on pigpiod error
+     */
+	public int serialDataAvailable(int handle) throws PigpioException;
+
+
 
 	// ################ PWM
 
@@ -790,7 +987,7 @@ public interface JPigpio {
 	 *
 	 * @param gpio user gpio 0-31
 	 * @param dutycycle 0-range (range defaults to 255).
-	 * @throws PigpioException
+	 * @throws PigpioException  on pigpiod error
      */
 	public void setPWMDutycycle(int gpio, int dutycycle) throws PigpioException;
 
@@ -817,7 +1014,7 @@ public interface JPigpio {
 	 * ...
 	 * @param gpio user gpio 0-31
 	 * @return PWM dutycycle
-	 * @throws PigpioException
+	 * @throws PigpioException  on pigpiod error
      */
 	public int getPWMDutycycle(int gpio) throws PigpioException;
 
@@ -833,7 +1030,7 @@ public interface JPigpio {
 	 *
 	 * @param gpio user gpio 0-31
 	 * @param range range 25-40000
-	 * @throws PigpioException
+	 * @throws PigpioException  on pigpiod error
      */
 	public void setPWMRange(int gpio, int range) throws PigpioException;
 
@@ -850,7 +1047,7 @@ public interface JPigpio {
 	 * ...
 	 * @param gpio user gpio 0-31
 	 * @return range of PWM values
-	 * @throws PigpioException
+	 * @throws PigpioException  on pigpiod error
      */
 	public int getPWMRange(int gpio) throws PigpioException;
 
@@ -871,7 +1068,7 @@ public interface JPigpio {
 	 * ...
 	 * @param gpio user gpio 0-31
 	 * @return the real (underlying) range of PWM values
-	 * @throws PigpioException
+	 * @throws PigpioException  on pigpiod error
      */
 	public int getPWMRealRange(int gpio) throws PigpioException;
 
@@ -890,8 +1087,9 @@ public interface JPigpio {
 	 * 8000
 	 * ...
 	 * @param gpio user gpio 0-31
-	 * @param frequency >= 0 Hz
-	 * @throws PigpioException
+	 * @param frequency &gt;= 0 Hz
+	 * @return Returns the frequency actually set.
+	 * @throws PigpioException  on pigpiod error
      */
 	public int setPWMFrequency(int gpio, int frequency) throws PigpioException;
 
@@ -920,7 +1118,7 @@ public interface JPigpio {
 	 * ...
 	 * @param gpio user gpio 0-31
 	 * @return frequency (in Hz) used for the GPIO.
-	 * @throws PigpioException
+	 * @throws PigpioException  on pigpiod error
      */
 	public int getPWMFrequency(int gpio) throws PigpioException;
 
@@ -945,6 +1143,7 @@ public interface JPigpio {
 	 * @param pulseHoldDuration The time to hold the output pulse in microseconds.
 	 * @param pulseLow True if the pulse should be a low pulse otherwise a high pulse will be sent.
 	 * @return The time in microseconds waiting for a pulse or -1 to signfify a timeout.
+	 * @throws PigpioException  on pigpiod error
 	 */
 	public long gpioxPulseAndWait(int outGpio, int inGpio, long waitDuration, long pulseHoldDuration, boolean pulseLow) throws PigpioException;
 
@@ -953,7 +1152,7 @@ public interface JPigpio {
 	 * GPIO levels which listener has specified.
 	 * @param listener
 	 * 	GPIOListener object
-	 * @throws PigpioException
+	 * @throws PigpioException  on pigpiod error
      */
 	public void addCallback(GPIOListener listener) throws PigpioException;
 
@@ -961,7 +1160,7 @@ public interface JPigpio {
 	 * Remove callback listener object from notification thread.
 	 * @param listener
 	 * 	GPIOListener object
-	 * @throws PigpioException
+	 * @throws PigpioException  on pigpiod error
      */
 	public void removeCallback(GPIOListener listener) throws PigpioException;
 
