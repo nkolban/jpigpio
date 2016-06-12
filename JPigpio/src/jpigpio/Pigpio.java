@@ -4,6 +4,12 @@ import jpigpio.impl.CommonPigpio;
 
 import java.util.ArrayList;
 
+/**
+ * Pigpiod wrapper class using native C++ methods. This class can be used only when executing your application directly at Raspberry Pi device.
+ * See {@link PigpioSocket class PigpioSocket} for socket based implementation allowing you to develop/debug/run your over network.
+ * <br><br>
+ * See {@link JPigpio interface JPigpio} for full documentation of specific methods.
+ */
 public class Pigpio extends CommonPigpio {
 	static {
 		System.loadLibrary("JPigpioC");

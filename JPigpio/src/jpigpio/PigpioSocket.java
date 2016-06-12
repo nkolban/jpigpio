@@ -8,11 +8,10 @@ import java.util.ArrayList;
 import jpigpio.impl.CommonPigpio;
 
 /**
- * http://abyz.co.uk/rpi/pigpio/sif.html
- */
-
-/**
- * An implementation of the Pigpio Java interface using sockets to connect to the target pigpio demon.
+ * An implementation of the Pigpio Java interface using sockets to connect to the target pigpio demon
+ * socket interface (see http://abyz.co.uk/rpi/pigpio/sif.html)
+ * <br><br>
+ * See {@link JPigpio JPigpio interface} for full documentation
  *
  */
 public class PigpioSocket extends CommonPigpio {
@@ -128,11 +127,27 @@ public class PigpioSocket extends CommonPigpio {
 	private final int CMD_SERDA = 82;		// 82 handle 0 0 -
 
 	private final int CMD_GDC = 83;			// 83 gpio 0 0 -
+
 	// CMD_GPW 84 gpio 0 0 -
 	// CMD_HC 85 gpio frequency 0 -
 	// CMD_HP 86 gpio frequency 4 uint32_t dutycycle
 	// CMD_CF1 87 arg1 arg2 X uint8_t argx[X]
 	// CMD_CF2 88 arg1 retMax X uint8_t argx[X]
+	// CMD_BI2CC	89	sda	0	0	-
+	// CMD_BI2CO	90	sda	scl	4	uint32_t baud
+	// CMD_BI2CZ	91	sda	0	X	uint8_t data[X]
+	// CMD_I2CZ	92	handle	0	X	uint8_t data[X]
+	// CMD_WVCHA	93	0	0	X	uint8_t data[X]
+	// CMD_SLRI	94	gpio	invert	0	-
+	// CMD_CGI	95	0	0	0	-
+	// CMD_CSI	96	config	0	0	-
+	// CMD_FG	97	gpio	steady	0	-
+	// CMD_FN	98	gpio	steady	4	uint32_t active
+	// CMD_NOIB	99	0	0	0	-
+	// CMD_WVTXM	100	wave_id	mode	0	-
+	// CMD_WVTAT	101	-	-	0	-
+
+
 
 	private final int CMD_NOIB = 99;		//99 0 0 0 -
 
