@@ -1,12 +1,14 @@
-package jpigpio;
+package jpigpio.packet;
+
+import jpigpio.GPIOListener;
 
 /**
  * NotificationListener is object, which after being registered with NotificationRouter (see class PigpioSocket)
  * receives notifications coming from Pigpiod. Every relevant notification (NotificationRouter filters out those
  * notifications irrelevant for specific NotificationListener object based on EDGE and GPIO pin which listener
- * is registered for) triggers calling method processNotification.
+ * is registered for) triggers calling method alert.
  */
-public class NotificationListener extends GPIOListener{
+public class NotificationListener extends GPIOListener {
 
     protected int count = 0;
     protected boolean reset = false;
@@ -19,7 +21,7 @@ public class NotificationListener extends GPIOListener{
         super(userGpio, edge);
     }
 
-    public void processNotification(int gpio, int level, long tick){
+    public void alert(int gpio, int level, long tick){
         count++;
     }
 

@@ -265,6 +265,7 @@ public class PigpioSocket extends CommonPigpio {
 			int gpio = 0;
 
 			try {
+				// read GPIO status for GPIOs in bank 1 (gpio 0-31)
 				int lastLevel = slPiCmd.sendCmd(CMD_BR1, 0, 0);
 
 				// loop until stop signal is received
@@ -296,7 +297,7 @@ public class PigpioSocket extends CommonPigpio {
 									newLevel = 1;
 								//System.out.println("#3 "+changed+" : "+Integer.toBinaryString(cb.bit)+" : "+(cb.bit & changed));
 								if ((cb.edge ^ newLevel) != 0)
-									cb.processNotification(cb.gpio, newLevel, tick);
+									cb.alert(cb.gpio, newLevel, tick);
 
 							}
 						}
@@ -306,7 +307,7 @@ public class PigpioSocket extends CommonPigpio {
 							gpio = flags & PI_NTFY_FLAGS_WDOG;
 							for (GPIOListener cb : gpioListeners)
 								if (cb.gpio == gpio)
-									cb.processNotification(cb.gpio, PI_TIMEOUT, tick);
+									cb.alert(cb.gpio, PI_TIMEOUT, tick);
 					}
 				}
 
@@ -817,8 +818,13 @@ public class PigpioSocket extends CommonPigpio {
 	}
 
 	@Override
-	public void gpioSetAlertFunc(int pin, Alert alert) throws PigpioException {
-		throw new NotImplementedException();
+	public void gpioSetAlertFunc(int pin, Alert gpioAlert) throws PigpioException {
+		router.addListener(new GPIOListener(pin, PI_EITHER_EDGE) {
+			@Override
+			public void alert(int gpio, int level, long tick) {
+				gpioAlert.alert(gpio, level, tick);
+			}
+		});
 	} // End of gpioSetAlertFunc
 
 	@Override
@@ -910,8 +916,6 @@ public class PigpioSocket extends CommonPigpio {
 	}
 
 	// ######################## PWM
-
-	// ############### PWM
 
 	@Override
 	public void setPWMDutycycle(int gpio, int dutycycle) throws PigpioException {

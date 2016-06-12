@@ -1,6 +1,5 @@
 package jpigpio.packet;
 
-import jpigpio.NotificationListener;
 import jpigpio.JPigpio;
 import jpigpio.PigpioException;
 import jpigpio.Utils;
@@ -73,7 +72,7 @@ public class Rf433rx {
         }
 
         @Override
-        public void processNotification(int gpio, int level, long tick){
+        public void alert(int gpio, int level, long tick){
             int trans = 0;
 
             count++;  // increase called count for statistical purposes
