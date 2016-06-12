@@ -4,6 +4,12 @@ import jpigpio.impl.CommonPigpio;
 
 import java.util.ArrayList;
 
+/**
+ * Pigpiod wrapper class using native C++ methods. This class can be used only when executing your application directly at Raspberry Pi device.
+ * See {@link PigpioSocket class PigpioSocket} for socket based implementation allowing you to develop/debug/run your over network.
+ * <br><br>
+ * See {@link JPigpio interface JPigpio} for full documentation of specific methods.
+ */
 public class Pigpio extends CommonPigpio {
 	static {
 		System.loadLibrary("JPigpioC");
@@ -38,34 +44,29 @@ public class Pigpio extends CommonPigpio {
 	}
 
 	@Override
-	public int notifyBegin(int handle, int bits) throws PigpioException{
+	public void notifyBegin(int handle, int bits) throws PigpioException{
 		throw new NotImplementedException();
 	}
 
 	@Override
-	public int notifyPause(int handle) throws PigpioException{
+	public void notifyPause(int handle) throws PigpioException{
 		throw new NotImplementedException();
 	}
 
 	@Override
-	public int notifyClose(int handle) throws PigpioException {
+	public void notifyClose(int handle) throws PigpioException {
 		throw new NotImplementedException();
 	}
 
 	@Override
-	public int setWatchdog(int userGpio, int timeout) throws PigpioException{
+	public void setWatchdog(int userGpio, int timeout) throws PigpioException{
 		throw new NotImplementedException();
 	}
 
-	// ##################### WAVES
+	// ##################### WAVEFORMS
 
-	/**
-	 * This function clears all waveforms and any data added by calls to the wave_add_* functions.
-	 *
-	 * @return The return code from close.
-	 */
 	@Override
-	public int waveClear() throws PigpioException {
+	public void waveClear() throws PigpioException {
 		throw new NotImplementedException();
 	}
 
@@ -80,7 +81,7 @@ public class Pigpio extends CommonPigpio {
 	}
 
 	@Override
-	public int waveAddNew() throws PigpioException {
+	public void waveAddNew() throws PigpioException {
 		throw new NotImplementedException();
 	}
 
@@ -100,7 +101,7 @@ public class Pigpio extends CommonPigpio {
 	}
 
 	@Override
-	public int waveDelete(int waveId) throws PigpioException {
+	public void waveDelete(int waveId) throws PigpioException {
 		throw new NotImplementedException();
 	}
 
@@ -208,6 +209,41 @@ public class Pigpio extends CommonPigpio {
 		throw new NotImplementedException();
 	}
 
+	// ################ SERIAL
+	@Override
+	public int serialOpen(String tty, int baudRate, int flags) throws PigpioException {
+		throw new NotImplementedException();
+	}
+
+	@Override
+	public void serialClose(int handle) throws PigpioException {
+		throw new NotImplementedException();
+	}
+
+	@Override
+	public byte serialReadByte(int handle) throws PigpioException {
+		throw new NotImplementedException();
+	}
+
+	@Override
+	public void serialWriteByte(int handle, byte data) throws PigpioException {
+		throw new NotImplementedException();
+	}
+
+	@Override
+	public byte[] serialRead(int handle, int count) throws PigpioException {
+		throw new NotImplementedException();
+	}
+
+	@Override
+	public void serialWrite(int handle, byte[] data) throws PigpioException {
+		throw new NotImplementedException();
+	}
+
+	@Override
+	public int serialDataAvailable(int handle) throws PigpioException {
+		throw new NotImplementedException();
+	}
 
 	// ###############
 
@@ -234,7 +270,7 @@ public class Pigpio extends CommonPigpio {
 	 * @param flags Control flags.  The flags can include:
 	 * 
 	 * @return A handle used in subsequent SPI API calls
-	 * @throws PigpioException
+	 * @throws PigpioException on pigpiod error
 	 */
 	@Override
 	public native int spiOpen(int channel, int baudRate, int flags) throws PigpioException;
@@ -244,7 +280,7 @@ public class Pigpio extends CommonPigpio {
 	 * 
 	 * @param handle
 	 *            The handle to be closed.
-	 * @throws PigpioException
+	 * @throws PigpioException on pigpiod error
 	 */
 	@Override
 	public native void spiClose(int handle) throws PigpioException;
@@ -257,7 +293,7 @@ public class Pigpio extends CommonPigpio {
 	 * @param data
 	 *            An array into which to read data.
 	 * @return The number of bytes actually read.
-	 * @throws PigpioException
+	 * @throws PigpioException on pigpiod error
 	 */
 	@Override
 	public native int spiRead(int handle, byte[] data) throws PigpioException;
@@ -270,7 +306,7 @@ public class Pigpio extends CommonPigpio {
 	 * @param data
 	 *            An array of data to write to SPI.
 	 * @return The number of bytes actually written
-	 * @throws PigpioException
+	 * @throws PigpioException on pigpiod error
 	 */
 	@Override
 	public native int spiWrite(int handle, byte[] data) throws PigpioException;
@@ -285,7 +321,7 @@ public class Pigpio extends CommonPigpio {
 	 * @param rxData
 	 *            An array of data to read.
 	 * @return The number of bytes actually transferred.
-	 * @throws PigpioException
+	 * @throws PigpioException on pigpiod error
 	 */
 	@Override
 	public native int spiXfer(int handle, byte[] txData, byte[] rxData) throws PigpioException;

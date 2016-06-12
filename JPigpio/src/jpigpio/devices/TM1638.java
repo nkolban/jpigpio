@@ -27,9 +27,9 @@ import jpigpio.WrongModeException;
  * This code is based upon work performed by Ricardo Batista in his project called "tm1638-library" found here:
  * <a href="https://code.google.com/p/tm1638-library/">https://code.google.com/p/tm1638-library/</a>.
  *
- *@author Neil Kolban
- *@email kolban1@kolban.com
- *@date 2015-05-23
+ *author Neil Kolban
+ *email kolban1@kolban.com
+ *date 2015-05-23
  */
 public class TM1638 {
 	private JPigpio pigpio;

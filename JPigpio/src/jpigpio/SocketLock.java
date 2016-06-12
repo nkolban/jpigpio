@@ -56,7 +56,7 @@ public class SocketLock {
      * @param p3 Command parameter 3 (usually length of extended data - see paramater ext)
      * @param ext Array of bytes containing extended data
      * @return Command result code
-     * @throws IOException
+     * @throws IOException in case of network connection error
      */
     public synchronized int sendCmd(int cmd, int p1, int p2, int p3, byte[] ext) throws IOException {
         int resp, a, w;
@@ -99,7 +99,7 @@ public class SocketLock {
     /**
      * Read all remaining bytes coming from pigpiod
      * @param data Array to store read bytes.
-     * @throws IOException
+     * @throws IOException if unbale to read from network
      */
     public void readBytes(byte[] data) throws IOException {
         in.readFully(data);

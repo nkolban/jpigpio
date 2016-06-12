@@ -11,6 +11,8 @@ import java.util.ArrayList;
  * Class implementing 433 MHz transmitter (e.g. FS1000A) using pigpiod daemon.
  * Specific protocol (high/low signal duration, datagram/message length etc. can be cofigured
  * by passing different Protocol object to the constructor of this class.
+ * <br><br>
+ * Work is based on Robert Tidey LightwaveRF code https://github.com/roberttidey/LightwaveRF
  *
  * Example usage: see Test_Rf433Tx
  */
@@ -184,7 +186,7 @@ public class Rf433tx {
      * @return
      * 0 - everything is OK
      * -1 - data
-     * @throws PigpioException
+     * @throws PigpioException  on pigpiod error
      */
     public int put (byte[] data) throws PigpioException{
         if (data.length != protocol.DATA_SIZE)
@@ -223,7 +225,7 @@ public class Rf433tx {
      * Returns TRUE if available for another transmission.
      * @return
      * TRUE/FALSE
-     * @throws PigpioException
+     * @throws PigpioException  on pigpiod error
      */
     public synchronized boolean ready() throws PigpioException {
         return transmitter.ready();
@@ -232,7 +234,7 @@ public class Rf433tx {
 
     /**
      * Terminates transmission of all waveforms.
-     * @throws PigpioException
+     * @throws PigpioException  on pigpiod error
      */
     public void terminate() throws PigpioException{
         transmitter.stop();

@@ -23,7 +23,7 @@ public class WrongModeException extends PigpioException {
 	
 	/**
 	 * Retrieve the pin that was flagged as being in the wrong mode.
-	 * @return
+	 * @return gpio number
 	 */
 	public int getPin() {
 		return pin;

@@ -27,7 +27,7 @@ public class HC_SR04 {
 	/**
 	 * Get the delay in microseconds for a trigger/echo
 	 * @return The time in microseconds between a trigger and an echo response
-	 * @throws PigpioException
+	 * @throws PigpioException on pigpiod error
 	 */
 	public long getDelay() throws PigpioException {
 		long delay = pigpio.gpioxPulseAndWait(triggerGpio, echoGpio, 50000, 10, false);
@@ -38,7 +38,7 @@ public class HC_SR04 {
 	/**
 	 * Get the sensor measured distance to the target in meters.
 	 * @return The distance to the target in meters or -1 if not determined.
-	 * @throws PigpioException
+	 * @throws PigpioException on pigpiod error
 	 */
 	public double getMetricDistance() throws PigpioException {
 		long delay = getDelay();
@@ -51,7 +51,7 @@ public class HC_SR04 {
 	/**
 	 * Get the distance in inches of detection or -1 if no object detected.
 	 * @return The distance in inches to object.
-	 * @throws PigpioException
+	 * @throws PigpioException on pigpiod error
 	 */
 	public double getImperialDistance() throws PigpioException {
 		double metricDistance = getMetricDistance();

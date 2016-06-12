@@ -3,7 +3,7 @@ package jpigpio;
 public class Utils {
 	/**
 	 * Add a handler to perform a clean termination of pigpio on termination.
-	 * @param pigpio
+	 * @param pigpio pigpio object to terminate
 	 */
 	public static void addShutdown(JPigpio pigpio) {
 		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
@@ -25,7 +25,7 @@ public class Utils {
 	
 	/**
 	 * Return a binary string representation of the byte.
-	 * @param value
+	 * @param value byte to convert
 	 * @return A binary string representation of the byte.
 	 */
 	public static String byteToBinary(byte value) {
@@ -34,7 +34,7 @@ public class Utils {
 	
 	/**
 	 * Return a binary string representation of the first 16 bits of the integer.
-	 * @param value
+	 * @param value integer to convert
 	 * @return A binary string representation of the first 16 bits of the integer.
 	 */
 	public static String int16ToBinary(int value) {

@@ -15,8 +15,8 @@ import jpigpio.PigpioException;
  * <li>get the data fields ...</li>
  * </ul>
  * 
- * @author Neil Kolban
- * @date 2015-04-30
+ * author Neil Kolban
+ * date 2015-04-30
  *
  */
 public class WiiNunchuck {

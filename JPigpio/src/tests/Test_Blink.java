@@ -9,8 +9,8 @@ import jpigpio.Utils;
  * Set a pin high and then low forever.  The pin is commonly connected to an LED to cause it to
  * blink on and off.
  * 
- * @author Neil Kolban
- * @date 2015-04-26
+ * author Neil Kolban
+ * date 2015-04-26
  *
  */
 public class Test_Blink {
