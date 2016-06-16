@@ -359,9 +359,7 @@ public class PigpioSocket extends CommonPigpio {
 		}
 	} // End of gpioInitialize()
 
-	/**
-	 * Terminate the usage of the pigpio interfaces.
-	 */
+
 	@Override
 	public void gpioTerminate() throws PigpioException {
 		try {
@@ -675,15 +673,6 @@ public class PigpioSocket extends CommonPigpio {
 
 	//############### I2C
 
-	/**
-	 * Open a connection to the i2c
-	 * 
-	 * @param i2cBus
-	 *            The id of the bus (1 for pi)
-	 * @param i2cAddr
-	 *            The address of the device on the bus
-	 * @return The handle for the device on the bus.
-	 */
 	@Override
 	public int i2cOpen(int i2cBus, int i2cAddr) throws PigpioException {
 		try {
@@ -693,12 +682,6 @@ public class PigpioSocket extends CommonPigpio {
 		}
 	} // i2cOpen
 
-	/**
-	 * Close a previously opened i2c handle.
-	 * 
-	 * @param handle
-	 *            The handle of the previously opened i2c
-	 */
 	@Override
 	public void i2cClose(int handle) throws PigpioException {
 		try {
@@ -711,14 +694,7 @@ public class PigpioSocket extends CommonPigpio {
 		}
 	} // i2cClose
 
-	/**
-	 * Read data from the device.
-	 * 
-	 * @param handle
-	 *            The handle to the device from which to read.
-	 * @param data
-	 *            The data array into which to store the data.
-	 */
+
 	@Override
 	public int i2cReadDevice(int handle, byte[] data) throws PigpioException {
 		try {
@@ -734,14 +710,7 @@ public class PigpioSocket extends CommonPigpio {
 		}
 	} // End of i2cReadDevice
 
-	/**
-	 * Write data to the i2c device.
-	 * 
-	 * @param handle
-	 *            The handle of the device to write.
-	 * @param data
-	 *            The data to write to the device.
-	 */
+
 	@Override
 	public void i2cWriteDevice(int handle, byte[] data) throws PigpioException {
 		try {
@@ -754,12 +723,7 @@ public class PigpioSocket extends CommonPigpio {
 		}
 	} // End of i2cWriteDevice
 
-	/**
-	 * Delay
-	 * 
-	 * @param delay
-	 *            The time for the delay.
-	 */
+
 	@Override
 	public void gpioDelay(long delay) throws PigpioException {
 		try {
@@ -770,11 +734,7 @@ public class PigpioSocket extends CommonPigpio {
 		}
 	} // End of gpioDelay
 
-	/**
-	 * Return the number of microseconds since the PI booted.
-	 * 
-	 * @return The number of microseconds since the PI booted.
-	 */
+
 	@Override
 	public long gpioTick() throws PigpioException {
 		try {
@@ -789,12 +749,6 @@ public class PigpioSocket extends CommonPigpio {
 		return gpioTick();
 	} // End of getCurrentTick
 
-	/**
-	 * Set the pulse width of a specific GPIO.  The pulse width is in microseconds
-	 * with a value between 500 and 2500 or a value of 0 to switch the servo off.
-	 * @param gpio The pin to use to control the servo.
-	 * @param pulseWidth The pulse width of the pulse (500-2500).
-	 */
 	@Override
 	public void gpioServo(int gpio, int pulseWidth) throws PigpioException {
 		try {
@@ -812,6 +766,9 @@ public class PigpioSocket extends CommonPigpio {
 		gpioServo(gpio, pulseWidth);
 	}
 
+	/**
+	 * Not implemented
+     */
 	@Override
 	public int getServoPulseWidth(int gpio) throws PigpioException {
 		throw new NotImplementedException();
@@ -827,6 +784,9 @@ public class PigpioSocket extends CommonPigpio {
 		});
 	} // End of gpioSetAlertFunc
 
+	/**
+	 * Not implemented
+	 */
 	@Override
 	public void gpioTrigger(int gpio, long pulseLen, boolean level) throws PigpioException {
 		throw new NotImplementedException();
@@ -1116,7 +1076,9 @@ public class PigpioSocket extends CommonPigpio {
 
 	// ########################
 
-
+	/**
+	 * Not implemented
+	 */
 	@Override
 	public void setDebug(boolean flag) throws PigpioException {
 		// TODO Auto-generated method stub
@@ -1124,48 +1086,15 @@ public class PigpioSocket extends CommonPigpio {
 		
 	}
 
+	/**
+	 * Not implemented
+	 */
 	@Override
 	public long gpioxPulseAndWait(int outGpio, int inGpio, long waitDuration, long pulseHoldDuration, boolean pulseLow) throws PigpioException {
 		// TODO Auto-generated method stub
 		throw new NotImplementedException();
 	}
 
-	/**
-	 * Calls a user supplied function (a callback) whenever the
-	 * specified GPIO edge is detected.
-	 *
-	 * The user supplied callback receives three parameters, the GPIO,
-	 * the level, and the tick.
-	 *
-	 * If a user callback is not specified a default tally callback is
-	 * provided which simply counts edges.  The count may be retrieved
-	 * by calling the tally function.  The count may be reset to zero
-	 * by calling the reset_tally function.
-	 *
-	 * The callback may be cancelled by calling the cancel function.
-	 *
-	 * A GPIO may have multiple notificationListeners (although I can't think of
-	 * a reason to do so).
-	 *
-	 * ...
-	 * def cbf(gpio, level, tick):
-	 * print(gpio, level, tick)
-	 *
-	 * cb1 = pi.callback(22, pigpio.EITHER_EDGE, cbf)
-	 *
-	 * cb2 = pi.callback(4, pigpio.EITHER_EDGE)
-	 *
-	 * cb3 = pi.callback(17)
-	 *
-	 * print(cb3.tally())
-	 *
-	 * cb3.reset_tally()
-	 *
-	 * cb1.cancel() # To cancel callback cb1.
-	 * ...
-     * @param gpioListener
-	 * 	user supplied callback object.
-     */
 	@Override
 	public void addCallback(GPIOListener gpioListener) throws PigpioException{
 		this.router.addListener(gpioListener);

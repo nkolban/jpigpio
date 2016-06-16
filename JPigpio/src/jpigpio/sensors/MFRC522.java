@@ -103,6 +103,13 @@ public class MFRC522 {
 	private int resetPowerDownPin;
 	private SPI spi;
 
+	/**
+	 * Object constructor
+	 * @param pigpio JPiogpio object
+	 * @param chipSelectPin Chip select pin
+	 * @param resetPowerDownPin Reset power down pin
+	 * @throws PigpioException
+     */
 	public MFRC522(JPigpio pigpio, int chipSelectPin, int resetPowerDownPin) throws PigpioException {
 		this.pigpio = pigpio;
 		this.chipSelectPin = chipSelectPin;
@@ -118,6 +125,12 @@ public class MFRC522 {
 		spi = new SPI(pigpio, 0, JPigpio.PI_SPI_BAUD_1MHZ, 0);
 	}
 
+	/**
+	 * Write single byte to specified register
+	 * @param reg The register to write to. One of the PCD_Register enums.
+	 * @param value The value to write.
+	 * @throws PigpioException
+     */
 	public void PCD_WriteRegister(byte reg, ///< The register to write to. One of the PCD_Register enums.
 			byte value) throws PigpioException ///< The value to write.
 	{
@@ -127,6 +140,12 @@ public class MFRC522 {
 		pigpio.gpioWrite(chipSelectPin, JPigpio.PI_HIGH); // Release slave again
 	} // End of PCD_WriteRegister
 
+	/**
+	 * Write set of values (bytearray) to specified register.
+	 * @param reg The register to write to. One of the PCD_Register enums.
+	 * @param values The values to write. Byte array.
+	 * @throws PigpioException
+     */
 	public void PCD_WriteRegister(byte reg, ///< The register to write to. One of the PCD_Register enums.
 			byte values[] ///< The values to write. Byte array.
 	) throws PigpioException {
@@ -139,7 +158,11 @@ public class MFRC522 {
 	} // End PCD_WriteRegister()
 
 	/**
-	 * Reads a byte from the specified register in the MFRC522 chip. The interface is described in the datasheet section 8.1.2.
+	 * Reads a byte from the specified register in the MFRC522 chip.
+	 * The interface is described in the datasheet section 8.1.2.
+	 * @param reg The register to read from. One of the PCD_Register enums.
+	 * @return byte from specified register
+	 * @throws PigpioException
 	 */
 	public byte PCD_ReadRegister(byte reg ///< The register to read from. One of the PCD_Register enums.
 	) throws PigpioException {
@@ -151,7 +174,12 @@ public class MFRC522 {
 	} // End PCD_ReadRegister()
 
 	/**
-	 * Reads a number of bytes from the specified register in the MFRC522 chip. The interface is described in the datasheet section 8.1.2.
+	 * Reads a number of bytes from the specified register in the MFRC522 chip.
+	 * The interface is described in the datasheet section 8.1.2.
+	 * @param reg The register to read from. One of the PCD_Register enums.
+	 * @param rxAlign Byte array to store the values in.
+	 * @param values Only bit positions rxAlign..7 in values[0] are updated.
+	 * @throws PigpioException
 	 */
 	public void PCD_ReadRegister(byte reg, ///< The register to read from. One of the PCD_Register enums.
 			byte values[], ///< Byte array to store the values in.
@@ -187,6 +215,9 @@ public class MFRC522 {
 
 	/**
 	 * Sets the bits given in mask in register reg.
+	 * @param reg The register to update. One of the PCD_Register enums.
+	 * @param mask The bits to set.
+	 * @throws PigpioException
 	 */
 	public void PCD_SetRegisterBitMask(byte reg, ///< The register to update. One of the PCD_Register enums.
 			byte mask ///< The bits to set.
@@ -198,6 +229,9 @@ public class MFRC522 {
 
 	/**
 	 * Clears the bits given in mask from register reg.
+	 * @param mask The bits to clear.
+	 * @param reg The register to update. One of the PCD_Register enums.
+	 * @throws PigpioException
 	 */
 	public void PCD_ClearRegisterBitMask(byte reg, ///< The register to update. One of the PCD_Register enums.
 			byte mask ///< The bits to clear.
@@ -209,8 +243,12 @@ public class MFRC522 {
 
 	/**
 	 * Use the CRC coprocessor in the MFRC522 to calculate a CRC_A.
-	 * 
+	 *
+	 * @param data Pointer to the data to transfer to the FIFO for CRC calculation.
+	 * @param length The number of bytes to transfer.
+	 * @param result Pointer to result buffer. Result is written to result[0..1], low byte first.
 	 * @return STATUS_OK on success, STATUS_??? otherwise.
+	 * @throws PigpioException
 	 */
 	public byte PCD_CalculateCRC(byte data[], ///< In: Pointer to the data to transfer to the FIFO for CRC calculation.
 			byte length, ///< In: The number of bytes to transfer.
@@ -244,6 +282,7 @@ public class MFRC522 {
 	
 	/**
 	 * Initializes the MFRC522 chip.
+	 * @throws PigpioException
 	 */
 	public void PCD_Init() throws PigpioException {
 		if (pigpio.gpioRead(resetPowerDownPin) == JPigpio.PI_LOW) {	//The MFRC522 chip is in power down mode.
@@ -270,6 +309,7 @@ public class MFRC522 {
 	
 	/**
 	 * Performs a soft reset on the MFRC522 chip and waits for it to be ready again.
+	 * @throws PigpioException
 	 */
 	public void PCD_Reset() throws PigpioException {
 		PCD_WriteRegister(CommandReg, PCD_SoftReset);	// Issue the SoftReset command.
@@ -286,6 +326,7 @@ public class MFRC522 {
 	/**
 	 * Turns the antenna on by enabling pins TX1 and TX2.
 	 * After a reset these pins are disabled.
+	 * @throws PigpioException
 	 */
 	public void PCD_AntennaOn() throws PigpioException {
 		byte value = PCD_ReadRegister(TxControlReg);
@@ -296,6 +337,7 @@ public class MFRC522 {
 	
 	/**
 	 * Turns the antenna off by disabling pins TX1 and TX2.
+	 * @throws PigpioException
 	 */
 	public void PCD_AntennaOff() throws PigpioException {
 		PCD_ClearRegisterBitMask(TxControlReg, (byte)0x03);
@@ -307,6 +349,7 @@ public class MFRC522 {
 	 * NOTE: Return value scrubbed with (0x07&lt;&lt;4)=01110000b as RCFfgReg may use reserved bits.
 	 * 
 	 * @return Value of the RxGain, scrubbed to the 3 bits used.
+	 * @throws PigpioException
 	 */
 	public byte PCD_GetAntennaGain() throws PigpioException {
 		return (byte)(PCD_ReadRegister(RFCfgReg) & (0x07<<4));
@@ -316,6 +359,8 @@ public class MFRC522 {
 	 * Set the MFRC522 Receiver Gain (RxGain) to value specified by given mask.
 	 * See 9.3.3.6 / table 98 in http://www.nxp.com/documents/data_sheet/MFRC522.pdf
 	 * NOTE: Given mask is scrubbed with (0x07&lt;&lt;4)=01110000b as RCFfgReg may use reserved bits.
+	 * @param mask
+	 * @throws PigpioException
 	 */
 	public void PCD_SetAntennaGain(byte mask) throws PigpioException {
 		if (PCD_GetAntennaGain() != mask) {						// only bother if there is a change

@@ -8,7 +8,7 @@ import jpigpio.packet.*;
 
 
 /**
- * Created by Jozef on 24.04.2016.
+ * Simple example of using 433MHz transmitter (e.g. FS1000A) with Java and Pigpiod.
  */
 public class Test_Rf433Rx {
 
