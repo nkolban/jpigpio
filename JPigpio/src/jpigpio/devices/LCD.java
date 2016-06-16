@@ -276,7 +276,7 @@ public class LCD {
 	/**
 	 * Write a text string to the LCD.
 	 * @param text The string of text to write.
-	 * @throws PigpioException
+	 * @throws PigpioException when write fails
 	 */
 	public void write(String text) throws PigpioException {
 		byte data[] = text.getBytes();

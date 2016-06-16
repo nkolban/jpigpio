@@ -8,8 +8,10 @@ import jpigpio.packet.Rf433tx;
 
 import java.util.Arrays;
 
+// Created by Jozef on 26.04.2016.
+
 /**
- * Created by Jozef on 26.04.2016.
+ * Simple example of using 433MHz transmitter (e.g. XD-RF-5V) with Java and Pigpiod.
  */
 public class Test_Rf433Tx {
 
