@@ -75,7 +75,7 @@ public class PigpioSocket extends CommonPigpio {
 	// private final int CMD_WVSM = 34;		//34 subcmd 0 0 -
 	// private final int CMD_WVSP = 35;		//35 subcmd 0 0 -
 	// private final int CMD_WVSC = 36;		//36 subcmd 0 0 -
-	// private final int CMD_TRIG = 37;		//37 gpio pulselen 4 uint32_t level
+	private final int CMD_TRIG = 37;		//37 gpio pulselen 4 uint32_t level
 	// private final int CMD_PROC = 38;		//38 0 0 X uint8_t text[X]
 	// private final int CMD_PROCD = 39;	//39 script_id 0 0 -
 	// private final int CMD_PROCR = 40;	//40 script_id 0 4*X uint32_t pars[X]
@@ -789,7 +789,19 @@ public class PigpioSocket extends CommonPigpio {
 	 */
 	@Override
 	public void gpioTrigger(int gpio, long pulseLen, boolean level) throws PigpioException {
-		throw new NotImplementedException();
+		try {
+			ByteBuffer bb = ByteBuffer.allocate(12);
+			bb.order(ByteOrder.LITTLE_ENDIAN);
+			bb.putInt(level?1:0);
+
+			int rc = slCmd.sendCmd(CMD_TRIG, gpio, (int)pulseLen, 4, bb.array());
+			if (rc < 0) {
+				throw new PigpioException(rc);
+			}
+		} catch (IOException e) {
+			throw new PigpioException("gpioTrigger");
+		}
+
 	}
 
 	// ############### SPI

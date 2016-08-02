@@ -26,49 +26,55 @@ public class Test_NRF24L01_Client {
 			Utils.addShutdown(pigpio);
 			nrf24l01 = new NRF24L01(pigpio);
 			p("init");
-			pigpio.gpioSetMode(cePin, JPigpio.PI_OUTPUT);
-			pigpio.gpioSetMode(csnPin, JPigpio.PI_OUTPUT);
 			nrf24l01.init(cePin, csnPin);
-			byte rAddr[] = { 'c', 'l', 'i', 'e', '1' };
 
+			byte rAddr[] = { 'D', 'S', 'P', '0', '1' };
 			p("setRADDR");
 			nrf24l01.setRADDR(rAddr);
-			p("setConfig");
-			nrf24l01.config(4);
 
-			byte tAddr[] = { 's', 'e', 'r', 'v', '1' };
+			byte tAddr[] = { 'C', 'B', 'X', '0', '1' };
+			p("setTADDR");
+			nrf24l01.setTADDR(tAddr);
+
+			p("setConfig");
+			nrf24l01.config(32);
+			nrf24l01.setChannel(76);
 
 			p("getRFChannel");
 			System.out.println("RF Channel: " + nrf24l01.getRFChannel());
+
 			p("getAutomaticRetransmission");
 			System.out.println(nrf24l01.setupRetrToString(nrf24l01.getAutomaticRetransmission()));
+
+			nrf24l01.setAddressWidths(0b11);
 			p("setupAddressWidthToString");
 			System.out.println("Address widths: " + nrf24l01.setupAddressWidthToString(nrf24l01.getAddressWidths()));
-			while (true) {
-				p("setTADDR");
-				nrf24l01.setTADDR(tAddr);
-				byte data[] = { 'H', 'E', 'L', 'O' };
-				System.out.println("Sending ...");
-				nrf24l01.send(data);
-				while (nrf24l01.isSending()) {
-					logStatus();
-					logConfig();
-					//pigpio.gpioDelay(1, JPigpio.PI_SECONDS);
-				}
-				System.out.println("Finished sending ...");
-				//pigpio.gpioDelay(1000 * 10);
-				System.out.println("Waiting for data ...");
-				while (!nrf24l01.dataReady()) {
-					System.out.println("No data ...");
-					logStatus(); logConfig(); logFifoStatus();
-					pigpio.gpioDelay(2, JPigpio.PI_SECONDS);
-				}
 
-				System.out.println("Getting data ...");
-				nrf24l01.getData(data);
-				System.out.println("Got data");
-				pigpio.gpioDelay(10, JPigpio.PI_SECONDS);
-			} // Loop again!!
+			//nrf24l01.printDetails(System.out);
+			nrf24l01.setCRCSize(2);
+
+			nrf24l01.setDataRate(NRF24L01.RF24_1MBPS);
+
+			nrf24l01.printDetails(System.out);
+
+			byte data[] = new byte[5];
+			data[0] = 0x20;
+			data[1] = 3;
+			data[2] = '1';
+			data[3] = '1';
+
+			System.out.println("Sending ...");
+			nrf24l01.send(data);
+			while (nrf24l01.isSending()) {
+				logStatus();
+				logConfig();
+				//pigpio.gpioDelay(1, JPigpio.PI_SECONDS);
+			}
+
+			nrf24l01.terminate();
+
+			System.out.println("Done.");
+
 		} catch (PigpioException e) {
 			e.printStackTrace();
 		}
