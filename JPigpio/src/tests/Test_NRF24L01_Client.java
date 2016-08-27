@@ -19,41 +19,39 @@ public class Test_NRF24L01_Client {
 		try {
 
 			System.out.println("NRF24L01 - Client");
+
 			JPigpio pigpio = new PigpioSocket("pigpiod-host", 8888);
+
 			//JPigpio pigpio = new Pigpio();
-			// pigpio.setDebug(true);
+
 			pigpio.gpioInitialize();
 			Utils.addShutdown(pigpio);
-			nrf24l01 = new NRF24L01(pigpio);
-			p("init");
-			nrf24l01.init(cePin, csnPin);
 
+			nrf24l01 = new NRF24L01(pigpio);
+
+			p("Initializing...");
+			if (!nrf24l01.init(cePin, csnPin)) {
+				p("Failed to initialize nRF module. Module not present?");
+				nrf24l01.terminate();
+				pigpio.gpioTerminate();
+				return;
+			}
+
+			// set remote device address - to which data will be sent and from which data will be received
 			byte rAddr[] = { 'D', 'S', 'P', '0', '1' };
-			p("setRADDR");
 			nrf24l01.setRADDR(rAddr);
 
+			// set transmitter device address - from which data will be sent
 			byte tAddr[] = { 'C', 'B', 'X', '0', '1' };
-			p("setTADDR");
-			nrf24l01.setTADDR(tAddr);
+			nrf24l01.setTADDR(tAddr, true);
 
-			p("setConfig");
-			nrf24l01.config(32);
+			nrf24l01.setPayloadSize(32);
 			nrf24l01.setChannel(76);
-
-			p("getRFChannel");
-			System.out.println("RF Channel: " + nrf24l01.getRFChannel());
-
-			p("getAutomaticRetransmission");
-			System.out.println(nrf24l01.setupRetrToString(nrf24l01.getAutomaticRetransmission()));
-
-			nrf24l01.setAddressWidths(0b11);
-			p("setupAddressWidthToString");
-			System.out.println("Address widths: " + nrf24l01.setupAddressWidthToString(nrf24l01.getAddressWidths()));
-
-			//nrf24l01.printDetails(System.out);
+			nrf24l01.setRetries(5,15);
 			nrf24l01.setCRCSize(2);
-
 			nrf24l01.setDataRate(NRF24L01.RF24_1MBPS);
+			nrf24l01.setAutoACK(true);
+			nrf24l01.setPALevel(NRF24L01.RF24_PA_LOW);
 
 			nrf24l01.printDetails(System.out);
 
@@ -64,11 +62,16 @@ public class Test_NRF24L01_Client {
 			data[3] = '1';
 
 			System.out.println("Sending ...");
+
 			nrf24l01.send(data);
 			while (nrf24l01.isSending()) {
 				logStatus();
 				logConfig();
-				//pigpio.gpioDelay(1, JPigpio.PI_SECONDS);
+				try{
+					Thread.sleep(100);
+				} catch (InterruptedException e) {
+					// do nothing
+				}
 			}
 
 			nrf24l01.terminate();
