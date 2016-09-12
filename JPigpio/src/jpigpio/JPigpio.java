@@ -39,7 +39,7 @@ public interface JPigpio {
 	 * Set the specified gpio to the level specified by level for the duration specified
 	 * by pulseLen and then set the gpio back to !level.
 	 * @param gpio The GPIO pin to pulse.
-	 * @param pulseLen The duration in useconds to hold the pulse.
+	 * @param pulseLen The duration in microseconds to hold the pulse.
 	 * @param level The level to target the pulse.
 	 * @throws PigpioException  on pigpiod error
 	 */
