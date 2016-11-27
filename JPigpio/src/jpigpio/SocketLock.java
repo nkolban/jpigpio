@@ -22,11 +22,15 @@ public class SocketLock {
     int replyTimeout = 10000; //milliseconds to wait for reply from pigpiod
 
     public SocketLock(String host, int port) throws IOException {
+        this.host = host;
+        this.port = port;
+        reconnect();
+    }
+
+    public void reconnect() throws IOException{
         socket = new Socket(host, port);
         out = new DataOutputStream(socket.getOutputStream());
         in = new DataInputStream(socket.getInputStream());
-        this.host = host;
-        this.port = port;
     }
 
     public void terminate() throws IOException{

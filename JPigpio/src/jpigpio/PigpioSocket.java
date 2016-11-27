@@ -168,6 +168,9 @@ public class PigpioSocket extends CommonPigpio {
 		ArrayList<GPIOListener> gpioListeners = new ArrayList<>();
 		int monitor = 0;
 
+		String host;
+		int port;
+
 		/**
 		 * Create notification processing thread and open additional socket on PIGPIO host
 		 * for receiving notifications.
@@ -180,10 +183,19 @@ public class PigpioSocket extends CommonPigpio {
          */
 		public NotificationRouter(SocketLock slCmd, String host, int port) throws PigpioException{
 			this.slPiCmd = slCmd;
+			this.host = host;
+			this.port = port;
+			reconnect();
+		}
+
+		public void reconnect() throws PigpioException{
 			try {
 
 				// open additional socket used for notifications from Pi
-				slNotify = new SocketLock(host, port);
+				if (slNotify != null)
+					slNotify.reconnect();
+				else
+					slNotify = new SocketLock(host,port);
 
 				// open notification handle at PIGPIO
 				handle = slNotify.sendCmd(CMD_NOIB, 0, 0);
@@ -354,10 +366,21 @@ public class PigpioSocket extends CommonPigpio {
 				router = new NotificationRouter(slCmd, host, port);
 				router.start();
 			}
-		} catch (Exception e) {
+		} catch (IOException|PigpioException e) {
 			throw new PigpioException("gpioInitialize", e);
 		}
 	} // End of gpioInitialize()
+
+	@Override
+	public void reconnect() throws PigpioException {
+		try {
+		slCmd.reconnect();
+		router.reconnect();
+		} catch (IOException|PigpioException e) {
+			throw new PigpioException("gpioReconnect", e);
+		}
+
+	}
 
 
 	@Override
@@ -572,6 +595,7 @@ public class PigpioSocket extends CommonPigpio {
             bb = ByteBuffer.allocate(12);
             bb.order(ByteOrder.LITTLE_ENDIAN);
             bb.putInt(bbBits).putInt(bbStop).putInt(offset);
+			bb.put(data);
 
 			int rc = slCmd.sendCmd(CMD_WVAS, userGpio, baud, data.length + 12, bb.array());
 			if (rc < 0)
@@ -784,13 +808,12 @@ public class PigpioSocket extends CommonPigpio {
 		});
 	} // End of gpioSetAlertFunc
 
-	/**
-	 * Not implemented
-	 */
+
 	@Override
 	public void gpioTrigger(int gpio, long pulseLen, boolean level) throws PigpioException {
 		try {
-			ByteBuffer bb = ByteBuffer.allocate(12);
+
+			ByteBuffer bb = ByteBuffer.allocate(4);
 			bb.order(ByteOrder.LITTLE_ENDIAN);
 			bb.putInt(level?1:0);
 
