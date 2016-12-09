@@ -7,6 +7,8 @@ import java.util.ArrayList;
 
 import jpigpio.impl.CommonPigpio;
 
+import static jpigpio.Utils.LEint2Long;
+
 /**
  * An implementation of the Pigpio Java interface using sockets to connect to the target pigpio demon
  * socket interface (see http://abyz.co.uk/rpi/pigpio/sif.html)
@@ -271,10 +273,12 @@ public class PigpioSocket extends CommonPigpio {
 
 		@Override
 		public void run(){
-			int seq, flags, tick, level;
+			int seq, flags,level;
+			long tick;
 			int changed;
 			int newLevel = 0;
 			int gpio = 0;
+			byte[] bytes = new byte[4];
 
 			try {
 				// read GPIO status for GPIOs in bank 1 (gpio 0-31)
@@ -290,9 +294,14 @@ public class PigpioSocket extends CommonPigpio {
 					if (!go) // if stopping, then exit loop (to avoid big if)
 						break;
 
-					seq = Integer.reverseBytes(slNotify.in.readShort());
-					flags = Integer.reverseBytes(slNotify.in.readShort());
-					tick = Integer.reverseBytes(slNotify.in.readInt());
+					seq = Integer.reverseBytes(slNotify.in.readUnsignedShort());
+					flags = Integer.reverseBytes(slNotify.in.readUnsignedShort());
+
+					slNotify.in.read(bytes,0,4);  // read tick as plain 4 bytes first
+					// tick is stored as 4 byte unsigned integer using Little Endian byte order
+					// so we need to transform it to long
+					tick = LEint2Long(bytes);
+
 					level = Integer.reverseBytes(slNotify.in.readInt());
 
 					// no special flag, so it's normal notification
