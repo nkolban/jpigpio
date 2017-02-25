@@ -43,5 +43,17 @@ public class GPIO {
 	public int getPin() {
 		return pin;
 	}
+
+    public void setAlert(Alert alert) throws PigpioException {
+        pigpio.gpioSetAlertFunc(getPin(), alert);
+    }
+
+    public void setPulldown(int pulldown) throws PigpioException {
+        pigpio.gpioSetPullUpDown(getPin(), pulldown);
+    }
+
+    public JPigpio getPigpio() {
+        return pigpio;
+    }
 } // End of class
 // End of file
