@@ -52,6 +52,16 @@ public class GPIO {
         pigpio.gpioSetPullUpDown(getPin(), pulldown);
     }
 
+    public void delay(long delay, int type) throws PigpioException {
+        pigpio.gpioDelay(delay, type);
+    }
+
+    /**
+     *
+     * Should only be needed if not mapped by gpio class
+     *
+     * @return Pigpio instance
+     */
     public JPigpio getPigpio() {
         return pigpio;
     }
