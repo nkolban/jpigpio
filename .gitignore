@@ -55,3 +55,9 @@ logs/
 Network Trash Folder
 Temporary Items
 .apdisk
+
+
+# Eclipse project files
+**/.project
+**/.settings
+**/.classpath
