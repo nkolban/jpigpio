@@ -193,11 +193,9 @@ public class Utils {
      * @return
 	 * 	difference between ticks
      */
-	public static int tickDiff(long olderTick, long tick) {
+	public static long tickDiff(long olderTick, long tick) {
 		int tDiff = (int)(tick - olderTick);
-		if (tDiff < 0)
-			tDiff += (1 << 32);
-		return tDiff;
+		return Integer.toUnsignedLong(tDiff);
 	}
 
 	public static String bytesToHex(byte[] bytes) {
