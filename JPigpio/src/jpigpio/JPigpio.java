@@ -10,6 +10,13 @@ public interface JPigpio {
 
 	public void gpioInitialize() throws PigpioException;
 
+
+	/**
+	 * Try reconnecting to pigpio. This does make sense in case of socket pigpiod interface
+	 * @throws PigpioException
+     */
+	public void reconnect() throws PigpioException;
+
 	/**
 	 * Terminate the usage of the pigpio interfaces.
 	 * @throws PigpioException on error
@@ -36,8 +43,8 @@ public interface JPigpio {
 	public int gpioGetMode(int gpio) throws PigpioException;
 
 	/**
-	 * Set the specified gpio to the level specified by level for the duration specified
-	 * by pulseLen and then set the gpio back to !level.
+	 * Set the specified gpio to the level specified by level for the duration (in micro-sec) specified
+	 * by pulseLen and then set the gpio back to not-level.
 	 * @param gpio The GPIO pin to pulse.
 	 * @param pulseLen The duration in microseconds to hold the pulse.
 	 * @param level The level to target the pulse.

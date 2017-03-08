@@ -43,5 +43,27 @@ public class GPIO {
 	public int getPin() {
 		return pin;
 	}
+
+    public void setAlert(Alert alert) throws PigpioException {
+        pigpio.gpioSetAlertFunc(getPin(), alert);
+    }
+
+    public void setPulldown(int pulldown) throws PigpioException {
+        pigpio.gpioSetPullUpDown(getPin(), pulldown);
+    }
+
+    public void delay(long delay, int type) throws PigpioException {
+        pigpio.gpioDelay(delay, type);
+    }
+
+    /**
+     *
+     * Should only be needed if not mapped by gpio class
+     *
+     * @return Pigpio instance
+     */
+    public JPigpio getPigpio() {
+        return pigpio;
+    }
 } // End of class
 // End of file

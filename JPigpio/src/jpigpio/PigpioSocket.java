@@ -7,6 +7,8 @@ import java.util.ArrayList;
 
 import jpigpio.impl.CommonPigpio;
 
+import static jpigpio.Utils.LEint2Long;
+
 /**
  * An implementation of the Pigpio Java interface using sockets to connect to the target pigpio demon
  * socket interface (see http://abyz.co.uk/rpi/pigpio/sif.html)
@@ -168,6 +170,9 @@ public class PigpioSocket extends CommonPigpio {
 		ArrayList<GPIOListener> gpioListeners = new ArrayList<>();
 		int monitor = 0;
 
+		String host;
+		int port;
+
 		/**
 		 * Create notification processing thread and open additional socket on PIGPIO host
 		 * for receiving notifications.
@@ -180,10 +185,19 @@ public class PigpioSocket extends CommonPigpio {
          */
 		public NotificationRouter(SocketLock slCmd, String host, int port) throws PigpioException{
 			this.slPiCmd = slCmd;
+			this.host = host;
+			this.port = port;
+			reconnect();
+		}
+
+		public void reconnect() throws PigpioException{
 			try {
 
 				// open additional socket used for notifications from Pi
-				slNotify = new SocketLock(host, port);
+				if (slNotify != null)
+					slNotify.reconnect();
+				else
+					slNotify = new SocketLock(host,port);
 
 				// open notification handle at PIGPIO
 				handle = slNotify.sendCmd(CMD_NOIB, 0, 0);
@@ -259,10 +273,12 @@ public class PigpioSocket extends CommonPigpio {
 
 		@Override
 		public void run(){
-			int seq, flags, tick, level;
+			int seq, flags,level;
+			long tick;
 			int changed;
 			int newLevel = 0;
 			int gpio = 0;
+			byte[] bytes = new byte[4];
 
 			try {
 				// read GPIO status for GPIOs in bank 1 (gpio 0-31)
@@ -278,9 +294,14 @@ public class PigpioSocket extends CommonPigpio {
 					if (!go) // if stopping, then exit loop (to avoid big if)
 						break;
 
-					seq = Integer.reverseBytes(slNotify.in.readShort());
-					flags = Integer.reverseBytes(slNotify.in.readShort());
-					tick = Integer.reverseBytes(slNotify.in.readInt());
+					seq = Integer.reverseBytes(slNotify.in.readUnsignedShort());
+					flags = Integer.reverseBytes(slNotify.in.readUnsignedShort());
+
+					slNotify.in.read(bytes,0,4);  // read tick as plain 4 bytes first
+					// tick is stored as 4 byte unsigned integer using Little Endian byte order
+					// so we need to transform it to long
+					tick = LEint2Long(bytes);
+
 					level = Integer.reverseBytes(slNotify.in.readInt());
 
 					// no special flag, so it's normal notification
@@ -354,10 +375,21 @@ public class PigpioSocket extends CommonPigpio {
 				router = new NotificationRouter(slCmd, host, port);
 				router.start();
 			}
-		} catch (Exception e) {
+		} catch (IOException|PigpioException e) {
 			throw new PigpioException("gpioInitialize", e);
 		}
 	} // End of gpioInitialize()
+
+	@Override
+	public void reconnect() throws PigpioException {
+		try {
+		slCmd.reconnect();
+		router.reconnect();
+		} catch (IOException|PigpioException e) {
+			throw new PigpioException("gpioReconnect", e);
+		}
+
+	}
 
 
 	@Override
@@ -572,6 +604,7 @@ public class PigpioSocket extends CommonPigpio {
             bb = ByteBuffer.allocate(12);
             bb.order(ByteOrder.LITTLE_ENDIAN);
             bb.putInt(bbBits).putInt(bbStop).putInt(offset);
+			bb.put(data);
 
 			int rc = slCmd.sendCmd(CMD_WVAS, userGpio, baud, data.length + 12, bb.array());
 			if (rc < 0)
@@ -784,13 +817,12 @@ public class PigpioSocket extends CommonPigpio {
 		});
 	} // End of gpioSetAlertFunc
 
-	/**
-	 * Not implemented
-	 */
+
 	@Override
 	public void gpioTrigger(int gpio, long pulseLen, boolean level) throws PigpioException {
 		try {
-			ByteBuffer bb = ByteBuffer.allocate(12);
+
+			ByteBuffer bb = ByteBuffer.allocate(4);
 			bb.order(ByteOrder.LITTLE_ENDIAN);
 			bb.putInt(level?1:0);
 

@@ -26,6 +26,15 @@ public class Pigpio extends CommonPigpio {
 	@Override
 	public native void gpioTerminate() throws PigpioException;
 
+	/**
+	 * Not implemented
+	 */
+	@Override
+	public void reconnect() throws PigpioException{
+		// do nothing for native interface
+		return;
+	}
+
 	@Override
 	public native void gpioSetMode(int pin, int mode) throws PigpioException;
 
