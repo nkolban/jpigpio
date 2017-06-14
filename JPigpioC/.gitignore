@@ -1,0 +1,4 @@
+# exclude object files
+*.o
+# exclude libraries
+*.so

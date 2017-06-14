@@ -379,9 +379,5 @@ public class Pigpio extends CommonPigpio {
 		throw new NotImplementedException();
 	}
 
-	public void gpioGlitchFilter(int gpio, int steady) throws PigpioException{
-	    throw new NotImplementedException();
-    }
-
 } // End of class
 // End of file

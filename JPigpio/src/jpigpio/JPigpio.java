@@ -1213,15 +1213,6 @@ public interface JPigpio {
      */
 	public void removeCallback(GPIOListener listener) throws PigpioException;
 
-	/**
-	 * Sets a glitch filter on a gpio
-	 * Level changes on the GPIO are not reported unless the level has been stable for at least steady microseconds. The level is then reported. Level changes of less than steady microseconds are ignored
-	 * @param gpio pin on which the glitch filter will be set
-	 * @param steady amount of microseconds for the level to be stable
-	 * @throws PigpioException  on pigpiod error
-     */
-	public void gpioGlitchFilter(int gpio, int steady) throws PigpioException;
-
 	public static final int PI_GPIO2 = 2;
 	public static final int PI_GPIO3 = 3;
 	public static final int PI_GPIO4 = 4;
