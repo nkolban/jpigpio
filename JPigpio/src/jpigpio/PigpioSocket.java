@@ -143,14 +143,15 @@ public class PigpioSocket extends CommonPigpio {
 	// CMD_SLRI	94	gpio	invert	0	-
 	// CMD_CGI	95	0	0	0	-
 	// CMD_CSI	96	config	0	0	-
+	// CMD_FG	97	gpio	steady	0	-
 	// CMD_FN	98	gpio	steady	4	uint32_t active
 	// CMD_NOIB	99	0	0	0	-
 	// CMD_WVTXM	100	wave_id	mode	0	-
 	// CMD_WVTAT	101	-	-	0	-
 
 
-	private final int CMD_FG = 97;		// 97 gpio steady 0 -
-	private final int CMD_NOIB = 99;	// 99 0 0 0 -
+
+	private final int CMD_NOIB = 99;		//99 0 0 0 -
 
 	/**
 	 * Notification router runs in the background thread and listens to asynchronous messages
@@ -1149,18 +1150,5 @@ public class PigpioSocket extends CommonPigpio {
 	}
 
 
-	@Override
-	public void gpioGlitchFilter(int gpio, int steady) throws PigpioException{
-		int rc = 0;
-
-		try {
-			rc = slCmd.sendCmd(CMD_FG, gpio, steady);
-			if (rc < 0)
-				throw new PigpioException(rc);
-
-		} catch (IOException e) {
-			throw new PigpioException("gpioGlitchFilter failed", e);
-		}
-	}
 } // End of class
 // End of file
