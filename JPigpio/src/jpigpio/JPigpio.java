@@ -43,6 +43,14 @@ public interface JPigpio {
 	public int gpioGetMode(int gpio) throws PigpioException;
 
 	/**
+	 * Retrieve the drive strength of the given pad
+	 * @param pad The gpio to retrieve the drive strength
+	 * @return The drive strength of the pad
+	 * @throws PigpioException  on pigpiod error
+	 */
+	public int gpioGetPad(int pad) throws PigpioException;
+
+	/**
 	 * Set the specified gpio to the level specified by level for the duration (in micro-sec) specified
 	 * by pulseLen and then set the gpio back to not-level.
 	 * @param gpio The GPIO pin to pulse.

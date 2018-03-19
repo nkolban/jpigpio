@@ -41,6 +41,14 @@ JNIEXPORT jint JNICALL Java_jpigpio_Pigpio_gpioGetMode
 
 /*
  * Class:     jpigpio_Pigpio
+ * Method:    gpioGetPad
+ * Signature: (I)I
+ */
+JNIEXPORT jint JNICALL Java_jpigpio_Pigpio_gpioGetPad
+  (JNIEnv *, jobject, jint);
+
+/*
+ * Class:     jpigpio_Pigpio
  * Method:    gpioSetPullUpDown
  * Signature: (II)V
  */

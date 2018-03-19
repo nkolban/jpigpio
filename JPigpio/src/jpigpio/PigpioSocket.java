@@ -436,6 +436,19 @@ public class PigpioSocket extends CommonPigpio {
 	} // End of gpioGetMode
 
 	@Override
+	public int gpioGetPad(int pin) throws PigpioException {
+		try {
+			int rc = slCmd.sendCmd(CMD_MODEG, pin, 0);
+			if (rc < 0) {
+				throw new PigpioException(rc);
+			}
+			return rc;
+		} catch (IOException e) {
+			throw new PigpioException("gpioGetPad", e);
+		}
+	} // End of gpioGetPad
+
+	@Override
 	public void gpioSetPullUpDown(int pin, int pud) throws PigpioException {
 		try {
 			int rc = slCmd.sendCmd(CMD_PUD, pin, pud);

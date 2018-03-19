@@ -1,4 +1,4 @@
-LIBDIR=/mnt/share/opt/lib
+LIBDIR=/home/rabbit/local/lib
 
 install:
 	jar -cvf $(LIBDIR)/Pigpio.jar -C bin jpigpio

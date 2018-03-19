@@ -86,6 +86,15 @@ jint JNICALL Java_jpigpio_Pigpio_gpioGetMode(JNIEnv *env, jobject obj, jint gpio
 
 /*
  * Class:     jpigpio_Pigpio
+ * Method:    gpioGetPad
+ * Signature: (I)I
+ */
+jint JNICALL Java_jpigpio_Pigpio_gpioGetPad(JNIEnv *env, jobject obj, jint pad) {
+	return gpioGetPad(pad);
+} // End of Java_jpigpio_Pigpio_gpioGetPad
+
+/*
+ * Class:     jpigpio_Pigpio
  * Method:    gpioSetPullUpDown
  * Signature: (II)V
  */
