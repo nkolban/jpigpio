@@ -148,10 +148,11 @@ public class PigpioSocket extends CommonPigpio {
 	// CMD_NOIB	99	0	0	0	-
 	// CMD_WVTXM	100	wave_id	mode	0	-
 	// CMD_WVTAT	101	-	-	0	-
+	private final int CMD_NOIB = 99;		// 99 0 0 0 -
 
+	private final int CMD_PADS = 102;       // 102 pad strength 0 -
+	private final int CMD_PADG = 103;       // 103 pad 0 0 -
 
-
-	private final int CMD_NOIB = 99;		//99 0 0 0 -
 
 	/**
 	 * Notification router runs in the background thread and listens to asynchronous messages
@@ -434,6 +435,31 @@ public class PigpioSocket extends CommonPigpio {
 			throw new PigpioException("gpioGetMode", e);
 		}
 	} // End of gpioGetMode
+
+	@Override
+	public void gpioSetPad(int pad, int strength) throws PigpioException {
+		try {
+			int rc = slCmd.sendCmd(CMD_PADS, pad, strength);
+			if (rc < 0) {
+				throw new PigpioException(rc);
+			}
+		} catch (IOException e) {
+			throw new PigpioException("gpioSetPad", e);
+		}
+	} // End of gpioSetPad
+
+	@Override
+	public int gpioGetPad(int pad) throws PigpioException {
+		try {
+			int rc = slCmd.sendCmd(CMD_PADG, pad, 0);
+			if (rc < 0) {
+				throw new PigpioException(rc);
+			}
+			return rc;
+		} catch (IOException e) {
+			throw new PigpioException("gpioGetPad", e);
+		}
+	} // End of gpioGetPad
 
 	@Override
 	public void gpioSetPullUpDown(int pin, int pud) throws PigpioException {

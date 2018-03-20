@@ -5,7 +5,7 @@
 *.cs     diff=csharp
 
 #Java
-*.java   text diff=java eol=crlf
+*.java   text diff=java
 
 # Standard to msysgit
 *.doc	 diff=astextplain
