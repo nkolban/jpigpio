@@ -86,6 +86,19 @@ jint JNICALL Java_jpigpio_Pigpio_gpioGetMode(JNIEnv *env, jobject obj, jint gpio
 
 /*
  * Class:     jpigpio_Pigpio
+ * Method:    gpioSetPad
+ * Signature: (II)V
+ */
+void JNICALL Java_jpigpio_Pigpio_gpioSetPad(JNIEnv *env, jobject obj, jint pad, jint strength) {
+	int rc = gpioSetPad(pad, strength);
+	if (rc < 0) {
+		(*env)->Throw(env, createPigpioException(env, rc));
+		return;
+	}
+} // End of Java_jpigpio_Pigpio_gpioSetPad
+
+/*
+ * Class:     jpigpio_Pigpio
  * Method:    gpioGetPad
  * Signature: (I)I
  */

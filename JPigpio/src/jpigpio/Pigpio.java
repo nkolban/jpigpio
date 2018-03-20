@@ -42,6 +42,9 @@ public class Pigpio extends CommonPigpio {
 	public native int gpioGetMode(int pin) throws PigpioException;
 
 	@Override
+	public native void gpioSetPad(int pin, int strength) throws PigpioException;
+
+	@Override
 	public native int gpioGetPad(int pad) throws PigpioException;
 
 	@Override

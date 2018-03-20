@@ -43,6 +43,17 @@ public interface JPigpio {
 	public int gpioGetMode(int gpio) throws PigpioException;
 
 	/**
+	 * Set the mode of the gpio
+	 *
+	 * @param gpio
+	 *            The gpio pad to set
+	 * @param mode
+	 *            The drive strength of the pad
+	 * @throws PigpioException  on pigpiod error
+	 */
+	public void gpioSetPad(int gpio, int strength) throws PigpioException;
+
+	/**
 	 * Retrieve the drive strength of the given pad
 	 * @param pad The gpio to retrieve the drive strength
 	 * @return The drive strength of the pad
