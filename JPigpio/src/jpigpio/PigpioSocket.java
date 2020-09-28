@@ -294,8 +294,8 @@ public class PigpioSocket extends CommonPigpio {
 					if (!go) // if stopping, then exit loop (to avoid big if)
 						break;
 
-					seq = Integer.reverseBytes(slNotify.in.readUnsignedShort());
-					flags = Integer.reverseBytes(slNotify.in.readUnsignedShort());
+					seq = Short.toUnsignedInt(Short.reverseBytes(slNotify.in.readShort()));
+					flags = Short.toUnsignedInt(Short.reverseBytes(slNotify.in.readShort()));
 
 					slNotify.in.read(bytes,0,4);  // read tick as plain 4 bytes first
 					// tick is stored as 4 byte unsigned integer using Little Endian byte order
@@ -325,7 +325,7 @@ public class PigpioSocket extends CommonPigpio {
 					} else
 						// is it a watchdog message?
 						if ((flags & PI_NTFY_FLAGS_WDOG) != 0) {
-							gpio = flags & PI_NTFY_FLAGS_WDOG;
+							gpio = flags & PI_NTFY_FLAGS_GPIO;
 							for (GPIOListener cb : gpioListeners)
 								if (cb.gpio == gpio)
 									cb.alert(cb.gpio, PI_TIMEOUT, tick);
