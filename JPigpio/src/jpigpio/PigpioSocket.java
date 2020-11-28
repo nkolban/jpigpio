@@ -1,13 +1,13 @@
 package jpigpio;
 
+import static jpigpio.Utils.*;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
 
 import jpigpio.impl.CommonPigpio;
-
-import static jpigpio.Utils.LEint2Long;
 
 /**
  * An implementation of the Pigpio Java interface using sockets to connect to the target pigpio demon
@@ -139,7 +139,7 @@ public class PigpioSocket extends CommonPigpio {
 	// CMD_BI2CO	90	sda	scl	4	uint32_t baud
 	// CMD_BI2CZ	91	sda	0	X	uint8_t data[X]
 	// CMD_I2CZ	92	handle	0	X	uint8_t data[X]
-	// CMD_WVCHA	93	0	0	X	uint8_t data[X]
+	private final int CMD_WVCHA = 93;// 93	0	0	X	uint8_t data[X]
 	// CMD_SLRI	94	gpio	invert	0	-
 	// CMD_CGI	95	0	0	0	-
 	// CMD_CSI	96	config	0	0	-
@@ -294,8 +294,8 @@ public class PigpioSocket extends CommonPigpio {
 					if (!go) // if stopping, then exit loop (to avoid big if)
 						break;
 
-					seq = Integer.reverseBytes(slNotify.in.readUnsignedShort());
-					flags = Integer.reverseBytes(slNotify.in.readUnsignedShort());
+					seq = Short.toUnsignedInt(Short.reverseBytes(slNotify.in.readShort()));
+					flags = Short.toUnsignedInt(Short.reverseBytes(slNotify.in.readShort()));
 
 					slNotify.in.read(bytes,0,4);  // read tick as plain 4 bytes first
 					// tick is stored as 4 byte unsigned integer using Little Endian byte order
@@ -322,13 +322,14 @@ public class PigpioSocket extends CommonPigpio {
 
 							}
 						}
-					} else
+					} else {
 						// is it a watchdog message?
 						if ((flags & PI_NTFY_FLAGS_WDOG) != 0) {
-							gpio = flags & PI_NTFY_FLAGS_WDOG;
+							gpio = flags & PI_NTFY_FLAGS_GPIO;
 							for (GPIOListener cb : gpioListeners)
 								if (cb.gpio == gpio)
 									cb.alert(cb.gpio, PI_TIMEOUT, tick);
+						}
 					}
 				}
 
@@ -355,7 +356,7 @@ public class PigpioSocket extends CommonPigpio {
 
 	/**
 	 * The constructor of the class.
-	 * 
+	 *
 	 * @param host The host name or ip address of the pigpio daemon.
 	 * @param port The port of the pigpio daemon.
 	 * @throws  PigpioException if not able to initialize/connect to pigpiod
@@ -670,7 +671,7 @@ public class PigpioSocket extends CommonPigpio {
 	@Override
 	public void waveDelete(int waveId) throws PigpioException{
 		try {
-			int rc = slCmd.sendCmd(CMD_WVDEL, 0, 0);
+			int rc = slCmd.sendCmd(CMD_WVDEL, waveId, 0);
 			if (rc < 0)
 				throw new PigpioException(rc);
 
@@ -837,7 +838,7 @@ public class PigpioSocket extends CommonPigpio {
 	}
 
 	// ############### SPI
-	
+
 	@Override
 	public int spiOpen(int spiChannel, int spiBaudRate, int flags) throws PigpioException {
 		int rc = 0;
@@ -1127,7 +1128,7 @@ public class PigpioSocket extends CommonPigpio {
 	public void setDebug(boolean flag) throws PigpioException {
 		// TODO Auto-generated method stub
 		throw new NotImplementedException();
-		
+
 	}
 
 	/**
@@ -1149,6 +1150,19 @@ public class PigpioSocket extends CommonPigpio {
 		this.router.removeListener(gpioListener);
 	}
 
+
+	public int waveChain(int[] waveIds) throws PigpioException {
+		try {
+			byte[] data = new byte[waveIds.length];
+			for( int i = 0;i < waveIds.length;i++ )data[i] = (byte) waveIds[i];
+			int rc = slCmd.sendCmd(CMD_WVCHA, 0, 0, data.length, data);
+			if (rc < 0)
+				throw new PigpioException(rc);
+			return rc;
+		} catch (IOException e) {
+			throw new PigpioException("waveChain", e);
+		}
+	}
 
 } // End of class
 // End of file
